@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acta de Terreno WSS - v2.0</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c5f9e 0%, #1a3d6b 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4a90e2 0%, #2c5f9e 100%);
+            color: white;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .header-left {
+            flex: 1;
+        }
+
+        .header-center {
+            flex: 2;
+            text-align: center;
+        }
+
+        .header-right {
+            flex: 1;
+            text-align: right;
+            font-size: 12px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .header .doc-number {
+            font-size: 18px;
+            font-weight: 300;
+        }
+
+        .form-content {
+            padding: 40px;
+        }
+
+        .top-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #333;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .specs-table {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .specs-table .form-group {
+            margin-bottom: 0;
+        }
+
+        .ensayos-section {
+            margin-bottom: 30px;
+        }
+
+        .ensayos-header {
+            background: #2c5f9e;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px 8px 0 0;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .ensayos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            padding: 20px;
+            border: 2px solid #2c5f9e;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .ensayo-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ensayo-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .ensayo-item label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+        }
+
+        /* Área de resultados con IA */
+        .results-section {
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .results-section textarea {
+            min-height: 300px;
+        }
+
+        .ai-assistant {
+            margin-top: 15px;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .ai-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .ai-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .ai-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .ai-text {
+            color: white;
+            font-size: 13px;
+            flex: 1;
+        }
+
+        /* Canvas para firmas digitales */
+        .signature-canvas-container {
+            margin-top: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            background: white;
+            position: relative;
+        }
+
+        .signature-canvas {
+            width: 100%;
+            height: 150px;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .signature-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .signature-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-clear {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .btn-clear:hover {
+            background: #f5c6cb;
+        }
+
+        .signature-status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .status-signed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-unsigned {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .equipment-section {
+            margin-bottom: 30px;
+        }
+
+        .equipment-section textarea {
+            min-height: 100px;
+        }
+
+        .time-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .signature-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .signature-box {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .signature-box h3 {
+            color: #2c5f9e;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #4a90e2 0%, #2c5f9e 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(44, 95, 158, 0.4);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c5f9e;
+            margin: 30px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .wss-footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            font-size: 11px;
+            color: #666;
+            border-top: 3px solid #2c5f9e;
+        }
+
+        .wss-offices {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .wss-office {
+            font-size: 10px;
+        }
+
+        .info-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .top-section,
+            .specs-table,
+            .time-section,
+            .signature-section {
+                grid-template-columns: 1fr;
+            }
+
+            .form-content {
+                padding: 20px;
+            }
+
+            .ensayos-grid {
+                grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+            }
+
+            .signature-canvas {
+                height: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <div style="font-size: 24px; font-weight: bold;">WSS</div>
+                <div style="font-size: 11px; opacity: 0.9;">Testing and Certification</div>
+            </div>
+            <div class="header-center">
+                <h1>ACTA DE TERRENO</h1>
+                <p class="doc-number">N° <span id="displayActaNumber">-</span></p>
+            </div>
+            <div class="header-right">
+                <div><strong>REG-DII-001</strong></div>
+                <div>Revisión: 03</div>
+                <div>Fecha: 25.04.2022</div>
+                <div>Página: 1 de 1</div>
+            </div>
+        </div>
+
+        <div class="form-content">
+            <div id="alertBox" class="alert"></div>
+
+            <form id="actaForm">
+                <!-- Sección Superior -->
+                <div class="top-section">
+                    <div>
+                        <div class="form-group">
+                            <label>Solicitante <span class="required">*</span></label>
+                            <input type="text" name="solicitante" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Atención</label>
+                            <input type="text" name="atencion">
+                        </div>
+                        <div class="form-group">
+                            <label>Dirección</label>
+                            <input type="text" name="direccion">
+                        </div>
+                    </div>
+                    <div>
+                        <div class="form-group">
+                            <label>Orden de Trabajo <span class="required">*</span></label>
+                            <input type="text" name="ordenTrabajo" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha(s) de Inspección <span class="required">*</span></label>
+                            <input type="date" name="fechaInspeccion" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Especificaciones Técnicas -->
+                <div class="section-title">📋 Especificaciones Técnicas</div>
+                <div class="specs-table">
+                    <div class="form-group">
+                        <label>Proyecto <span class="required">*</span></label>
+                        <input type="text" name="proyecto" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre(s) Inspector(es) <span class="required">*</span></label>
+                        <input type="text" name="nombreInspector" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Procedimiento(s) WSS</label>
+                        <input type="text" name="procedimientoWSS">
+                    </div>
+                    <div class="form-group">
+                        <label>Correo Inspector <span class="required">*</span></label>
+                        <input type="email" name="correoInspector" required placeholder="inspector@wss.cl">
+                    </div>
+                    <div class="form-group">
+                        <label>Norma de Evaluación</label>
+                        <input type="text" name="normaEvaluacion">
+                    </div>
+                    <div class="form-group">
+                        <label>Correo Cliente <span class="required">*</span></label>
+                        <input type="email" name="correoCliente" required placeholder="cliente@empresa.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Norma de Ejecución</label>
+                        <input type="text" name="normaEjecucion">
+                    </div>
+                    <div class="form-group">
+                        <label>Nivel SNT-TC-1A</label>
+                        <input type="text" name="nivelSNT" placeholder="Ej: Nivel II">
+                    </div>
+                    <div class="form-group">
+                        <label>Material</label>
+                        <input type="text" name="material">
+                    </div>
+                    <div class="form-group">
+                        <label>Condición Superficial</label>
+                        <input type="text" name="condicionSuperficial">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo Junta</label>
+                        <input type="text" name="tipoJunta">
+                    </div>
+                    <div class="form-group">
+                        <label>Iluminación</label>
+                        <input type="text" name="iluminacion" placeholder="Ej: Natural, Artificial">
+                    </div>
+                    <div class="form-group">
+                        <label>Espesor del Material</label>
+                        <input type="text" name="espesorMaterial" placeholder="Ej: 10mm">
+                    </div>
+                    <div class="form-group">
+                        <label>Tº Material</label>
+                        <input type="text" name="temperaturaMateria" placeholder="Ej: 20°C">
+                    </div>
+                    <div class="form-group">
+                        <label>Proceso de Soldadura</label>
+                        <input type="text" name="procesoSoldadura" placeholder="Ej: SMAW, GMAW">
+                    </div>
+                    <div class="form-group">
+                        <label>Nº Requerimiento Calidad</label>
+                        <input type="text" name="nroRequerimientoCalidad">
+                    </div>
+                </div>
+
+                <!-- Ensayos -->
+                <div class="ensayos-section">
+                    <div class="ensayos-header">
+                        🔬 Ensayos - Haz click en los ensayos aplicados
+                    </div>
+                    <div class="ensayos-grid">
+                        <div class="ensayo-item">
+                            <input type="checkbox" id="vt" name="ensayos" value="VT">
+                            <label for="vt">VT</label>
+                        </div>
+                        <div class="ensayo-item">
+                            <input type="checkbox" id="cd" name="ensayos" value="CD">
+                            <label for="cd">CD</label>
+                        </div>
+                        <div class="ensayo-item">
+                            <input type="checkbox" id="pt" name="ensayos" value="PT">
+                            <label for="pt">PT</label>
+                        </div>
+                        <div class="ensayo-item">
+                            <input type="checkbox" id="mt" name="ensayos" value="MT">
+                            <label for="mt">MT</label>
+                        </div>
+                        <div class="ensayo-item">
+                            <input type="checkbox" id="ut" name="ensayos" value="UT">
+                            <label for="ut">UT</label>
+                        </div>
+                        <div class="ensayo-item">
+                            <input type="checkbox" id="t" name="ensayos" value="T">
+                            <label for="t">T</label>
+                        </div>
+                        <div class="ensayo-item">
+                            <input type="checkbox" id="cg" name="ensayos" value="CG">
+                            <label for="cg">CG</label>
+                        </div>
+                        <div class="ensayo-item">
+                            <input type="checkbox" id="ctk" name="ensayos" value="CTK">
+                            <label for="ctk">CTK</label>
+                        </div>
+                        <div class="ensayo-item">
+                            <input type="checkbox" id="cs" name="ensayos" value="CS">
+                            <label for="cs">CS</label>
+                        </div>
+                        <div class="ensayo-item">
+                            <input type="checkbox" id="cv" name="ensayos" value="CV">
+                            <label for="cv">CV</label>
+                        </div>
+                        <div class="ensayo-item">
+                            <input type="checkbox" id="pn" name="ensayos" value="PN">
+                            <label for="pn">PN</label>
+                        </div>
+                        <div class="ensayo-item">
+                            <input type="checkbox" id="utt" name="ensayos" value="UTT">
+                            <label for="utt">UTT</label>
+                        </div>
+                        <div class="ensayo-item">
+                            <input type="checkbox" id="ph" name="ensayos" value="PH">
+                            <label for="ph">PH</label>
+                        </div>
+                        <div class="ensayo-item">
+                            <input type="checkbox" id="o" name="ensayos" value="O">
+                            <label for="o">O</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alcances y Resultados con IA -->
+                <div class="results-section">
+                    <div class="section-title">
+                        📝 Alcances y Resultados
+                        <span class="info-badge">✨ Asistente IA</span>
+                    </div>
+                    <div class="form-group">
+                        <textarea id="alcancesResultados" name="alcancesResultados" placeholder="Describa detalladamente los alcances y resultados de la inspección realizada..."></textarea>
+                    </div>
+                    <div class="ai-assistant">
+                        <button type="button" class="ai-btn" id="btnMejorarIA">
+                            ✨ Mejorar con IA
+                        </button>
+                        <button type="button" class="ai-btn" id="btnCorregirIA">
+                            📝 Corregir Ortografía
+                        </button>
+                        <button type="button" class="ai-btn" id="btnProfesionalIA">
+                            👔 Hacer Más Profesional
+                        </button>
+                        <span class="ai-text">💡 Usa la IA para mejorar tu redacción técnica</span>
+                    </div>
+                </div>
+
+                <!-- Equipos e Instrumentos -->
+                <div class="equipment-section">
+                    <div class="section-title">🔧 Equipos e Instrumentos utilizados (nombre/código)</div>
+                    <div class="form-group">
+                        <textarea name="equiposInstrumentos" placeholder="Liste los equipos e instrumentos utilizados con sus códigos de identificación..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Horarios -->
+                <div class="time-section">
+                    <div class="form-group">
+                        <label>⏰ Horario efectivo en terreno</label>
+                        <input type="text" name="horarioTerreno" placeholder="Ej: 08:00 - 17:00">
+                    </div>
+                    <div class="form-group">
+                        <label>🚗 Horario efectivo en viaje</label>
+                        <input type="text" name="horarioViaje" placeholder="Ej: 06:00 - 08:00 / 17:00 - 19:00">
+                    </div>
+                </div>
+
+                <!-- Firmas Digitales -->
+                <div class="signature-section">
+                    <div class="signature-box">
+                        <h3>👤 Datos y Firma del Cliente</h3>
+                        <div class="form-group">
+                            <label>Nombre Cliente</label>
+                            <input type="text" name="nombreCliente" id="nombreCliente">
+                        </div>
+                        <div class="form-group">
+                            <label>Cargo Cliente</label>
+                            <input type="text" name="cargoCliente">
+                        </div>
+                        <div class="form-group">
+                            <label>✍️ Firma Digital del Cliente</label>
+                            <div class="signature-canvas-container">
+                                <canvas id="canvasCliente" class="signature-canvas"></canvas>
+                            </div>
+                            <div class="signature-controls">
+                                <button type="button" class="signature-btn btn-clear" onclick="clearSignature('canvasCliente')">🗑️ Limpiar</button>
+                                <span id="statusCliente" class="signature-status status-unsigned">⚠️ Sin firmar</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="signature-box">
+                        <h3>🏢 Datos y Firma del Inspector WSS</h3>
+                        <div class="form-group">
+                            <label>Sede WSS</label>
+                            <select name="sedeWSS">
+                                <option value="">Seleccionar...</option>
+                                <option value="Casa Matriz">Casa Matriz - Macul</option>
+                                <option value="Iquique">Iquique</option>
+                                <option value="Calama">Calama</option>
+                                <option value="Antofagasta">Antofagasta</option>
+                                <option value="Concepción">Concepción</option>
+                                <option value="Valparaíso">Valparaíso</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Nombre Inspector (confirmar)</label>
+                            <input type="text" name="nombreInspectorFirma" id="nombreInspectorFirma">
+                        </div>
+                        <div class="form-group">
+                            <label>✍️ Firma Digital del Inspector</label>
+                            <div class="signature-canvas-container">
+                                <canvas id="canvasInspector" class="signature-canvas"></canvas>
+                            </div>
+                            <div class="signature-controls">
+                                <button type="button" class="signature-btn btn-clear" onclick="clearSignature('canvasInspector')">🗑️ Limpiar</button>
+                                <span id="statusInspector" class="signature-status status-unsigned">⚠️ Sin firmar</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    ✅ Generar y Enviar Acta de Terreno
+                </button>
+            </form>
+        </div>
+
+        <div class="wss-footer">
+            <strong>WORLD SURVEY SERVICES S.A., CHILE</strong>
+            <div class="wss-offices">
+                <div class="wss-office">
+                    <strong>CASA MATRIZ</strong><br>
+                    José Arrieta N°1651, Macul<br>
+                    (2)22399887<br>
+                    jrodriguez@wss.cl
+                </div>
+                <div class="wss-office">
+                    <strong>IQUIQUE</strong><br>
+                    Agustín Zavala N°2879<br>
+                    (57)2447818<br>
+                    jrodriguez@wss.cl
+                </div>
+                <div class="wss-office">
+                    <strong>CALAMA</strong><br>
+                    Barrio Ind. Puerto Seco<br>
+                    N°45, Camino Chiu Chiu<br>
+                    czambra@wss.cl
+                </div>
+                <div class="wss-office">
+                    <strong>ANTOFAGASTA</strong><br>
+                    Nicolás Tirado N°386<br>
+                    (55)2271050<br>
+                    czambra@wss.cl
+                </div>
+                <div class="wss-office">
+                    <strong>CONCEPCIÓN</strong><br>
+                    Junqe N°142<br>
+                    (41)2590791<br>
+                    jrodriguez@wss.cl
+                </div>
+                <div class="wss-office">
+                    <strong>VALPARAÍSO</strong><br>
+                    Blanco 1215 Of. 1104<br>
+                    (32)2746253<br>
+                    wss@wss.cl
+                </div>
+            </div>
+            <div style="margin-top: 15px;">
+                <strong>www.wss.cl</strong>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // URL de tu Web App de Google Apps Script
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwuyXdhUSarV9Wntip4bkdYQv_OUUW15IPmdGpQrRbMI1PsliX1m1_o6_Vgi905o3kUaw/exec';
+
+        // ========== SISTEMA DE FIRMAS DIGITALES ==========
+        const signaturePads = {};
+
+        function initializeSignaturePads() {
+            ['canvasCliente', 'canvasInspector'].forEach(canvasId => {
+                const canvas = document.getElementById(canvasId);
+                const ctx = canvas.getContext('2d');
+                
+                // Ajustar tamaño del canvas
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+                
+                let isDrawing = false;
+                let lastX = 0;
+                let lastY = 0;
+                
+                // Función para obtener posición del mouse/touch
+                function getPosition(e) {
+                    const rect = canvas.getBoundingClientRect();
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                    return {
+                        x: clientX - rect.left,
+                        y: clientY - rect.top
+                    };
+                }
+                
+                // Eventos de mouse
+                canvas.addEventListener('mousedown', (e) => {
+                    isDrawing = true;
+                    const pos = getPosition(e);
+                    [lastX, lastY] = [pos.x, pos.y];
+                });
+                
+                canvas.addEventListener('mousemove', (e) => {
+                    if (!isDrawing) return;
+                    const pos = getPosition(e);
+                    
+                    ctx.strokeStyle = '#000';
+                    ctx.lineWidth = 2;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(lastX, lastY);
+                    ctx.lineTo(pos.x, pos.y);
+                    ctx.stroke();
+                    
+                    [lastX, lastY] = [pos.x, pos.y];
+                    updateSignatureStatus(canvasId, true);
+                });
+                
+                canvas.addEventListener('mouseup', () => {
+                    isDrawing = false;
+                });
+                
+                canvas.addEventListener('mouseout', () => {
+                    isDrawing = false;
+                });
+                
+                // Eventos táctiles (móvil)
+                canvas.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    isDrawing = true;
+                    const pos = getPosition(e);
+                    [lastX, lastY] = [pos.x, pos.y];
+                });
+                
+                canvas.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    if (!isDrawing) return;
+                    const pos = getPosition(e);
+                    
+                    ctx.strokeStyle = '#000';
+                    ctx.lineWidth = 2;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(lastX, lastY);
+                    ctx.lineTo(pos.x, pos.y);
+                    ctx.stroke();
+                    
+                    [lastX, lastY] = [pos.x, pos.y];
+                    updateSignatureStatus(canvasId, true);
+                });
+                
+                canvas.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    isDrawing = false;
+                });
+                
+                signaturePads[canvasId] = { canvas, ctx };
+            });
+        }
+
+        function clearSignature(canvasId) {
+            const pad = signaturePads[canvasId];
+            if (pad) {
+                pad.ctx.clearRect(0, 0, pad.canvas.width, pad.canvas.height);
+                updateSignatureStatus(canvasId, false);
+            }
+        }
+
+        function updateSignatureStatus(canvasId, isSigned) {
+            const statusId = canvasId === 'canvasCliente' ? 'statusCliente' : 'statusInspector';
+            const statusElement = document.getElementById(statusId);
+            
+            if (isSigned) {
+                statusElement.textContent = '✅ Firmado';
+                statusElement.className = 'signature-status status-signed';
+            } else {
+                statusElement.textContent = '⚠️ Sin firmar';
+                statusElement.className = 'signature-status status-unsigned';
+            }
+        }
+
+        function getSignatureData(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            return canvas.toDataURL('image/png');
+        }
+
+        function isCanvasBlank(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            const blank = document.createElement('canvas');
+            blank.width = canvas.width;
+            blank.height = canvas.height;
+            return canvas.toDataURL() === blank.toDataURL();
+        }
+
+        // ========== ASISTENTE DE IA PARA REDACCIÓN ==========
+        
+        async function mejorarConIA(tipo) {
+            const textarea = document.getElementById('alcancesResultados');
+            const textoOriginal = textarea.value.trim();
+            
+            if (!textoOriginal) {
+                showAlert('error', '⚠️ Por favor escribe algo primero antes de usar la IA');
+                return;
+            }
+            
+            const btn = event.target;
+            const textoOriginalBtn = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span>Procesando...';
+            
+            try {
+                let prompt = '';
+                
+                switch(tipo) {
+                    case 'mejorar':
+                        prompt = `Mejora la siguiente descripción técnica de inspección, manteniendo todos los datos técnicos pero haciéndola más clara y profesional. Mantén el formato y estructura, solo mejora la redacción:\n\n${textoOriginal}`;
+                        break;
+                    case 'corregir':
+                        prompt = `Corrige únicamente los errores ortográficos y gramaticales del siguiente texto, sin cambiar el contenido técnico ni el significado:\n\n${textoOriginal}`;
+                        break;
+                    case 'profesional':
+                        prompt = `Reescribe el siguiente texto de manera más profesional y técnica, apropiado para un informe de inspección industrial. Mantén todos los datos técnicos:\n\n${textoOriginal}`;
+                        break;
+                }
+                
+                // Aquí usamos la API de Claude (Anthropic)
+                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': 'TU_API_KEY_DE_ANTHROPIC_AQUI',
+                        'anthropic-version': '2023-06-01'
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-3-5-sonnet-20241022',
+                        max_tokens: 1024,
+                        messages: [{
+                            role: 'user',
+                            content: prompt
+                        }]
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error en la API de IA');
+                }
+                
+                const data = await response.json();
+                const textoMejorado = data.content[0].text;
+                
+                // Animación de cambio de texto
+                textarea.style.opacity = '0.5';
+                setTimeout(() => {
+                    textarea.value = textoMejorado;
+                    textarea.style.opacity = '1';
+                    showAlert('success', '✅ Texto mejorado con IA. Revisa y ajusta si es necesario.');
+                }, 300);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('error', '❌ Error al conectar con la IA. Por favor intenta nuevamente o escribe manualmente.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = textoOriginalBtn;
+            }
+        }
+
+        // Event listeners para botones de IA
+        document.getElementById('btnMejorarIA').addEventListener('click', () => mejorarConIA('mejorar'));
+        document.getElementById('btnCorregirIA').addEventListener('click', () => mejorarConIA('corregir'));
+        document.getElementById('btnProfesionalIA').addEventListener('click', () => mejorarConIA('profesional'));
+
+        // ========== GENERACIÓN Y ENVÍO DEL ACTA ==========
+        
+        function generarNumeroActa() {
+            const fecha = new Date();
+            const año = fecha.getFullYear();
+            const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+            const dia = String(fecha.getDate()).padStart(2, '0');
+            const random = Math.floor(Math.random() * 1000);
+            return `ACT-${año}${mes}${dia}-${random}`;
+        }
+
+        // Inicializar
+        const numeroActa = generarNumeroActa();
+        document.getElementById('displayActaNumber').textContent = numeroActa;
+        document.querySelector('input[name="fechaInspeccion"]').valueAsDate = new Date();
+        
+        // Inicializar firmas al cargar la página
+        window.addEventListener('load', initializeSignaturePads);
+
+        // Manejo del formulario
+        document.getElementById('actaForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            const alertBox = document.getElementById('alertBox');
+
+            // Validar firmas
+            const firmaClienteBlank = isCanvasBlank('canvasCliente');
+            const firmaInspectorBlank = isCanvasBlank('canvasInspector');
+            
+            if (firmaClienteBlank || firmaInspectorBlank) {
+                showAlert('error', '⚠️ Por favor complete ambas firmas digitales antes de enviar.');
+                return;
+            }
+
+            // Recopilar ensayos seleccionados
+            const ensayosSeleccionados = Array.from(document.querySelectorAll('input[name="ensayos"]:checked'))
+                .map(cb => cb.value);
+
+            // Obtener firmas en base64
+            const firmaCliente = getSignatureData('canvasCliente');
+            const firmaInspector = getSignatureData('canvasInspector');
+
+            // Recopilar todos los datos del formulario
+            const formData = {
+                numeroActa: numeroActa,
+                solicitante: document.querySelector('input[name="solicitante"]').value,
+                atencion: document.querySelector('input[name="atencion"]').value,
+                direccion: document.querySelector('input[name="direccion"]').value,
+                ordenTrabajo: document.querySelector('input[name="ordenTrabajo"]').value,
+                fechaInspeccion: document.querySelector('input[name="fechaInspeccion"]').value,
+                proyecto: document.querySelector('input[name="proyecto"]').value,
+                nombreInspector: document.querySelector('input[name="nombreInspector"]').value,
+                procedimientoWSS: document.querySelector('input[name="procedimientoWSS"]').value,
+                correoInspector: document.querySelector('input[name="correoInspector"]').value,
+                normaEvaluacion: document.querySelector('input[name="normaEvaluacion"]').value,
+                correoCliente: document.querySelector('input[name="correoCliente"]').value,
+                normaEjecucion: document.querySelector('input[name="normaEjecucion"]').value,
+                nivelSNT: document.querySelector('input[name="nivelSNT"]').value,
+                material: document.querySelector('input[name="material"]').value,
+                condicionSuperficial: document.querySelector('input[name="condicionSuperficial"]').value,
+                tipoJunta: document.querySelector('input[name="tipoJunta"]').value,
+                iluminacion: document.querySelector('input[name="iluminacion"]').value,
+                espesorMaterial: document.querySelector('input[name="espesorMaterial"]').value,
+                temperaturaMateria: document.querySelector('input[name="temperaturaMateria"]').value,
+                procesoSoldadura: document.querySelector('input[name="procesoSoldadura"]').value,
+                nroRequerimientoCalidad: document.querySelector('input[name="nroRequerimientoCalidad"]').value,
+                ensayos: ensayosSeleccionados.join(', '),
+                alcancesResultados: document.getElementById('alcancesResultados').value,
+                equiposInstrumentos: document.querySelector('textarea[name="equiposInstrumentos"]').value,
+                horarioTerreno: document.querySelector('input[name="horarioTerreno"]').value,
+                horarioViaje: document.querySelector('input[name="horarioViaje"]').value,
+                nombreCliente: document.querySelector('input[name="nombreCliente"]').value,
+                cargoCliente: document.querySelector('input[name="cargoCliente"]').value,
+                sedeWSS: document.querySelector('select[name="sedeWSS"]').value,
+                nombreInspectorFirma: document.querySelector('input[name="nombreInspectorFirma"]').value,
+                firmaCliente: firmaCliente,
+                firmaInspector: firmaInspector,
+                fechaGeneracion: new Date().toISOString()
+            };
+
+            // Validar URL del script
+            if (SCRIPT_URL === 'TU_URL_DE_GOOGLE_APPS_SCRIPT_AQUI') {
+                showAlert('error', '⚠️ Error: Debes configurar la URL de tu Google Apps Script en el código.');
+                return;
+            }
+
+            // Mostrar estado de carga
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading"></span>Generando acta con firmas digitales...';
+            showAlert('info', '⏳ Procesando acta, guardando en Drive y enviando correos...');
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                showAlert('success', `✅ ¡Acta ${numeroActa} generada exitosamente con firmas digitales! Se ha guardado en Drive y enviado por correo a cliente e inspector.`);
+                
+                // Limpiar formulario
+                document.getElementById('actaForm').reset();
+                document.querySelector('input[name="fechaInspeccion"]').valueAsDate = new Date();
+                clearSignature('canvasCliente');
+                clearSignature('canvasInspector');
+                
+                // Generar nuevo número de acta
+                const nuevoNumero = generarNumeroActa();
+                document.getElementById('displayActaNumber').textContent = nuevoNumero;
+
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('error', '❌ Hubo un error al procesar el acta. Por favor, verifica tu conexión e intenta nuevamente.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '✅ Generar y Enviar Acta de Terreno';
+            }
+        });
+
+        function showAlert(type, message) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.className = 'alert alert-' + type;
+            alertBox.textContent = message;
+            alertBox.style.display = 'block';
+
+            if (type === 'success') {
+                setTimeout(() => {
+                    alertBox.style.display = 'none';
+                }, 10000);
+            }
+        }
+
+        // Validación de emails en tiempo real
+        const emailInputs = document.querySelectorAll('input[type="email"]');
+        emailInputs.forEach(input => {
+            input.addEventListener('blur', function() {
+                if (this.value && !isValidEmail(this.value)) {
+                    this.style.borderColor = '#e74c3c';
+                } else {
+                    this.style.borderColor = '#e0e0e0';
+                }
+            });
+        });
+
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+    </script>
+</body>
+</html>
