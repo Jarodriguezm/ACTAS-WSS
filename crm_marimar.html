@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM - Marimar Group</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --blue-dark: #1a3d6b;
+      --blue-mid: #2c5f9e;
+      --blue-light: #4a90e2;
+      --sidebar-w: 260px;
+      --accent: #e8941a;
+      --danger: #e74c3c;
+      --success: #27ae60;
+      --text: #2d3748;
+      --muted: #718096;
+      --border: #e2e8f0;
+      --bg: #f7fafc;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      width: var(--sidebar-w);
+      background: linear-gradient(180deg, var(--blue-dark) 0%, #0d2440 100%);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      overflow-y: auto;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      text-align: center;
+    }
+
+    .sidebar-logo .logo-circle {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, var(--accent), #f5a623);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 700;
+      margin: 0 auto 10px;
+      box-shadow: 0 4px 12px rgba(232,148,26,0.4);
+    }
+
+    .sidebar-logo h2 {
+      font-size: 15px; font-weight: 700; letter-spacing: 0.5px;
+    }
+
+    .sidebar-logo span {
+      font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .sidebar-nav { flex: 1; padding: 12px 0; }
+
+    /* Dashboard link */
+    .nav-home {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 20px; cursor: pointer;
+      color: rgba(255,255,255,0.7);
+      font-size: 13px; font-weight: 500;
+      transition: background 0.2s, color 0.2s;
+      border-radius: 0;
+    }
+
+    .nav-home:hover, .nav-home.active {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+
+    .nav-home .ico { font-size: 16px; width: 20px; text-align: center; }
+
+    /* Groups */
+    .nav-group { margin: 8px 0; }
+
+    .nav-group-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 20px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .nav-group-header .group-label {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1.2px;
+      color: rgba(255,255,255,0.4);
+    }
+
+    .nav-group-header .group-label .g-ico {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+
+    .g-ico.cot { background: rgba(74,144,226,0.25); }
+    .g-ico.ot  { background: rgba(39,174,96,0.25);  }
+    .g-ico.oc  { background: rgba(232,148,26,0.25); }
+
+    .nav-group-header .chevron {
+      font-size: 10px; color: rgba(255,255,255,0.3);
+      transition: transform 0.25s;
+    }
+
+    .nav-group.open .chevron { transform: rotate(90deg); }
+
+    .nav-group-items { display: none; }
+    .nav-group.open .nav-group-items { display: block; }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 20px 9px 46px;
+      cursor: pointer; font-size: 13px;
+      color: rgba(255,255,255,0.65);
+      transition: background 0.15s, color 0.15s;
+      border-left: 3px solid transparent;
+    }
+
+    .nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+
+    .nav-item.active {
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      border-left-color: var(--blue-light);
+    }
+
+    .nav-item .n-ico { font-size: 14px; }
+
+    .nav-item .badge {
+      margin-left: auto;
+      background: var(--blue-light);
+      color: #fff; font-size: 10px; font-weight: 700;
+      border-radius: 10px; padding: 1px 7px;
+    }
+
+    .nav-item .badge.orange { background: var(--accent); }
+    .nav-item .badge.green  { background: var(--success); }
+
+    /* ── MAIN ── */
+    #main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      height: 100vh;
+    }
+
+    .topbar {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50;
+    }
+
+    .topbar-title { font-size: 17px; font-weight: 600; color: var(--text); }
+    .topbar-sub   { font-size: 12px; color: var(--muted); margin-top: 1px; }
+
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+
+    .btn {
+      padding: 8px 16px; border: none; border-radius: 8px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+
+    .btn:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+
+    .btn-primary { background: var(--blue-mid); color: #fff; }
+    .btn-accent  { background: var(--accent);   color: #fff; }
+    .btn-success { background: var(--success);  color: #fff; }
+    .btn-danger  { background: var(--danger);   color: #fff; }
+    .btn-ghost   { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-sm      { padding: 5px 11px; font-size: 12px; }
+
+    .content { padding: 28px 32px; flex: 1; }
+
+    /* ── DASHBOARD ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 18px; margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: #fff; border-radius: 12px;
+      padding: 20px 22px;
+      border: 1px solid var(--border);
+      display: flex; align-items: center; gap: 16px;
+    }
+
+    .stat-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+
+    .si-blue   { background: #ebf4ff; }
+    .si-green  { background: #e8f8f0; }
+    .si-orange { background: #fff4e5; }
+    .si-red    { background: #fef0ef; }
+
+    .stat-info .stat-val { font-size: 26px; font-weight: 700; }
+    .stat-info .stat-lbl { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    .recent-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+    }
+
+    .card {
+      background: #fff; border-radius: 12px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .card-header h3 { font-size: 14px; font-weight: 600; }
+
+    .card-body { padding: 0; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      background: var(--bg); padding: 10px 16px;
+      text-align: left; font-weight: 600; font-size: 11px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--muted); border-bottom: 1px solid var(--border);
+    }
+
+    td { padding: 11px 16px; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafafa; }
+
+    .pill {
+      display: inline-block; padding: 2px 10px;
+      border-radius: 20px; font-size: 11px; font-weight: 600;
+    }
+
+    .pill-blue   { background: #ebf4ff; color: var(--blue-mid); }
+    .pill-green  { background: #e8f8f0; color: var(--success);  }
+    .pill-orange { background: #fff4e5; color: var(--accent);   }
+    .pill-red    { background: #fef0ef; color: var(--danger);   }
+    .pill-gray   { background: #f0f0f0; color: var(--muted);    }
+
+    /* ── FORMS ── */
+    .form-card {
+      background: #fff; border-radius: 12px;
+      border: 1px solid var(--border); padding: 28px;
+      margin-bottom: 20px;
+    }
+
+    .form-card h3 {
+      font-size: 15px; font-weight: 700; margin-bottom: 20px;
+      padding-bottom: 12px; border-bottom: 2px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .form-grid {
+      display: grid; gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .form-grid-2 { grid-template-columns: 1fr 1fr; }
+    .form-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .col-span-2  { grid-column: span 2; }
+    .col-span-3  { grid-column: span 3; }
+
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+
+    .field input, .field select, .field textarea {
+      padding: 9px 12px; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 13px; font-family: inherit;
+      color: var(--text); background: #fff;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: var(--blue-light);
+      box-shadow: 0 0 0 3px rgba(74,144,226,0.15);
+    }
+
+    .field textarea { resize: vertical; min-height: 80px; }
+
+    /* Items table in forms */
+    .items-table-wrap { overflow-x: auto; }
+
+    .items-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .items-tbl th {
+      background: var(--bg); padding: 8px 10px;
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--muted); border: 1px solid var(--border);
+    }
+
+    .items-tbl td {
+      border: 1px solid var(--border); padding: 4px 6px;
+    }
+
+    .items-tbl input, .items-tbl select {
+      width: 100%; border: none; background: transparent;
+      font-size: 13px; font-family: inherit; padding: 5px 4px;
+      outline: none; color: var(--text);
+    }
+
+    .items-tbl tr:hover td { background: #fafafa; }
+
+    .items-footer {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-top: 12px; flex-wrap: wrap; gap: 10px;
+    }
+
+    .total-box {
+      background: var(--bg); border-radius: 10px;
+      padding: 14px 20px; border: 1px solid var(--border);
+      min-width: 240px;
+    }
+
+    .total-row {
+      display: flex; justify-content: space-between;
+      font-size: 13px; padding: 3px 0;
+    }
+
+    .total-row.grand {
+      font-size: 16px; font-weight: 700; padding-top: 8px;
+      border-top: 2px solid var(--border); margin-top: 4px;
+    }
+
+    /* List view toolbar */
+    .list-toolbar {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 18px; flex-wrap: wrap;
+    }
+
+    .search-box {
+      flex: 1; min-width: 200px; max-width: 340px;
+      padding: 8px 14px; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 13px; font-family: inherit;
+      outline: none; transition: border-color 0.2s;
+    }
+
+    .search-box:focus { border-color: var(--blue-light); }
+
+    .filter-select {
+      padding: 8px 12px; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 13px; font-family: inherit;
+      background: #fff; cursor: pointer; outline: none;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45); z-index: 999;
+      align-items: center; justify-content: center;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #fff; border-radius: 14px;
+      padding: 28px; max-width: 520px; width: 90%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+
+    .modal h3 { font-size: 17px; font-weight: 700; margin-bottom: 16px; }
+    .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+    /* Section visibility */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center; padding: 60px 20px; color: var(--muted);
+    }
+
+    .empty-state .emo { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+
+    /* Print styles */
+    @media print {
+      #sidebar, .topbar, .list-toolbar, .btn, .form-actions { display: none !important; }
+      #main { margin-left: 0; }
+      .print-area { display: block !important; }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      :root { --sidebar-w: 0px; }
+      #sidebar { transform: translateX(-260px); width: 260px; transition: transform 0.3s; }
+      #sidebar.mobile-open { transform: translateX(0); }
+      #main { margin-left: 0; }
+      .recent-grid { grid-template-columns: 1fr; }
+      .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
+      .col-span-2, .col-span-3 { grid-column: span 1; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════ SIDEBAR ═══════════════════════ -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-circle">MG</div>
+    <h2>Marimar Group</h2>
+    <span>CRM Empresarial</span>
+  </div>
+
+  <div class="sidebar-nav">
+
+    <div class="nav-home active" onclick="showView('dashboard', this)">
+      <span class="ico">🏠</span> Dashboard
+    </div>
+
+    <!-- COTIZACIONES -->
+    <div class="nav-group open" id="grp-cot">
+      <div class="nav-group-header" onclick="toggleGroup('grp-cot')">
+        <span class="group-label">
+          <span class="g-ico cot">📋</span> Cotizaciones
+        </span>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="nav-group-items">
+        <div class="nav-item" onclick="showView('cot-nueva', this)">
+          <span class="n-ico">➕</span> Nueva Cotización
+        </div>
+        <div class="nav-item" onclick="showView('cot-lista', this)">
+          <span class="n-ico">📄</span> Ver Cotizaciones
+          <span class="badge" id="badge-cot">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- OT -->
+    <div class="nav-group open" id="grp-ot">
+      <div class="nav-group-header" onclick="toggleGroup('grp-ot')">
+        <span class="group-label">
+          <span class="g-ico ot">🔧</span> Órdenes de Trabajo
+        </span>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="nav-group-items">
+        <div class="nav-item" onclick="showView('ot-nueva', this)">
+          <span class="n-ico">➕</span> Nueva OT
+        </div>
+        <div class="nav-item" onclick="showView('ot-lista', this)">
+          <span class="n-ico">🔩</span> Ver OTs
+          <span class="badge green" id="badge-ot">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- OC -->
+    <div class="nav-group open" id="grp-oc">
+      <div class="nav-group-header" onclick="toggleGroup('grp-oc')">
+        <span class="group-label">
+          <span class="g-ico oc">🛒</span> Órdenes de Compra
+        </span>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="nav-group-items">
+        <div class="nav-item" onclick="showView('oc-nueva', this)">
+          <span class="n-ico">➕</span> Nueva OC
+        </div>
+        <div class="nav-item" onclick="showView('oc-lista', this)">
+          <span class="n-ico">📦</span> Ver OCs
+          <span class="badge orange" id="badge-oc">0</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</nav>
+
+<!-- ═══════════════════════ MAIN ═══════════════════════ -->
+<div id="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-sub" id="topbar-sub">Resumen general del sistema</div>
+    </div>
+    <div class="topbar-right">
+      <span style="font-size:12px;color:var(--muted)" id="topbar-date"></span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div id="view-dashboard" class="view active">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon si-blue">📋</div>
+          <div class="stat-info">
+            <div class="stat-val" id="dash-cot">0</div>
+            <div class="stat-lbl">Cotizaciones totales</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon si-green">🔧</div>
+          <div class="stat-info">
+            <div class="stat-val" id="dash-ot">0</div>
+            <div class="stat-lbl">Órdenes de Trabajo</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon si-orange">🛒</div>
+          <div class="stat-info">
+            <div class="stat-val" id="dash-oc">0</div>
+            <div class="stat-lbl">Órdenes de Compra</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon si-red">💰</div>
+          <div class="stat-info">
+            <div class="stat-val" id="dash-total">$0</div>
+            <div class="stat-lbl">Monto total cotizado</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="recent-grid">
+        <div class="card">
+          <div class="card-header">
+            <h3>📋 Últimas Cotizaciones</h3>
+            <button class="btn btn-primary btn-sm" onclick="showView('cot-lista')">Ver todas</button>
+          </div>
+          <div class="card-body">
+            <table>
+              <thead><tr><th>N°</th><th>Cliente</th><th>Monto</th><th>Estado</th></tr></thead>
+              <tbody id="dash-cot-rows"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">Sin registros</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>🔧 Últimas OTs</h3>
+            <button class="btn btn-success btn-sm" onclick="showView('ot-lista')">Ver todas</button>
+          </div>
+          <div class="card-body">
+            <table>
+              <thead><tr><th>N°</th><th>Cliente</th><th>Técnico</th><th>Estado</th></tr></thead>
+              <tbody id="dash-ot-rows"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">Sin registros</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ COTIZACIÓN NUEVA ══ -->
+    <div id="view-cot-nueva" class="view">
+      <form id="form-cot" onsubmit="saveCot(event)">
+        <div class="form-card">
+          <h3>📋 Datos del Documento</h3>
+          <div class="form-grid form-grid-3">
+            <div class="field">
+              <label>N° Cotización</label>
+              <input type="text" id="cot-num" placeholder="COT-0001" required>
+            </div>
+            <div class="field">
+              <label>Fecha</label>
+              <input type="date" id="cot-fecha" required>
+            </div>
+            <div class="field">
+              <label>Validez (días)</label>
+              <input type="number" id="cot-validez" value="30" min="1">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h3>👤 Datos del Cliente</h3>
+          <div class="form-grid form-grid-2">
+            <div class="field">
+              <label>Razón Social / Cliente</label>
+              <input type="text" id="cot-cliente" placeholder="Nombre empresa o persona" required>
+            </div>
+            <div class="field">
+              <label>RUT</label>
+              <input type="text" id="cot-rut" placeholder="12.345.678-9">
+            </div>
+            <div class="field">
+              <label>Contacto</label>
+              <input type="text" id="cot-contacto" placeholder="Nombre del contacto">
+            </div>
+            <div class="field">
+              <label>Email</label>
+              <input type="email" id="cot-email" placeholder="contacto@empresa.cl">
+            </div>
+            <div class="field col-span-2">
+              <label>Proyecto / Obra</label>
+              <input type="text" id="cot-proyecto" placeholder="Descripción del proyecto">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h3>📦 Ítems de Cotización</h3>
+          <div class="items-table-wrap">
+            <table class="items-tbl" id="cot-items-tbl">
+              <thead>
+                <tr>
+                  <th style="width:40px">#</th>
+                  <th>Descripción</th>
+                  <th style="width:90px">Unidad</th>
+                  <th style="width:80px">Cant.</th>
+                  <th style="width:120px">P. Unitario</th>
+                  <th style="width:130px">Total</th>
+                  <th style="width:40px"></th>
+                </tr>
+              </thead>
+              <tbody id="cot-items-body">
+                <!-- rows added by JS -->
+              </tbody>
+            </table>
+          </div>
+          <div class="items-footer">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="addItem('cot')">➕ Agregar ítem</button>
+            <div class="total-box">
+              <div class="total-row"><span>Subtotal</span><span id="cot-subtotal">$0</span></div>
+              <div class="total-row"><span>IVA (19%)</span><span id="cot-iva">$0</span></div>
+              <div class="total-row grand"><span>TOTAL</span><span id="cot-total">$0</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h3>📝 Condiciones y Observaciones</h3>
+          <div class="form-grid form-grid-2">
+            <div class="field">
+              <label>Forma de Pago</label>
+              <select id="cot-pago">
+                <option>30 días</option>
+                <option>60 días</option>
+                <option>Contado</option>
+                <option>50% anticipo / 50% entrega</option>
+                <option>Otra</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Tiempo de Entrega</label>
+              <input type="text" id="cot-entrega" placeholder="ej: 10 días hábiles">
+            </div>
+            <div class="field col-span-2">
+              <label>Observaciones</label>
+              <textarea id="cot-obs" placeholder="Notas adicionales, condiciones especiales…"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions" style="display:flex;gap:12px;justify-content:flex-end">
+          <button type="button" class="btn btn-ghost" onclick="resetCot()">Limpiar</button>
+          <button type="submit" class="btn btn-primary">💾 Guardar Cotización</button>
+          <button type="button" class="btn btn-accent" onclick="printDoc('cot')">🖨️ Generar PDF</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- ══ COTIZACIÓN LISTA ══ -->
+    <div id="view-cot-lista" class="view">
+      <div class="list-toolbar">
+        <input class="search-box" type="text" placeholder="🔍 Buscar cotización…" oninput="filterList('cot', this.value)">
+        <select class="filter-select" onchange="filterList('cot', document.querySelector('#view-cot-lista .search-box').value, this.value)">
+          <option value="">Todos los estados</option>
+          <option>Pendiente</option>
+          <option>Aprobada</option>
+          <option>Rechazada</option>
+        </select>
+        <button class="btn btn-primary" onclick="showView('cot-nueva')">➕ Nueva Cotización</button>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <table>
+            <thead>
+              <tr>
+                <th>N°</th><th>Fecha</th><th>Cliente</th><th>Proyecto</th>
+                <th>Monto Total</th><th>Estado</th><th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="cot-list-body">
+              <tr><td colspan="7" class="empty-state"><div class="emo">📋</div><p>No hay cotizaciones registradas</p></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ OT NUEVA ══ -->
+    <div id="view-ot-nueva" class="view">
+      <form id="form-ot" onsubmit="saveOT(event)">
+        <div class="form-card">
+          <h3>🔧 Datos de la Orden de Trabajo</h3>
+          <div class="form-grid form-grid-3">
+            <div class="field">
+              <label>N° OT</label>
+              <input type="text" id="ot-num" placeholder="OT-0001" required>
+            </div>
+            <div class="field">
+              <label>Fecha Emisión</label>
+              <input type="date" id="ot-fecha" required>
+            </div>
+            <div class="field">
+              <label>Estado</label>
+              <select id="ot-estado">
+                <option>Pendiente</option>
+                <option>En Proceso</option>
+                <option>Completada</option>
+                <option>Pausada</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Fecha Inicio</label>
+              <input type="date" id="ot-inicio">
+            </div>
+            <div class="field">
+              <label>Fecha Término</label>
+              <input type="date" id="ot-termino">
+            </div>
+            <div class="field">
+              <label>Prioridad</label>
+              <select id="ot-prioridad">
+                <option>Normal</option>
+                <option>Alta</option>
+                <option>Urgente</option>
+                <option>Baja</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h3>👤 Cliente y Proyecto</h3>
+          <div class="form-grid form-grid-2">
+            <div class="field">
+              <label>Cliente</label>
+              <input type="text" id="ot-cliente" placeholder="Nombre empresa o persona" required>
+            </div>
+            <div class="field">
+              <label>Proyecto / Obra</label>
+              <input type="text" id="ot-proyecto" placeholder="Nombre del proyecto">
+            </div>
+            <div class="field">
+              <label>Dirección de Trabajo</label>
+              <input type="text" id="ot-direccion" placeholder="Lugar de ejecución">
+            </div>
+            <div class="field">
+              <label>Técnico Responsable</label>
+              <input type="text" id="ot-tecnico" placeholder="Nombre del técnico" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h3>🛠️ Descripción del Trabajo</h3>
+          <div class="form-grid" style="grid-template-columns:1fr">
+            <div class="field">
+              <label>Descripción General</label>
+              <textarea id="ot-descripcion" rows="3" placeholder="Detalle el trabajo a realizar…" required></textarea>
+            </div>
+          </div>
+          <br>
+          <div class="items-table-wrap">
+            <table class="items-tbl" id="ot-items-tbl">
+              <thead>
+                <tr>
+                  <th style="width:40px">#</th>
+                  <th>Actividad / Tarea</th>
+                  <th style="width:100px">Unidad</th>
+                  <th style="width:80px">Cant.</th>
+                  <th style="width:120px">H/H o Costo</th>
+                  <th style="width:130px">Total</th>
+                  <th style="width:40px"></th>
+                </tr>
+              </thead>
+              <tbody id="ot-items-body"></tbody>
+            </table>
+          </div>
+          <div class="items-footer">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="addItem('ot')">➕ Agregar actividad</button>
+            <div class="total-box">
+              <div class="total-row"><span>Subtotal</span><span id="ot-subtotal">$0</span></div>
+              <div class="total-row"><span>IVA (19%)</span><span id="ot-iva">$0</span></div>
+              <div class="total-row grand"><span>TOTAL</span><span id="ot-total">$0</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h3>📝 Materiales y Observaciones</h3>
+          <div class="form-grid form-grid-2">
+            <div class="field">
+              <label>Materiales Incluidos</label>
+              <select id="ot-materiales">
+                <option>Incluidos</option>
+                <option>No incluidos</option>
+                <option>Parcialmente incluidos</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Cotización Referencia</label>
+              <input type="text" id="ot-cot-ref" placeholder="COT-0001">
+            </div>
+            <div class="field col-span-2">
+              <label>Observaciones</label>
+              <textarea id="ot-obs" placeholder="Condiciones, restricciones u otras observaciones…"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions" style="display:flex;gap:12px;justify-content:flex-end">
+          <button type="button" class="btn btn-ghost" onclick="resetOT()">Limpiar</button>
+          <button type="submit" class="btn btn-success">💾 Guardar OT</button>
+          <button type="button" class="btn btn-accent" onclick="printDoc('ot')">🖨️ Generar PDF</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- ══ OT LISTA ══ -->
+    <div id="view-ot-lista" class="view">
+      <div class="list-toolbar">
+        <input class="search-box" type="text" placeholder="🔍 Buscar OT…" oninput="filterList('ot', this.value)">
+        <select class="filter-select" onchange="filterList('ot', document.querySelector('#view-ot-lista .search-box').value, this.value)">
+          <option value="">Todos los estados</option>
+          <option>Pendiente</option>
+          <option>En Proceso</option>
+          <option>Completada</option>
+          <option>Pausada</option>
+        </select>
+        <button class="btn btn-success" onclick="showView('ot-nueva')">➕ Nueva OT</button>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <table>
+            <thead>
+              <tr>
+                <th>N°</th><th>Fecha</th><th>Cliente</th><th>Técnico</th>
+                <th>Monto</th><th>Prioridad</th><th>Estado</th><th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="ot-list-body">
+              <tr><td colspan="8" class="empty-state"><div class="emo">🔧</div><p>No hay OTs registradas</p></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ OC NUEVA ══ -->
+    <div id="view-oc-nueva" class="view">
+      <form id="form-oc" onsubmit="saveOC(event)">
+        <div class="form-card">
+          <h3>🛒 Datos de la Orden de Compra</h3>
+          <div class="form-grid form-grid-3">
+            <div class="field">
+              <label>N° OC</label>
+              <input type="text" id="oc-num" placeholder="OC-0001" required>
+            </div>
+            <div class="field">
+              <label>Fecha</label>
+              <input type="date" id="oc-fecha" required>
+            </div>
+            <div class="field">
+              <label>Estado</label>
+              <select id="oc-estado">
+                <option>Pendiente</option>
+                <option>Aprobada</option>
+                <option>Recibida</option>
+                <option>Anulada</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h3>🏭 Datos del Proveedor</h3>
+          <div class="form-grid form-grid-2">
+            <div class="field">
+              <label>Proveedor</label>
+              <input type="text" id="oc-proveedor" placeholder="Nombre empresa proveedora" required>
+            </div>
+            <div class="field">
+              <label>RUT Proveedor</label>
+              <input type="text" id="oc-rut" placeholder="12.345.678-9">
+            </div>
+            <div class="field">
+              <label>Contacto Proveedor</label>
+              <input type="text" id="oc-contacto" placeholder="Nombre contacto">
+            </div>
+            <div class="field">
+              <label>Email Proveedor</label>
+              <input type="email" id="oc-email" placeholder="ventas@proveedor.cl">
+            </div>
+            <div class="field">
+              <label>Proyecto / Centro de Costo</label>
+              <input type="text" id="oc-proyecto" placeholder="Proyecto destino">
+            </div>
+            <div class="field">
+              <label>OT Referencia</label>
+              <input type="text" id="oc-ot-ref" placeholder="OT-0001">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h3>📦 Ítems a Comprar</h3>
+          <div class="items-table-wrap">
+            <table class="items-tbl">
+              <thead>
+                <tr>
+                  <th style="width:40px">#</th>
+                  <th>Descripción / Ítem</th>
+                  <th style="width:90px">Unidad</th>
+                  <th style="width:80px">Cant.</th>
+                  <th style="width:120px">P. Unitario</th>
+                  <th style="width:130px">Total</th>
+                  <th style="width:40px"></th>
+                </tr>
+              </thead>
+              <tbody id="oc-items-body"></tbody>
+            </table>
+          </div>
+          <div class="items-footer">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="addItem('oc')">➕ Agregar ítem</button>
+            <div class="total-box">
+              <div class="total-row"><span>Subtotal</span><span id="oc-subtotal">$0</span></div>
+              <div class="total-row"><span>IVA (19%)</span><span id="oc-iva">$0</span></div>
+              <div class="total-row grand"><span>TOTAL</span><span id="oc-total">$0</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h3>📝 Condiciones de Compra</h3>
+          <div class="form-grid form-grid-2">
+            <div class="field">
+              <label>Condición de Pago</label>
+              <select id="oc-pago">
+                <option>30 días</option>
+                <option>60 días</option>
+                <option>Contado</option>
+                <option>Transferencia inmediata</option>
+                <option>Otra</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Lugar de Entrega</label>
+              <input type="text" id="oc-entrega" placeholder="Dirección de entrega">
+            </div>
+            <div class="field">
+              <label>Fecha Entrega Esperada</label>
+              <input type="date" id="oc-fecha-entrega">
+            </div>
+            <div class="field">
+              <label>Solicitado por</label>
+              <input type="text" id="oc-solicitante" placeholder="Nombre responsable">
+            </div>
+            <div class="field col-span-2">
+              <label>Observaciones</label>
+              <textarea id="oc-obs" placeholder="Instrucciones de entrega, condiciones especiales…"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions" style="display:flex;gap:12px;justify-content:flex-end">
+          <button type="button" class="btn btn-ghost" onclick="resetOC()">Limpiar</button>
+          <button type="submit" class="btn btn-accent">💾 Guardar OC</button>
+          <button type="button" class="btn btn-accent" onclick="printDoc('oc')">🖨️ Generar PDF</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- ══ OC LISTA ══ -->
+    <div id="view-oc-lista" class="view">
+      <div class="list-toolbar">
+        <input class="search-box" type="text" placeholder="🔍 Buscar OC…" oninput="filterList('oc', this.value)">
+        <select class="filter-select" onchange="filterList('oc', document.querySelector('#view-oc-lista .search-box').value, this.value)">
+          <option value="">Todos los estados</option>
+          <option>Pendiente</option>
+          <option>Aprobada</option>
+          <option>Recibida</option>
+          <option>Anulada</option>
+        </select>
+        <button class="btn btn-accent" onclick="showView('oc-nueva')">➕ Nueva OC</button>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <table>
+            <thead>
+              <tr>
+                <th>N°</th><th>Fecha</th><th>Proveedor</th><th>Proyecto</th>
+                <th>Monto Total</th><th>Estado</th><th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="oc-list-body">
+              <tr><td colspan="7" class="empty-state"><div class="emo">🛒</div><p>No hay OCs registradas</p></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- Modal de confirmación de eliminación -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal">
+    <h3>⚠️ Confirmar Eliminación</h3>
+    <p style="font-size:14px;color:var(--muted)">¿Está seguro que desea eliminar este registro? Esta acción no se puede deshacer.</p>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-danger" id="confirm-delete-btn">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ JAVASCRIPT ═══════════════════════ -->
+<script>
+// ── State ──────────────────────────────────────────────────
+const DB = {
+  cot: JSON.parse(localStorage.getItem('mg_cot') || '[]'),
+  ot:  JSON.parse(localStorage.getItem('mg_ot')  || '[]'),
+  oc:  JSON.parse(localStorage.getItem('mg_oc')  || '[]'),
+};
+
+let currentView = 'dashboard';
+let deleteTarget = null; // { type, id }
+let itemCounts = { cot: 0, ot: 0, oc: 0 };
+
+// ── Navigation ─────────────────────────────────────────────
+function showView(key, navEl) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item, .nav-home').forEach(n => n.classList.remove('active'));
+
+  const viewEl = document.getElementById('view-' + key);
+  if (viewEl) viewEl.classList.add('active');
+  if (navEl) navEl.classList.add('active');
+
+  currentView = key;
+
+  const titles = {
+    'dashboard':  ['Dashboard', 'Resumen general del sistema'],
+    'cot-nueva':  ['Nueva Cotización', 'Complete el formulario para generar una cotización'],
+    'cot-lista':  ['Cotizaciones', 'Listado de cotizaciones registradas'],
+    'ot-nueva':   ['Nueva Orden de Trabajo', 'Complete el formulario para generar una OT'],
+    'ot-lista':   ['Órdenes de Trabajo', 'Listado de órdenes de trabajo'],
+    'oc-nueva':   ['Nueva Orden de Compra', 'Complete el formulario para generar una OC'],
+    'oc-lista':   ['Órdenes de Compra', 'Listado de órdenes de compra'],
+  };
+
+  const t = titles[key] || [key, ''];
+  document.getElementById('topbar-title').textContent = t[0];
+  document.getElementById('topbar-sub').textContent = t[1];
+
+  if (key === 'dashboard')  refreshDashboard();
+  if (key === 'cot-lista')  renderList('cot');
+  if (key === 'ot-lista')   renderList('ot');
+  if (key === 'oc-lista')   renderList('oc');
+  if (key === 'cot-nueva')  { ensureItems('cot'); autoNum('cot'); }
+  if (key === 'ot-nueva')   { ensureItems('ot');  autoNum('ot'); }
+  if (key === 'oc-nueva')   { ensureItems('oc');  autoNum('oc'); }
+}
+
+function toggleGroup(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+// ── Date ───────────────────────────────────────────────────
+(function setDate() {
+  const d = new Date();
+  document.getElementById('topbar-date').textContent =
+    d.toLocaleDateString('es-CL', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  // Set today as default in date inputs
+  const today = d.toISOString().split('T')[0];
+  ['cot-fecha','ot-fecha','oc-fecha'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = today;
+  });
+})();
+
+// ── Auto numbering ─────────────────────────────────────────
+function autoNum(type) {
+  const prefixes = { cot:'COT', ot:'OT', oc:'OC' };
+  const count = DB[type].length + 1;
+  const numEl = document.getElementById(type + '-num');
+  if (numEl && !numEl.dataset.edited) {
+    numEl.value = prefixes[type] + '-' + String(count).padStart(4,'0');
+  }
+}
+
+// ── Items table ────────────────────────────────────────────
+function ensureItems(type) {
+  const tbody = document.getElementById(type + '-items-body');
+  if (tbody && tbody.children.length === 0) addItem(type);
+}
+
+function addItem(type) {
+  const tbody = document.getElementById(type + '-items-body');
+  const idx = tbody.children.length + 1;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td style="text-align:center;color:var(--muted)">${idx}</td>
+    <td><input type="text" placeholder="Descripción del ítem"></td>
+    <td><input type="text" placeholder="UN" style="text-align:center"></td>
+    <td><input type="number" placeholder="0" min="0" oninput="recalc('${type}')" style="text-align:right"></td>
+    <td><input type="number" placeholder="0" min="0" oninput="recalc('${type}')" style="text-align:right"></td>
+    <td style="text-align:right;font-weight:600;color:var(--blue-mid)">$0</td>
+    <td><button type="button" style="background:none;border:none;cursor:pointer;color:var(--danger);font-size:16px"
+        onclick="removeItem(this,'${type}')">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+  recalc(type);
+}
+
+function removeItem(btn, type) {
+  btn.closest('tr').remove();
+  // renumber
+  const tbody = document.getElementById(type + '-items-body');
+  Array.from(tbody.children).forEach((tr, i) => { tr.cells[0].textContent = i + 1; });
+  recalc(type);
+}
+
+function recalc(type) {
+  const tbody = document.getElementById(type + '-items-body');
+  let sub = 0;
+  Array.from(tbody.children).forEach(tr => {
+    const qty   = parseFloat(tr.cells[3].querySelector('input')?.value) || 0;
+    const price = parseFloat(tr.cells[4].querySelector('input')?.value) || 0;
+    const line  = qty * price;
+    tr.cells[5].textContent = '$' + fmt(line);
+    sub += line;
+  });
+  const iva   = sub * 0.19;
+  const total = sub + iva;
+  document.getElementById(type + '-subtotal').textContent = '$' + fmt(sub);
+  document.getElementById(type + '-iva').textContent      = '$' + fmt(iva);
+  document.getElementById(type + '-total').textContent    = '$' + fmt(total);
+}
+
+function getItems(type) {
+  const tbody = document.getElementById(type + '-items-body');
+  return Array.from(tbody.children).map(tr => ({
+    desc:  tr.cells[1].querySelector('input')?.value || '',
+    unit:  tr.cells[2].querySelector('input')?.value || '',
+    qty:   parseFloat(tr.cells[3].querySelector('input')?.value) || 0,
+    price: parseFloat(tr.cells[4].querySelector('input')?.value) || 0,
+    total: (parseFloat(tr.cells[3].querySelector('input')?.value) || 0) *
+           (parseFloat(tr.cells[4].querySelector('input')?.value) || 0),
+  }));
+}
+
+// ── Formatters ─────────────────────────────────────────────
+function fmt(n) {
+  return Math.round(n).toLocaleString('es-CL');
+}
+
+function statusPill(st) {
+  const map = {
+    'Pendiente':   'pill-orange',
+    'Aprobada':    'pill-green',
+    'Rechazada':   'pill-red',
+    'En Proceso':  'pill-blue',
+    'Completada':  'pill-green',
+    'Pausada':     'pill-gray',
+    'Recibida':    'pill-green',
+    'Anulada':     'pill-red',
+  };
+  return `<span class="pill ${map[st] || 'pill-gray'}">${st}</span>`;
+}
+
+function prioColor(p) {
+  const map = { 'Urgente':'pill-red','Alta':'pill-orange','Normal':'pill-blue','Baja':'pill-gray' };
+  return `<span class="pill ${map[p]||'pill-gray'}">${p}</span>`;
+}
+
+// ── Save / Storage ─────────────────────────────────────────
+function persist(type) {
+  localStorage.setItem('mg_' + type, JSON.stringify(DB[type]));
+  updateBadges();
+}
+
+function updateBadges() {
+  ['cot','ot','oc'].forEach(t => {
+    document.getElementById('badge-' + t).textContent = DB[t].length;
+  });
+}
+
+// ── COTIZACIÓN save ────────────────────────────────────────
+function saveCot(e) {
+  e.preventDefault();
+  const items = getItems('cot');
+  const sub = items.reduce((a,i) => a + i.total, 0);
+  const record = {
+    id:        Date.now(),
+    num:       document.getElementById('cot-num').value,
+    fecha:     document.getElementById('cot-fecha').value,
+    validez:   document.getElementById('cot-validez').value,
+    cliente:   document.getElementById('cot-cliente').value,
+    rut:       document.getElementById('cot-rut').value,
+    contacto:  document.getElementById('cot-contacto').value,
+    email:     document.getElementById('cot-email').value,
+    proyecto:  document.getElementById('cot-proyecto').value,
+    pago:      document.getElementById('cot-pago').value,
+    entrega:   document.getElementById('cot-entrega').value,
+    obs:       document.getElementById('cot-obs').value,
+    items,
+    subtotal:  sub,
+    iva:       sub * 0.19,
+    total:     sub * 1.19,
+    estado:    'Pendiente',
+  };
+  DB.cot.push(record);
+  persist('cot');
+  alert('✅ Cotización ' + record.num + ' guardada correctamente.');
+  resetCot();
+  showView('cot-lista');
+}
+
+function resetCot() {
+  document.getElementById('form-cot').reset();
+  document.getElementById('cot-items-body').innerHTML = '';
+  document.getElementById('cot-num').dataset.edited = '';
+  autoNum('cot');
+  addItem('cot');
+}
+
+// ── OT save ────────────────────────────────────────────────
+function saveOT(e) {
+  e.preventDefault();
+  const items = getItems('ot');
+  const sub = items.reduce((a,i) => a + i.total, 0);
+  const record = {
+    id:          Date.now(),
+    num:         document.getElementById('ot-num').value,
+    fecha:       document.getElementById('ot-fecha').value,
+    estado:      document.getElementById('ot-estado').value,
+    prioridad:   document.getElementById('ot-prioridad').value,
+    inicio:      document.getElementById('ot-inicio').value,
+    termino:     document.getElementById('ot-termino').value,
+    cliente:     document.getElementById('ot-cliente').value,
+    proyecto:    document.getElementById('ot-proyecto').value,
+    direccion:   document.getElementById('ot-direccion').value,
+    tecnico:     document.getElementById('ot-tecnico').value,
+    descripcion: document.getElementById('ot-descripcion').value,
+    materiales:  document.getElementById('ot-materiales').value,
+    cotRef:      document.getElementById('ot-cot-ref').value,
+    obs:         document.getElementById('ot-obs').value,
+    items,
+    subtotal:    sub,
+    iva:         sub * 0.19,
+    total:       sub * 1.19,
+  };
+  DB.ot.push(record);
+  persist('ot');
+  alert('✅ Orden de Trabajo ' + record.num + ' guardada correctamente.');
+  resetOT();
+  showView('ot-lista');
+}
+
+function resetOT() {
+  document.getElementById('form-ot').reset();
+  document.getElementById('ot-items-body').innerHTML = '';
+  document.getElementById('ot-num').dataset.edited = '';
+  autoNum('ot');
+  addItem('ot');
+}
+
+// ── OC save ────────────────────────────────────────────────
+function saveOC(e) {
+  e.preventDefault();
+  const items = getItems('oc');
+  const sub = items.reduce((a,i) => a + i.total, 0);
+  const record = {
+    id:           Date.now(),
+    num:          document.getElementById('oc-num').value,
+    fecha:        document.getElementById('oc-fecha').value,
+    estado:       document.getElementById('oc-estado').value,
+    proveedor:    document.getElementById('oc-proveedor').value,
+    rut:          document.getElementById('oc-rut').value,
+    contacto:     document.getElementById('oc-contacto').value,
+    email:        document.getElementById('oc-email').value,
+    proyecto:     document.getElementById('oc-proyecto').value,
+    otRef:        document.getElementById('oc-ot-ref').value,
+    pago:         document.getElementById('oc-pago').value,
+    entrega:      document.getElementById('oc-entrega').value,
+    fechaEntrega: document.getElementById('oc-fecha-entrega').value,
+    solicitante:  document.getElementById('oc-solicitante').value,
+    obs:          document.getElementById('oc-obs').value,
+    items,
+    subtotal:     sub,
+    iva:          sub * 0.19,
+    total:        sub * 1.19,
+  };
+  DB.oc.push(record);
+  persist('oc');
+  alert('✅ Orden de Compra ' + record.num + ' guardada correctamente.');
+  resetOC();
+  showView('oc-lista');
+}
+
+function resetOC() {
+  document.getElementById('form-oc').reset();
+  document.getElementById('oc-items-body').innerHTML = '';
+  document.getElementById('oc-num').dataset.edited = '';
+  autoNum('oc');
+  addItem('oc');
+}
+
+// ── List renderers ─────────────────────────────────────────
+function renderList(type, filter = '', statusFilter = '') {
+  const body = document.getElementById(type + '-list-body');
+  let data = DB[type].filter(r => {
+    const search = filter.toLowerCase();
+    const matchText = !search || JSON.stringify(r).toLowerCase().includes(search);
+    const matchStatus = !statusFilter || (r.estado || r.estado) === statusFilter;
+    return matchText && matchStatus;
+  });
+
+  if (!data.length) {
+    const labels = { cot:'cotizaciones', ot:'órdenes de trabajo', oc:'órdenes de compra' };
+    body.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:30px">Sin ${labels[type]} que mostrar</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = data.map(r => {
+    if (type === 'cot') return `
+      <tr>
+        <td><strong>${r.num}</strong></td>
+        <td>${r.fecha}</td>
+        <td>${r.cliente}</td>
+        <td>${r.proyecto || '—'}</td>
+        <td><strong>$${fmt(r.total)}</strong></td>
+        <td>${statusPill(r.estado)}</td>
+        <td>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="changeStatus('cot',${r.id})">⚡ Estado</button>
+            <button class="btn btn-primary btn-sm" onclick="printRecord('cot',${r.id})">🖨️</button>
+            <button class="btn btn-danger btn-sm" onclick="confirmDelete('cot',${r.id})">🗑️</button>
+          </div>
+        </td>
+      </tr>`;
+    if (type === 'ot') return `
+      <tr>
+        <td><strong>${r.num}</strong></td>
+        <td>${r.fecha}</td>
+        <td>${r.cliente}</td>
+        <td>${r.tecnico}</td>
+        <td><strong>$${fmt(r.total)}</strong></td>
+        <td>${prioColor(r.prioridad)}</td>
+        <td>${statusPill(r.estado)}</td>
+        <td>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="changeStatus('ot',${r.id})">⚡ Estado</button>
+            <button class="btn btn-success btn-sm" onclick="printRecord('ot',${r.id})">🖨️</button>
+            <button class="btn btn-danger btn-sm" onclick="confirmDelete('ot',${r.id})">🗑️</button>
+          </div>
+        </td>
+      </tr>`;
+    if (type === 'oc') return `
+      <tr>
+        <td><strong>${r.num}</strong></td>
+        <td>${r.fecha}</td>
+        <td>${r.proveedor}</td>
+        <td>${r.proyecto || '—'}</td>
+        <td><strong>$${fmt(r.total)}</strong></td>
+        <td>${statusPill(r.estado)}</td>
+        <td>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="changeStatus('oc',${r.id})">⚡ Estado</button>
+            <button class="btn btn-accent btn-sm" onclick="printRecord('oc',${r.id})">🖨️</button>
+            <button class="btn btn-danger btn-sm" onclick="confirmDelete('oc',${r.id})">🗑️</button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function filterList(type, text, status) {
+  renderList(type, text || '', status || '');
+}
+
+// ── Status change ──────────────────────────────────────────
+function changeStatus(type, id) {
+  const r = DB[type].find(x => x.id === id);
+  if (!r) return;
+
+  const statusMap = {
+    cot: ['Pendiente','Aprobada','Rechazada'],
+    ot:  ['Pendiente','En Proceso','Completada','Pausada'],
+    oc:  ['Pendiente','Aprobada','Recibida','Anulada'],
+  };
+
+  const opts = statusMap[type];
+  const current = opts.indexOf(r.estado);
+  const next = opts[(current + 1) % opts.length];
+  r.estado = next;
+  persist(type);
+  renderList(type);
+}
+
+// ── Delete ─────────────────────────────────────────────────
+function confirmDelete(type, id) {
+  deleteTarget = { type, id };
+  document.getElementById('delete-modal').classList.add('open');
+}
+
+function closeModal() {
+  deleteTarget = null;
+  document.getElementById('delete-modal').classList.remove('open');
+}
+
+document.getElementById('confirm-delete-btn').onclick = function() {
+  if (!deleteTarget) return;
+  const { type, id } = deleteTarget;
+  DB[type] = DB[type].filter(r => r.id !== id);
+  persist(type);
+  renderList(type);
+  closeModal();
+};
+
+// ── Dashboard ──────────────────────────────────────────────
+function refreshDashboard() {
+  document.getElementById('dash-cot').textContent = DB.cot.length;
+  document.getElementById('dash-ot').textContent  = DB.ot.length;
+  document.getElementById('dash-oc').textContent  = DB.oc.length;
+
+  const totalCot = DB.cot.reduce((a,r) => a + r.total, 0);
+  document.getElementById('dash-total').textContent = '$' + fmt(totalCot);
+
+  // Recent cots
+  const cotRows = document.getElementById('dash-cot-rows');
+  const recentCot = DB.cot.slice(-5).reverse();
+  cotRows.innerHTML = recentCot.length
+    ? recentCot.map(r => `<tr>
+        <td><strong>${r.num}</strong></td>
+        <td>${r.cliente}</td>
+        <td>$${fmt(r.total)}</td>
+        <td>${statusPill(r.estado)}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px">Sin registros</td></tr>';
+
+  // Recent OTs
+  const otRows = document.getElementById('dash-ot-rows');
+  const recentOT = DB.ot.slice(-5).reverse();
+  otRows.innerHTML = recentOT.length
+    ? recentOT.map(r => `<tr>
+        <td><strong>${r.num}</strong></td>
+        <td>${r.cliente}</td>
+        <td>${r.tecnico}</td>
+        <td>${statusPill(r.estado)}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px">Sin registros</td></tr>';
+}
+
+// ── Print / PDF ────────────────────────────────────────────
+function printRecord(type, id) {
+  const r = DB[type].find(x => x.id === id);
+  if (r) generatePrintWindow(type, r);
+}
+
+function printDoc(type) {
+  // Collect current form data for preview before saving
+  const items = getItems(type);
+  const sub = items.reduce((a,i) => a + i.total, 0);
+  const mock = { ...collectForm(type), items, subtotal: sub, iva: sub*0.19, total: sub*1.19 };
+  generatePrintWindow(type, mock);
+}
+
+function collectForm(type) {
+  if (type === 'cot') return {
+    num: document.getElementById('cot-num').value,
+    fecha: document.getElementById('cot-fecha').value,
+    validez: document.getElementById('cot-validez').value,
+    cliente: document.getElementById('cot-cliente').value,
+    rut: document.getElementById('cot-rut').value,
+    contacto: document.getElementById('cot-contacto').value,
+    email: document.getElementById('cot-email').value,
+    proyecto: document.getElementById('cot-proyecto').value,
+    pago: document.getElementById('cot-pago').value,
+    entrega: document.getElementById('cot-entrega').value,
+    obs: document.getElementById('cot-obs').value,
+    estado: 'Borrador',
+  };
+  if (type === 'ot') return {
+    num: document.getElementById('ot-num').value,
+    fecha: document.getElementById('ot-fecha').value,
+    estado: document.getElementById('ot-estado').value,
+    prioridad: document.getElementById('ot-prioridad').value,
+    cliente: document.getElementById('ot-cliente').value,
+    proyecto: document.getElementById('ot-proyecto').value,
+    tecnico: document.getElementById('ot-tecnico').value,
+    descripcion: document.getElementById('ot-descripcion').value,
+    obs: document.getElementById('ot-obs').value,
+  };
+  if (type === 'oc') return {
+    num: document.getElementById('oc-num').value,
+    fecha: document.getElementById('oc-fecha').value,
+    estado: document.getElementById('oc-estado').value,
+    proveedor: document.getElementById('oc-proveedor').value,
+    rut: document.getElementById('oc-rut').value,
+    contacto: document.getElementById('oc-contacto').value,
+    email: document.getElementById('oc-email').value,
+    proyecto: document.getElementById('oc-proyecto').value,
+    pago: document.getElementById('oc-pago').value,
+    entrega: document.getElementById('oc-entrega').value,
+    solicitante: document.getElementById('oc-solicitante').value,
+    obs: document.getElementById('oc-obs').value,
+  };
+}
+
+function generatePrintWindow(type, r) {
+  const labels = { cot:'COTIZACIÓN', ot:'ORDEN DE TRABAJO', oc:'ORDEN DE COMPRA' };
+  const accentCol = { cot:'#2c5f9e', ot:'#27ae60', oc:'#e8941a' };
+  const color = accentCol[type];
+  const label = labels[type];
+
+  const itemsHtml = (r.items || []).map((it, i) => `
+    <tr>
+      <td style="text-align:center">${i+1}</td>
+      <td>${it.desc}</td>
+      <td style="text-align:center">${it.unit}</td>
+      <td style="text-align:right">${it.qty}</td>
+      <td style="text-align:right">$${fmt(it.price)}</td>
+      <td style="text-align:right;font-weight:600">$${fmt(it.total)}</td>
+    </tr>`).join('');
+
+  const extraFields = type === 'cot' ? `
+    <tr><td><strong>Proyecto:</strong></td><td>${r.proyecto||''}</td><td><strong>Forma de Pago:</strong></td><td>${r.pago||''}</td></tr>
+    <tr><td><strong>Contacto:</strong></td><td>${r.contacto||''}</td><td><strong>Email:</strong></td><td>${r.email||''}</td></tr>
+    <tr><td><strong>Validez:</strong></td><td>${r.validez||''} días</td><td><strong>Entrega:</strong></td><td>${r.entrega||''}</td></tr>
+  ` : type === 'ot' ? `
+    <tr><td><strong>Técnico:</strong></td><td>${r.tecnico||''}</td><td><strong>Proyecto:</strong></td><td>${r.proyecto||''}</td></tr>
+    <tr><td><strong>Prioridad:</strong></td><td>${r.prioridad||''}</td><td><strong>Estado:</strong></td><td>${r.estado||''}</td></tr>
+  ` : `
+    <tr><td><strong>RUT:</strong></td><td>${r.rut||''}</td><td><strong>Contacto:</strong></td><td>${r.contacto||''}</td></tr>
+    <tr><td><strong>Proyecto:</strong></td><td>${r.proyecto||''}</td><td><strong>Pago:</strong></td><td>${r.pago||''}</td></tr>
+    <tr><td><strong>Solicitante:</strong></td><td>${r.solicitante||''}</td><td><strong>Entrega:</strong></td><td>${r.entrega||''}</td></tr>
+  `;
+
+  const who = type === 'oc' ? r.proveedor : r.cliente;
+  const whoLabel = type === 'oc' ? 'Proveedor' : 'Cliente';
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <title>${label} ${r.num}</title>
+  <style>
+    * { margin:0;padding:0;box-sizing:border-box; }
+    body { font-family:'Segoe UI',sans-serif; font-size:13px; color:#2d3748; padding:30px; }
+    .header { background:${color}; color:#fff; padding:28px 32px; border-radius:8px 8px 0 0; display:flex; justify-content:space-between; align-items:center; }
+    .header h1 { font-size:22px; }
+    .header .num { font-size:28px; font-weight:700; }
+    .meta { background:#f7fafc; border:1px solid #e2e8f0; border-top:none; padding:18px 24px; }
+    .meta table { width:100%; border-collapse:collapse; }
+    .meta td { padding:5px 10px; vertical-align:top; width:25%; }
+    .section { margin-top:20px; }
+    .section h3 { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#718096; margin-bottom:8px; }
+    table.items { width:100%; border-collapse:collapse; font-size:13px; margin-top:10px; }
+    table.items th { background:${color}; color:#fff; padding:8px 10px; text-align:left; font-size:11px; }
+    table.items td { padding:8px 10px; border-bottom:1px solid #e2e8f0; }
+    .totals { display:flex; justify-content:flex-end; margin-top:16px; }
+    .totals-box { min-width:260px; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; }
+    .t-row { display:flex; justify-content:space-between; padding:8px 16px; border-bottom:1px solid #e2e8f0; }
+    .t-row.grand { background:${color}; color:#fff; font-size:16px; font-weight:700; border-bottom:none; }
+    .obs { background:#fffbeb; border:1px solid #fde68a; border-radius:6px; padding:12px 16px; margin-top:16px; font-size:12px; }
+    .footer { margin-top:40px; display:flex; justify-content:space-around; text-align:center; }
+    .sig { border-top:1px solid #ccc; width:200px; padding-top:8px; font-size:11px; color:#718096; }
+    @media print { body { padding:15px; } }
+  </style></head><body>
+  <div class="header">
+    <div><div style="font-size:12px;opacity:0.8">MARIMAR GROUP</div><h1>${label}</h1></div>
+    <div class="num">${r.num}</div>
+  </div>
+  <div class="meta">
+    <table>
+      <tr>
+        <td><strong>${whoLabel}:</strong></td><td>${who||''}</td>
+        <td><strong>Fecha:</strong></td><td>${r.fecha}</td>
+      </tr>
+      ${extraFields}
+    </table>
+  </div>
+  ${type === 'ot' && r.descripcion ? `<div class="section"><h3>Descripción del Trabajo</h3><p style="border:1px solid #e2e8f0;border-radius:6px;padding:12px">${r.descripcion}</p></div>` : ''}
+  <div class="section">
+    <h3>Detalle</h3>
+    <table class="items">
+      <thead><tr><th>#</th><th>Descripción</th><th>Unidad</th><th style="text-align:right">Cant.</th><th style="text-align:right">P.Unit.</th><th style="text-align:right">Total</th></tr></thead>
+      <tbody>${itemsHtml}</tbody>
+    </table>
+  </div>
+  <div class="totals">
+    <div class="totals-box">
+      <div class="t-row"><span>Subtotal</span><span>$${fmt(r.subtotal||0)}</span></div>
+      <div class="t-row"><span>IVA (19%)</span><span>$${fmt(r.iva||0)}</span></div>
+      <div class="t-row grand"><span>TOTAL</span><span>$${fmt(r.total||0)}</span></div>
+    </div>
+  </div>
+  ${r.obs ? `<div class="obs"><strong>Observaciones:</strong><br>${r.obs}</div>` : ''}
+  <div class="footer">
+    <div class="sig">Emitido por<br>Marimar Group</div>
+    <div class="sig">${whoLabel}<br>&nbsp;</div>
+  </div>
+  <script>window.onload=()=>window.print()<\/script>
+  </body></html>`;
+
+  const w = window.open('', '_blank', 'width=900,height=700');
+  w.document.write(html);
+  w.document.close();
+}
+
+// ── Init ───────────────────────────────────────────────────
+updateBadges();
+refreshDashboard();
+ensureItems('cot');
+ensureItems('ot');
+ensureItems('oc');
+autoNum('cot');
+autoNum('ot');
+autoNum('oc');
+
+// Set today on date fields
+const today = new Date().toISOString().split('T')[0];
+['cot-fecha','ot-fecha','oc-fecha'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el && !el.value) el.value = today;
+});
+</script>
+</body>
+</html>
