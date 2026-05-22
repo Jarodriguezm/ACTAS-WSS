@@ -24,21 +24,11 @@ function doGet() {
 }
 
 // ── Spreadsheet setup ───────────────────────────────────────
+const SPREADSHEET_ID = '1CzVPvS3FO533RYypXVWF6XN-4vxEADCegzVWm_eHoRE';
+
 function getSpreadsheet() {
-  const props = PropertiesService.getScriptProperties();
-  let ssId = props.getProperty('SS_ID');
-  let ss;
-
-  if (ssId) {
-    try { ss = SpreadsheetApp.openById(ssId); } catch (e) { ssId = null; }
-  }
-
-  if (!ss) {
-    ss = SpreadsheetApp.create('CRM Marimar Group — Base de Datos');
-    props.setProperty('SS_ID', ss.getId());
-    initSheets(ss);
-  }
-
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  initSheets(ss); // crea las hojas CRM si aún no existen
   return ss;
 }
 
