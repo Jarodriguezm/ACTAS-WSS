@@ -142,7 +142,7 @@ html,body{height:100%;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;col
 .dash-right{border-left:1px solid var(--border);background:var(--white);padding:12px;display:flex;flex-direction:column;gap:0}
 
 /* Stat cards row */
-.stat-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:4px}
+.stat-row{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:4px}
 .stat-mini{
   background:var(--white);border:1px solid var(--border);border-radius:4px;
   padding:10px 12px;
@@ -328,7 +328,8 @@ html,body{height:100%;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;col
 <!-- ═══════════ TOP NAV ═══════════ -->
 <div id="topnav">
   <div class="tn-brand">
-    <div class="mg">MG</div>
+    <div class="mg" id="nav-mg">MG</div>
+    <img id="nav-logo" style="display:none;height:30px;width:auto;object-fit:contain;border-radius:3px;flex-shrink:0" alt="Marimar">
     <span>Marimar Group</span>
   </div>
   <div class="tn-links">
@@ -373,6 +374,7 @@ html,body{height:100%;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;col
             <div class="stat-mini"><div class="sv" id="d-oc">—</div><div class="sl">Órdenes Comp.</div></div>
             <div class="stat-mini"><div class="sv" id="d-cli">—</div><div class="sl">Clientes</div></div>
             <div class="stat-mini"><div class="sv" id="d-prov">—</div><div class="sl">Proveedores</div></div>
+            <div class="stat-mini"><div class="sv" id="d-fac" style="color:#6a1b9a">—</div><div class="sl">Facturas</div></div>
           </div>
 
           <!-- Charts -->
@@ -970,6 +972,117 @@ html,body{height:100%;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;col
       </div>
     </div>
 
+    <!-- ══ FACTURAS NUEVA ══ -->
+    <div id="view-facturas-nueva" class="view">
+      <div class="toolbar">
+        <strong style="font-size:13px">🧾 Nueva Factura</strong>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button class="btn btn-ghost" onclick="resetForm('facturas')">Limpiar</button>
+          <button class="btn btn-ghost" onclick="printDoc('facturas')">🖨️ PDF</button>
+          <button class="btn btn-sm" style="background:#6a1b9a;color:#fff;border:none;border-radius:3px;padding:5px 14px;font-weight:600;font-size:12px;cursor:pointer;font-family:inherit" onclick="document.getElementById('form-facturas').requestSubmit()">💾 Guardar</button>
+        </div>
+      </div>
+      <div class="form-wrap">
+        <form id="form-facturas" onsubmit="saveFact(event)">
+          <div class="f-card">
+            <div class="f-card-hdr">🧾 Datos del Documento</div>
+            <div class="f-body">
+              <div class="f-grid fg-4">
+                <div class="f-field"><label>N° Folio</label><input type="text" id="fac-folio" required placeholder="FAC-0001" readonly style="background:#f5f5f5"></div>
+                <div class="f-field"><label>Fecha</label><input type="date" id="fac-fecha" required></div>
+                <div class="f-field"><label>Forma de Pago</label>
+                  <select id="fac-formaPago"><option>Contado</option><option>30 días</option><option>60 días</option><option>Transferencia</option><option>Cheque</option></select>
+                </div>
+                <div class="f-field"><label>Estado</label>
+                  <select id="fac-estado"><option>Borrador</option><option>Emitida</option><option>Pagada</option><option>Anulada</option></select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="f-card">
+            <div class="f-card-hdr">👤 Receptor (Cliente)</div>
+            <div class="f-body">
+              <div class="f-grid fg-3">
+                <div class="f-field"><label>Seleccionar cliente</label>
+                  <select id="fac-cliente-sel" onchange="fillCliente('fac')">
+                    <option value="">— Seleccionar cliente —</option>
+                  </select>
+                </div>
+                <div class="f-field"><label>RUT</label><input type="text" id="fac-rut" required placeholder="12.345.678-9"></div>
+                <div class="f-field"><label>Razón Social</label><input type="text" id="fac-razonSocial" required placeholder="Nombre o empresa"></div>
+                <div class="f-field sp2"><label>Giro / Actividad</label><input type="text" id="fac-giro"></div>
+                <div class="f-field"><label>Email</label><input type="email" id="fac-email"></div>
+                <div class="f-field sp2"><label>Dirección</label><input type="text" id="fac-direccion"></div>
+                <div class="f-field"><label>Ciudad</label><input type="text" id="fac-ciudad"></div>
+              </div>
+            </div>
+          </div>
+          <div class="f-card">
+            <div class="f-card-hdr">📦 Ítems / Servicios</div>
+            <div class="f-body">
+              <div class="items-wrap">
+                <table class="itbl">
+                  <thead><tr><th style="width:36px">#</th><th>Descripción</th><th style="width:80px">Unidad</th><th style="width:70px">Cant.</th><th style="width:110px">P.Unit.</th><th style="width:120px">Total</th><th style="width:30px"></th></tr></thead>
+                  <tbody id="facturas-items-body"></tbody>
+                </table>
+              </div>
+              <div class="items-footer">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="addItem('facturas')">➕ Agregar ítem</button>
+                <div class="total-box">
+                  <div class="t-row"><span>Neto</span><span id="facturas-subtotal">$0</span></div>
+                  <div class="t-row"><span>IVA (19%)</span><span id="facturas-iva">$0</span></div>
+                  <div class="t-row grand"><span>TOTAL</span><span id="facturas-total">$0</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="f-card">
+            <div class="f-card-hdr">📝 Observaciones</div>
+            <div class="f-body">
+              <div class="f-field"><textarea id="fac-obs" rows="3" placeholder="Observaciones o comentarios…"></textarea></div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ══ FACTURAS LISTA ══ -->
+    <div id="view-facturas-lista" class="view">
+      <div class="toolbar">
+        <input class="tb-search" type="text" placeholder="🔍 Buscar factura…" oninput="filterTable('facturas',this.value)">
+        <select class="tb-select" onchange="filterTable('facturas','',this.value)">
+          <option value="">Todos los estados</option>
+          <option>Borrador</option><option>Emitida</option><option>Pagada</option><option>Anulada</option>
+        </select>
+        <button class="btn btn-sm" onclick="showView('facturas-nueva')" style="background:#6a1b9a;color:#fff;border:none;border-radius:3px;padding:5px 14px;font-weight:600;font-size:12px;cursor:pointer;font-family:inherit">➕ Nueva Factura</button>
+      </div>
+      <div class="list-wrap">
+        <div class="list-table-card">
+          <table class="data-table">
+            <thead><tr><th>Folio</th><th>Fecha</th><th>Cliente</th><th>Total</th><th>Forma Pago</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="facturas-list-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ FACTURAS STATS ══ -->
+    <div id="view-facturas-stats" class="view">
+      <div class="toolbar"><strong>📊 Estadísticas Facturas</strong></div>
+      <div class="stats-wrap">
+        <div class="big-chart">
+          <h3>Distribución por Estado</h3>
+          <canvas id="chart-facturas-big"></canvas>
+          <div id="legend-facturas-big" style="margin-top:14px"></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr">Detalle por estado</div>
+          <table class="data-table"><thead><tr><th>Estado</th><th>Cantidad</th><th>%</th></tr></thead>
+          <tbody id="facturas-stats-body"></tbody></table>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -988,11 +1101,13 @@ html,body{height:100%;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;col
 <!-- ═══════════ JS ═══════════ -->
 <script>
 // ── Cache & state ────────────────────────────────────────────
-const DB = { cot:[], ot:[], oc:[], clientes:[], productos:[], proveedores:[] };
+const DB = { cot:[], ot:[], oc:[], facturas:[], clientes:[], productos:[], proveedores:[] };
 const SELECTS = { clientes:[], productos:[], proveedores:[] };
-let delTarget = null;
-let dashData  = null;
-let charts    = {};
+let delTarget    = null;
+let dashData     = null;
+let charts       = {};
+let EMPRESA_DATA = {};
+let logoSrc      = '';
 
 // ── Sidebar config ───────────────────────────────────────────
 const AREAS = {
@@ -1011,6 +1126,11 @@ const AREAS = {
       {lbl:'Nueva orden',  view:'oc-nueva'},
       {lbl:'Listado',      view:'oc-lista'},
       {lbl:'Estadísticas', view:'oc-stats'},
+    ]},
+    { title:'Facturas', ico:'ico-purple', items:[
+      {lbl:'Nueva Factura', view:'facturas-nueva'},
+      {lbl:'Listado',       view:'facturas-lista'},
+      {lbl:'Estadísticas',  view:'facturas-stats'},
     ]},
   ],
   clientes: [
@@ -1087,6 +1207,7 @@ function showView(key, navEl) {
     ensureItems(type);
     setAutoNum(type);
     loadSelects();
+    if (type === 'facturas') loadNextFolio();
   }
 }
 
@@ -1114,6 +1235,7 @@ function pill(st) {
     'Activo':'p-green','Inactivo':'p-gray','Prospecto':'p-blue',
     'Cliente VIP':'p-teal','Alta':'p-orange','Urgente':'p-red',
     'Normal':'p-blue','Baja':'p-gray',
+    'Emitida':'p-teal','Pagada':'p-green',
   };
   return `<span class="pill ${m[st]||'p-gray'}">${st||'—'}</span>`;
 }
@@ -1143,6 +1265,7 @@ function renderDashboard(d) {
   document.getElementById('d-oc').textContent   = d.counts.oc;
   document.getElementById('d-cli').textContent  = d.counts.clientes;
   document.getElementById('d-prov').textContent = d.counts.proveedores;
+  document.getElementById('d-fac').textContent  = d.counts.facturas || 0;
 
   // Charts
   buildDonut('chart-cot', d.cotStats, COT_LABELS, COT_COLORS, 'legend-cot', 'total-cot', d.counts.cot);
@@ -1260,19 +1383,21 @@ function loadSelects() {
 }
 
 function populateSelects() {
-  [['cot-cliente-sel','clientes'],['ot-cliente-sel','clientes']].forEach(([id, type]) => {
+  ['cot-cliente-sel','ot-cliente-sel','fac-cliente-sel'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     const cur = el.value;
     el.innerHTML = '<option value="">— Seleccionar cliente —</option>' +
-      SELECTS.clientes.map(c => `<option value="${c.id}" data-rut="${c.rut}">${c.nombre}</option>`).join('');
+      SELECTS.clientes.map(c =>
+        `<option value="${c.id}" data-rut="${c.rut||''}" data-giro="${c.giro||''}" data-dir="${c.direccion||''}" data-ciudad="${c.ciudad||''}" data-email="${c.email||''}">${c.nombre}</option>`
+      ).join('');
     el.value = cur;
   });
 
   const ocSel = document.getElementById('oc-prov-sel');
   if (ocSel) {
     ocSel.innerHTML = '<option value="">— Seleccionar proveedor —</option>' +
-      SELECTS.proveedores.map(p => `<option value="${p.id}" data-rut="${p.rut}">${p.nombre}</option>`).join('');
+      SELECTS.proveedores.map(p => `<option value="${p.id}" data-rut="${p.rut||''}">${p.nombre}</option>`).join('');
   }
 }
 
@@ -1282,10 +1407,20 @@ function fillCliente(type) {
   const opt = sel.options[sel.selectedIndex];
   if (!opt || !opt.value) return;
   const cli = SELECTS.clientes.find(c => String(c.id) === opt.value);
-  if (cli) {
-    document.getElementById(type + '-cliente').value = cli.nombre;
-    const rutEl = document.getElementById(type + '-rut');
-    if (rutEl) rutEl.value = cli.rut;
+  if (!cli) return;
+  if (type === 'fac') {
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val||''; };
+    set('fac-rut',         cli.rut);
+    set('fac-razonSocial', cli.nombre);
+    set('fac-giro',        cli.giro);
+    set('fac-direccion',   cli.direccion);
+    set('fac-ciudad',      cli.ciudad);
+    set('fac-email',       cli.email);
+  } else {
+    const nameEl = document.getElementById(type + '-cliente');
+    if (nameEl) nameEl.value = cli.nombre;
+    const rutEl  = document.getElementById(type + '-rut');
+    if (rutEl)  rutEl.value  = cli.rut || '';
   }
 }
 
@@ -1315,7 +1450,7 @@ function renderList(type, textF='', statusF='') {
   });
 
   if (!data.length) {
-    const cols = {cot:7,ot:8,oc:7,clientes:8,productos:7,proveedores:8};
+    const cols = {cot:7,ot:8,oc:7,facturas:7,clientes:8,productos:7,proveedores:8};
     body.innerHTML = `<tr><td colspan="${cols[type]||6}" style="text-align:center;color:#aaa;padding:20px">Sin registros</td></tr>`;
     return;
   }
@@ -1369,6 +1504,13 @@ function renderList(type, textF='', statusF='') {
       <td>${r.condicionPago||'—'}</td><td>${pill(r.estado)}</td>
       <td>${acts}</td></tr>`;
 
+    if (type==='facturas') return `<tr>
+      <td><strong>${r.folio||'—'}</strong></td><td>${fmtDate(r.fecha)}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.razonSocial||'—'}</td>
+      <td style="text-align:right">$${fmt(r.total)}</td>
+      <td>${r.formaPago||'—'}</td>
+      <td>${pill(r.estado)}</td><td>${acts}</td></tr>`;
+
     return '';
   }).join('');
 }
@@ -1417,7 +1559,7 @@ function renderStats(type) {
 
 // ── Items table ──────────────────────────────────────────────
 function ensureItems(type) {
-  if (!['cot','ot','oc'].includes(type)) return;
+  if (!['cot','ot','oc','facturas'].includes(type)) return;
   const tb = document.getElementById(type + '-items-body');
   if (tb && tb.children.length === 0) addItem(type);
 }
@@ -1592,24 +1734,29 @@ function serverSave(type, data) {
 function resetForm(type) {
   const frm = document.getElementById('form-'+type);
   if (frm) frm.reset();
-  if (['cot','ot','oc'].includes(type)) {
+  if (['cot','ot','oc','facturas'].includes(type)) {
     const tb = document.getElementById(type+'-items-body');
     if (tb) tb.innerHTML = '';
-    const numEl = document.getElementById(type+'-num');
-    if (numEl) numEl.dataset.edited = '';
+    if (type !== 'facturas') {
+      const numEl = document.getElementById(type+'-num');
+      if (numEl) numEl.dataset.edited = '';
+    }
     addItem(type);
+    if (type === 'facturas') loadNextFolio();
   }
   const today = new Date().toISOString().split('T')[0];
-  const dateEl = document.getElementById(type+'-fecha');
+  const fechaId = type === 'facturas' ? 'fac-fecha' : type+'-fecha';
+  const dateEl  = document.getElementById(fechaId);
   if (dateEl) dateEl.value = today;
 }
 
 // ── Cycle status ─────────────────────────────────────────────
 function cycleStatus(type, id) {
   const maps = {
-    cot: ['Borrador','Pendiente','Aprobada','Rechazada'],
-    ot:  ['Borrador','Pendiente','En proceso','Terminada','Cancelado'],
-    oc:  ['Pendiente','Aprobada','Recibida','Anulada'],
+    cot:      ['Borrador','Pendiente','Aprobada','Rechazada'],
+    ot:       ['Borrador','Pendiente','En proceso','Terminada','Cancelado'],
+    oc:       ['Pendiente','Aprobada','Recibida','Anulada'],
+    facturas: ['Borrador','Emitida','Pagada','Anulada'],
     clientes:   ['Activo','Inactivo'],
     productos:  ['Activo','Inactivo'],
     proveedores:['Activo','Inactivo'],
@@ -1654,10 +1801,30 @@ document.getElementById('del-confirm').onclick = function() {
 // ── Print ─────────────────────────────────────────────────────
 function printRecord(type, id) {
   const r = DB[type].find(x => Number(x.id)===Number(id));
-  if (r) openPrintWin(type, r);
+  if (!r) return;
+  if (type === 'facturas') printFact(r);
+  else openPrintWin(type, r);
 }
 
 function printDoc(type) {
+  if (type === 'facturas') {
+    const items = getItems('facturas');
+    const neto  = items.reduce((a,i)=>a+i.total,0);
+    printFact({
+      folio:      document.getElementById('fac-folio').value,
+      fecha:      document.getElementById('fac-fecha').value,
+      rut:        document.getElementById('fac-rut').value,
+      razonSocial:document.getElementById('fac-razonSocial').value,
+      giro:       document.getElementById('fac-giro').value,
+      direccion:  document.getElementById('fac-direccion').value,
+      ciudad:     document.getElementById('fac-ciudad').value,
+      email:      document.getElementById('fac-email').value,
+      formaPago:  document.getElementById('fac-formaPago').value,
+      obs:        document.getElementById('fac-obs').value,
+      items, neto, iva:neto*0.19, total:neto*1.19,
+    });
+    return;
+  }
   if (!['cot','ot','oc'].includes(type)) return;
   const items = getItems(type);
   const sub   = items.reduce((a,i)=>a+i.total,0);
@@ -1734,6 +1901,138 @@ function openPrintWin(type, r) {
   w.document.write(html); w.document.close();
 }
 
+// ── saveFact ──────────────────────────────────────────────────
+function saveFact(e) {
+  e.preventDefault();
+  const items = getItems('facturas');
+  const neto  = items.reduce((a,i)=>a+i.total,0);
+  const data  = {
+    folio:      document.getElementById('fac-folio').value,
+    fecha:      document.getElementById('fac-fecha').value,
+    rut:        document.getElementById('fac-rut').value,
+    razonSocial:document.getElementById('fac-razonSocial').value,
+    giro:       document.getElementById('fac-giro').value,
+    direccion:  document.getElementById('fac-direccion').value,
+    ciudad:     document.getElementById('fac-ciudad').value,
+    email:      document.getElementById('fac-email').value,
+    formaPago:  document.getElementById('fac-formaPago').value,
+    estado:     document.getElementById('fac-estado').value,
+    obs:        document.getElementById('fac-obs').value,
+    items, neto, iva:neto*0.19, total:neto*1.19,
+  };
+  serverSave('facturas', data);
+}
+
+// ── loadNextFolio ─────────────────────────────────────────────
+function loadNextFolio() {
+  google.script.run
+    .withSuccessHandler(n => {
+      const el = document.getElementById('fac-folio');
+      if (el) el.value = 'FAC-' + String(n).padStart(4,'0');
+    })
+    .getNextFolio();
+}
+
+// ── loadLogo ──────────────────────────────────────────────────
+function loadLogo() {
+  google.script.run
+    .withSuccessHandler(src => {
+      if (!src) return;
+      logoSrc = src;
+      const img = document.getElementById('nav-logo');
+      const mg  = document.getElementById('nav-mg');
+      if (img) { img.src = src; img.style.display = 'block'; }
+      if (mg)  mg.style.display = 'none';
+    })
+    .getLogoBase64();
+  google.script.run
+    .withSuccessHandler(d => { if (d) EMPRESA_DATA = d; })
+    .getEmpresaData();
+}
+
+// ── printFact — formato factura chilena ───────────────────────
+function printFact(r) {
+  const e = EMPRESA_DATA;
+  const logoHtml = logoSrc
+    ? `<img src="${logoSrc}" style="max-height:70px;max-width:200px;object-fit:contain">`
+    : `<div style="font-size:20px;font-weight:900;color:#1d4373">MARIMAR GROUP</div>`;
+  const iRows = (r.items||[]).map((it,i)=>`<tr>
+    <td style="text-align:center">${i+1}</td>
+    <td>${it.desc||''}</td>
+    <td style="text-align:center">${it.unit||''}</td>
+    <td style="text-align:right">${it.qty||0}</td>
+    <td style="text-align:right">$${fmt(it.price)}</td>
+    <td style="text-align:right;font-weight:600">$${fmt(it.total)}</td>
+  </tr>`).join('');
+  const html=`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <title>Factura N° ${r.folio||''}</title>
+  <style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#333;padding:24px;max-width:900px;margin:0 auto}
+  .dh{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:14px;border-bottom:3px solid #1d4373}
+  .dt{text-align:right}.dt .tipo{font-size:10px;background:#1d4373;color:#fff;padding:3px 8px;border-radius:2px;letter-spacing:1px}
+  .dt .folio{font-size:28px;font-weight:900;color:#1d4373;margin-top:4px}
+  .dt .fecha{font-size:11px;color:#666;margin-top:2px}
+  .parties{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+  .pb{border:1px solid #ddd;border-radius:3px;overflow:hidden}
+  .pb-h{background:#1d4373;color:#fff;padding:5px 10px;font-size:10px;letter-spacing:.5px;font-weight:700;text-transform:uppercase}
+  .pb-b{padding:8px 10px}.pb-n{font-size:14px;font-weight:700;color:#1d4373;margin-bottom:3px}
+  .pb-r{font-size:11px;color:#555;padding:1px 0}
+  table.det{width:100%;border-collapse:collapse;margin-bottom:12px}
+  table.det th{background:#1d4373;color:#fff;padding:7px 8px;font-size:10.5px;text-align:left;font-weight:600}
+  table.det td{padding:7px 8px;border-bottom:1px solid #eee;font-size:11.5px}
+  table.det tr:last-child td{border-bottom:none}
+  .tots{display:flex;justify-content:flex-end}
+  .tb{min-width:240px;border:1px solid #ddd;border-radius:3px;overflow:hidden}
+  .tr{display:flex;justify-content:space-between;padding:7px 12px;border-bottom:1px solid #eee;font-size:12px}
+  .tr:last-child{border-bottom:none}
+  .tr.g{background:#1d4373;color:#fff;font-size:14px;font-weight:700}
+  .obs{margin-top:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:3px;padding:10px 12px;font-size:11.5px}
+  .sigs{margin-top:36px;display:flex;justify-content:space-around;text-align:center}
+  .sig{border-top:1px solid #ccc;width:180px;padding-top:7px;font-size:11px;color:#888}
+  @media print{body{padding:14px}}
+  </style></head><body>
+  <div class="dh">
+    <div>${logoHtml}</div>
+    <div class="dt"><div class="tipo">FACTURA</div><div class="folio">N° ${r.folio||'—'}</div><div class="fecha">${r.fecha||''}</div></div>
+  </div>
+  <div class="parties">
+    <div class="pb"><div class="pb-h">Emisor</div><div class="pb-b">
+      <div class="pb-n">${e.nombre||'MARIMAR AGENCIA NAVIERA Y ADUANAL CA'}</div>
+      ${e.rut?`<div class="pb-r">RUT: ${e.rut}</div>`:''}
+      ${e.giro?`<div class="pb-r">Giro: ${e.giro}</div>`:''}
+      ${e.direccion?`<div class="pb-r">${e.direccion}${e.ciudad?', '+e.ciudad:''}</div>`:''}
+      ${e.email?`<div class="pb-r">${e.email}</div>`:''}
+      ${e.telefono?`<div class="pb-r">Tel: ${e.telefono}</div>`:''}
+    </div></div>
+    <div class="pb"><div class="pb-h">Receptor</div><div class="pb-b">
+      <div class="pb-n">${r.razonSocial||'—'}</div>
+      ${r.rut?`<div class="pb-r">RUT: ${r.rut}</div>`:''}
+      ${r.giro?`<div class="pb-r">Giro: ${r.giro}</div>`:''}
+      ${r.direccion?`<div class="pb-r">${r.direccion}${r.ciudad?', '+r.ciudad:''}</div>`:''}
+      ${r.email?`<div class="pb-r">${r.email}</div>`:''}
+    </div></div>
+  </div>
+  <table class="det">
+    <thead><tr><th>#</th><th>Descripción</th><th>Unidad</th><th style="text-align:right">Cant.</th><th style="text-align:right">P.Unit.</th><th style="text-align:right">Total</th></tr></thead>
+    <tbody>${iRows}</tbody>
+  </table>
+  <div class="tots"><div class="tb">
+    <div class="tr"><span>Neto</span><span>$${fmt(r.neto||r.subtotal)}</span></div>
+    <div class="tr"><span>IVA (19%)</span><span>$${fmt(r.iva)}</span></div>
+    <div class="tr g"><span>TOTAL</span><span>$${fmt(r.total)}</span></div>
+  </div></div>
+  ${r.obs?`<div class="obs"><b>Obs:</b> ${r.obs}</div>`:''}
+  ${r.formaPago?`<div style="margin-top:8px;font-size:11px;color:#555">Forma de pago: <b>${r.formaPago}</b></div>`:''}
+  <div class="sigs">
+    <div class="sig">Firma Emisor<br>&nbsp;</div>
+    <div class="sig">Receptor<br>&nbsp;</div>
+  </div>
+  <script>window.onload=()=>window.print()<\/script></body></html>`;
+  const w = window.open('','_blank','width=920,height=720');
+  w.document.write(html); w.document.close();
+}
+
 // ── Sidebar search ────────────────────────────────────────────
 function sbSearch(q) {
   document.querySelectorAll('.sb-item').forEach(el => {
@@ -1751,12 +2050,13 @@ function openSheet() {
 // ── Init ──────────────────────────────────────────────────────
 (function init() {
   const today = new Date().toISOString().split('T')[0];
-  ['cot-fecha','ot-fecha','oc-fecha'].forEach(id => {
+  ['cot-fecha','ot-fecha','oc-fecha','fac-fecha'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = today;
   });
   buildSidebar('comercial');
   loadDashboard();
+  loadLogo();
 })();
 </script>
 </body>

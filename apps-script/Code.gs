@@ -4,10 +4,27 @@
 
 const SPREADSHEET_ID = '1CzVPvS3FO533RYypXVWF6XN-4vxEADCegzVWm_eHoRE';
 
+// ── Logo: pega el ID del archivo en Google Drive ─────────────
+// Sube el logo a Drive → clic derecho → Obtener enlace
+// El ID es la parte larga entre /d/ y /view en el enlace
+const LOGO_DRIVE_ID = '';  // ← pega aquí el ID, ej: '1A2B3cXyZ...'
+
+// ── Datos de la empresa emisora (para facturas) ──────────────
+const EMPRESA = {
+  nombre:    'MARIMAR AGENCIA NAVIERA Y ADUANAL CA',
+  rut:       '',          // ← tu RUT empresa
+  giro:      'Agencia Naviera y Aduanal',
+  direccion: '',          // ← tu dirección
+  ciudad:    '',          // ← tu ciudad
+  email:     '',          // ← tu email
+  telefono:  '',          // ← tu teléfono
+};
+
 const SHEET_NAMES = {
   cot:        'Cotizaciones',
   ot:         'OT',
   oc:         'OC',
+  facturas:   'Facturas',
   clientes:   'Clientes',
   productos:  'Productos',
   proveedores:'Proveedores'
@@ -22,6 +39,9 @@ const HEADERS = {
   oc:  ['id','num','fecha','estado','proveedor','rut','contacto','email',
         'proyecto','otRef','pago','entrega','fechaEntrega','solicitante',
         'obs','items','subtotal','iva','total','createdAt'],
+  facturas:   ['id','folio','fecha','rut','razonSocial','giro','direccion',
+               'ciudad','email','items','neto','iva','total','formaPago',
+               'estado','obs','createdAt'],
   clientes:   ['id','codigo','nombre','rut','giro','email','telefono',
                'direccion','ciudad','tipo','estado','obs','createdAt'],
   productos:  ['id','codigo','nombre','descripcion','unidad','precio',
@@ -35,6 +55,20 @@ function doGet() {
   return HtmlService.createHtmlOutputFromFile('Index')
     .setTitle('CRM Marimar Group')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+// ── Logo ────────────────────────────────────────────────────
+function getLogoBase64() {
+  if (!LOGO_DRIVE_ID) return '';
+  try {
+    const blob  = DriveApp.getFileById(LOGO_DRIVE_ID).getBlob();
+    const b64   = Utilities.base64Encode(blob.getBytes());
+    return 'data:' + blob.getContentType() + ';base64,' + b64;
+  } catch(e) { return ''; }
+}
+
+function getEmpresaData() {
+  return EMPRESA;
 }
 
 // ── Spreadsheet ─────────────────────────────────────────────
@@ -76,7 +110,7 @@ function getRecords(type) {
     if (typeof obj.items === 'string' && obj.items) {
       try { obj.items = JSON.parse(obj.items); } catch (e) { obj.items = []; }
     }
-    if (obj.id) obj.id = Number(obj.id);
+    if (obj.id)     obj.id     = Number(obj.id);
     if (obj.precio) obj.precio = Number(obj.precio);
     return obj;
   });
@@ -140,26 +174,31 @@ function deleteRecord(type, id) {
   return false;
 }
 
-// ── Dashboard data (single call) ────────────────────────────
+// ── Dashboard data ───────────────────────────────────────────
 function getDashboardData() {
   const cot  = getRecords('cot');
   const ot   = getRecords('ot');
   const oc   = getRecords('oc');
+  const fac  = getRecords('facturas');
   const cli  = getRecords('clientes');
   const prov = getRecords('proveedores');
 
   return {
     counts: {
       cot: cot.length, ot: ot.length, oc: oc.length,
+      facturas: fac.length,
       clientes: cli.length, proveedores: prov.length
     },
     cotStats: countByStatus(cot),
     otStats:  countByStatus(ot),
+    facStats: countByStatus(fac),
     montoTotalCot: cot.reduce((a, r) => a + (Number(r.total) || 0), 0),
+    montoTotalFac: fac.reduce((a, r) => a + (Number(r.total) || 0), 0),
     cotBorradores:  cot.filter(r => r.estado === 'Borrador').slice(-6).reverse(),
     otBorradores:   ot.filter(r => ['Borrador','Pendiente'].includes(r.estado)).slice(-6).reverse(),
     cotAbiertas:    cot.filter(r => ['Pendiente','Aprobada'].includes(r.estado)).slice(-6).reverse(),
     ocPendientes:   oc.filter(r => r.estado === 'Pendiente').slice(-6).reverse(),
+    facRecientes:   fac.slice(-5).reverse(),
     recentClientes: cli.slice(-5).reverse(),
     recentProv:     prov.slice(-5).reverse(),
   };
@@ -171,10 +210,10 @@ function countByStatus(records) {
   return c;
 }
 
-// ── Selects (dropdowns in forms) ────────────────────────────
+// ── Selects ──────────────────────────────────────────────────
 function getSelectData() {
   return {
-    clientes:   getRecords('clientes').map(c => ({ id:c.id, nombre:c.nombre, rut:c.rut||'' })),
+    clientes:   getRecords('clientes').map(c => ({ id:c.id, nombre:c.nombre, rut:c.rut||'', giro:c.giro||'', direccion:c.direccion||'', ciudad:c.ciudad||'', email:c.email||'' })),
     productos:  getRecords('productos').map(p => ({ id:p.id, nombre:p.nombre, precio:p.precio||0, unidad:p.unidad||'' })),
     proveedores:getRecords('proveedores').map(p => ({ id:p.id, nombre:p.nombre, rut:p.rut||'' })),
   };
@@ -182,4 +221,9 @@ function getSelectData() {
 
 function getSpreadsheetUrl() {
   return getSpreadsheet().getUrl();
+}
+
+function getNextFolio() {
+  const fac = getRecords('facturas');
+  return fac.length + 1;
 }
