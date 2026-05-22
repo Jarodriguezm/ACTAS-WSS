@@ -2,18 +2,32 @@
 //  CRM Marimar Group — Google Apps Script Backend
 // ═══════════════════════════════════════════════════════════
 
-const SHEET_NAMES = { cot: 'Cotizaciones', ot: 'OT', oc: 'OC' };
+const SPREADSHEET_ID = '1CzVPvS3FO533RYypXVWF6XN-4vxEADCegzVWm_eHoRE';
+
+const SHEET_NAMES = {
+  cot:        'Cotizaciones',
+  ot:         'OT',
+  oc:         'OC',
+  clientes:   'Clientes',
+  productos:  'Productos',
+  proveedores:'Proveedores'
+};
 
 const HEADERS = {
   cot: ['id','num','fecha','validez','cliente','rut','contacto','email',
-        'proyecto','pago','entrega','obs','items','subtotal','iva','total',
-        'estado','createdAt'],
+        'proyecto','pago','entrega','obs','items','subtotal','iva','total','estado','createdAt'],
   ot:  ['id','num','fecha','estado','prioridad','inicio','termino','cliente',
         'proyecto','direccion','tecnico','descripcion','materiales','cotRef',
         'obs','items','subtotal','iva','total','createdAt'],
   oc:  ['id','num','fecha','estado','proveedor','rut','contacto','email',
         'proyecto','otRef','pago','entrega','fechaEntrega','solicitante',
         'obs','items','subtotal','iva','total','createdAt'],
+  clientes:   ['id','codigo','nombre','rut','giro','email','telefono',
+               'direccion','ciudad','tipo','estado','obs','createdAt'],
+  productos:  ['id','codigo','nombre','descripcion','unidad','precio',
+               'categoria','estado','obs','createdAt'],
+  proveedores:['id','codigo','nombre','rut','giro','email','telefono',
+               'direccion','ciudad','condicionPago','estado','obs','createdAt']
 };
 
 // ── Entry point ─────────────────────────────────────────────
@@ -23,48 +37,37 @@ function doGet() {
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-// ── Spreadsheet setup ───────────────────────────────────────
-const SPREADSHEET_ID = '1CzVPvS3FO533RYypXVWF6XN-4vxEADCegzVWm_eHoRE';
-
+// ── Spreadsheet ─────────────────────────────────────────────
 function getSpreadsheet() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  initSheets(ss); // crea las hojas CRM si aún no existen
+  initSheets(ss);
   return ss;
 }
 
 function initSheets(ss) {
   Object.keys(HEADERS).forEach(type => {
-    const name = SHEET_NAMES[type];
-    let sheet = ss.getSheetByName(name);
+    const name  = SHEET_NAMES[type];
+    let sheet   = ss.getSheetByName(name);
     if (!sheet) sheet = ss.insertSheet(name);
-
-    const existing = sheet.getLastRow();
-    if (existing === 0) {
+    if (sheet.getLastRow() === 0) {
       const hdrs = HEADERS[type];
-      const header = sheet.getRange(1, 1, 1, hdrs.length);
-      header.setValues([hdrs]);
-      header.setFontWeight('bold');
-      header.setBackground('#2c5f9e');
-      header.setFontColor('#ffffff');
+      const r    = sheet.getRange(1, 1, 1, hdrs.length);
+      r.setValues([hdrs]);
+      r.setFontWeight('bold');
+      r.setBackground('#1a3a5c');
+      r.setFontColor('#ffffff');
       sheet.setFrozenRows(1);
     }
   });
-
-  // Remove default blank sheet
-  ['Sheet1','Hoja1','Hoja 1'].forEach(n => {
-    const s = ss.getSheetByName(n);
-    if (s && ss.getSheets().length > 1) ss.deleteSheet(s);
-  });
 }
 
-// ── CRUD operations ─────────────────────────────────────────
-
+// ── CRUD ────────────────────────────────────────────────────
 function getRecords(type) {
-  const ss = getSpreadsheet();
+  const ss    = getSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAMES[type]);
   if (!sheet || sheet.getLastRow() <= 1) return [];
 
-  const values = sheet.getDataRange().getValues();
+  const values  = sheet.getDataRange().getValues();
   const headers = values[0];
 
   return values.slice(1).map(row => {
@@ -73,60 +76,60 @@ function getRecords(type) {
     if (typeof obj.items === 'string' && obj.items) {
       try { obj.items = JSON.parse(obj.items); } catch (e) { obj.items = []; }
     }
-    // Convert numeric id to number
     if (obj.id) obj.id = Number(obj.id);
+    if (obj.precio) obj.precio = Number(obj.precio);
     return obj;
   });
 }
 
 function saveRecord(type, data) {
-  const ss = getSpreadsheet();
-  const sheetName = SHEET_NAMES[type];
-  let sheet = ss.getSheetByName(sheetName);
-  if (!sheet) {
-    initSheets(ss);
-    sheet = ss.getSheetByName(sheetName);
-  }
+  const ss   = getSpreadsheet();
+  let sheet  = ss.getSheetByName(SHEET_NAMES[type]);
+  if (!sheet) { initSheets(ss); sheet = ss.getSheetByName(SHEET_NAMES[type]); }
 
-  data.id = Date.now();
+  data.id        = Date.now();
   data.createdAt = new Date().toISOString();
-
-  // Serialize items array
   if (data.items && typeof data.items === 'object') {
     data.items = JSON.stringify(data.items);
   }
 
   const row = HEADERS[type].map(h => (data[h] !== undefined ? data[h] : ''));
   sheet.appendRow(row);
-
   return { success: true, id: data.id };
 }
 
-function updateStatus(type, id, newStatus) {
-  const ss = getSpreadsheet();
+function updateRecord(type, id, updates) {
+  const ss    = getSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAMES[type]);
   if (!sheet) return false;
 
-  const values = sheet.getDataRange().getValues();
-  const idCol     = values[0].indexOf('id');
-  const statusCol = values[0].indexOf('estado');
+  const values  = sheet.getDataRange().getValues();
+  const headers = values[0];
+  const idCol   = headers.indexOf('id');
 
   for (let i = 1; i < values.length; i++) {
     if (String(values[i][idCol]) === String(id)) {
-      sheet.getRange(i + 1, statusCol + 1).setValue(newStatus);
+      Object.keys(updates).forEach(key => {
+        const col = headers.indexOf(key);
+        if (col >= 0) sheet.getRange(i + 1, col + 1).setValue(updates[key]);
+      });
       return true;
     }
   }
   return false;
 }
 
+function updateStatus(type, id, newStatus) {
+  return updateRecord(type, id, { estado: newStatus });
+}
+
 function deleteRecord(type, id) {
-  const ss = getSpreadsheet();
+  const ss    = getSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAMES[type]);
   if (!sheet) return false;
 
   const values = sheet.getDataRange().getValues();
-  const idCol = values[0].indexOf('id');
+  const idCol  = values[0].indexOf('id');
 
   for (let i = 1; i < values.length; i++) {
     if (String(values[i][idCol]) === String(id)) {
@@ -137,13 +140,46 @@ function deleteRecord(type, id) {
   return false;
 }
 
-function getSpreadsheetUrl() {
-  return getSpreadsheet().getUrl();
+// ── Dashboard data (single call) ────────────────────────────
+function getDashboardData() {
+  const cot  = getRecords('cot');
+  const ot   = getRecords('ot');
+  const oc   = getRecords('oc');
+  const cli  = getRecords('clientes');
+  const prov = getRecords('proveedores');
+
+  return {
+    counts: {
+      cot: cot.length, ot: ot.length, oc: oc.length,
+      clientes: cli.length, proveedores: prov.length
+    },
+    cotStats: countByStatus(cot),
+    otStats:  countByStatus(ot),
+    montoTotalCot: cot.reduce((a, r) => a + (Number(r.total) || 0), 0),
+    cotBorradores:  cot.filter(r => r.estado === 'Borrador').slice(-6).reverse(),
+    otBorradores:   ot.filter(r => ['Borrador','Pendiente'].includes(r.estado)).slice(-6).reverse(),
+    cotAbiertas:    cot.filter(r => ['Pendiente','Aprobada'].includes(r.estado)).slice(-6).reverse(),
+    ocPendientes:   oc.filter(r => r.estado === 'Pendiente').slice(-6).reverse(),
+    recentClientes: cli.slice(-5).reverse(),
+    recentProv:     prov.slice(-5).reverse(),
+  };
 }
 
-function getNextNumber(type) {
-  const records = getRecords(type);
-  const count = records.length + 1;
-  const prefix = { cot: 'COT', ot: 'OT', oc: 'OC' }[type];
-  return prefix + '-' + String(count).padStart(4, '0');
+function countByStatus(records) {
+  const c = {};
+  records.forEach(r => { const s = r.estado || 'Sin estado'; c[s] = (c[s] || 0) + 1; });
+  return c;
+}
+
+// ── Selects (dropdowns in forms) ────────────────────────────
+function getSelectData() {
+  return {
+    clientes:   getRecords('clientes').map(c => ({ id:c.id, nombre:c.nombre, rut:c.rut||'' })),
+    productos:  getRecords('productos').map(p => ({ id:p.id, nombre:p.nombre, precio:p.precio||0, unidad:p.unidad||'' })),
+    proveedores:getRecords('proveedores').map(p => ({ id:p.id, nombre:p.nombre, rut:p.rut||'' })),
+  };
+}
+
+function getSpreadsheetUrl() {
+  return getSpreadsheet().getUrl();
 }
