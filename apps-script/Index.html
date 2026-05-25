@@ -2002,8 +2002,9 @@ function printFact(r) {
       ${e.rut?`<div class="pb-r">RUT: ${e.rut}</div>`:''}
       ${e.giro?`<div class="pb-r">Giro: ${e.giro}</div>`:''}
       ${e.direccion?`<div class="pb-r">${e.direccion}${e.ciudad?', '+e.ciudad:''}</div>`:''}
-      ${e.email?`<div class="pb-r">${e.email}</div>`:''}
-      ${e.telefono?`<div class="pb-r">Tel: ${e.telefono}</div>`:''}
+      ${e.email?`<div class="pb-r">✉ ${e.email}</div>`:''}
+      ${e.telefono?`<div class="pb-r">☎ ${e.telefono}</div>`:''}
+      ${e.web?`<div class="pb-r">🌐 ${e.web}</div>`:''}
     </div></div>
     <div class="pb"><div class="pb-h">Receptor</div><div class="pb-b">
       <div class="pb-n">${r.razonSocial||'—'}</div>

@@ -16,8 +16,9 @@ const EMPRESA = {
   giro:      'Agencia Naviera y Aduanal',
   direccion: 'Calle Simón Rodríguez #10',
   ciudad:    'Cumaná, Edo. Sucre',
-  email:     '',          // ← tu email
-  telefono:  '',          // ← tu teléfono
+  email:     'agencianaviera@marimargroup.com',
+  telefono:  '0293-431.12.11',
+  web:       'https://marimargroup.com/',
 };
 
 const SHEET_NAMES = {
