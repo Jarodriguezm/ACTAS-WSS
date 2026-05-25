@@ -1959,17 +1959,18 @@ function loadLogo() {
 
 // ── printFact — formato SENIAT Venezuela ──────────────────────
 function printFact(r) {
-  const e       = EMPRESA_DATA;
-  const ivaP    = r.ivaPorc || e.ivaPorc || 16;
-  const neto    = r.neto || r.subtotal || 0;
-  const iva     = neto * (ivaP / 100);
-  const total   = neto + iva;
+  const e    = EMPRESA_DATA;
+  const ivaP = r.ivaPorc || e.ivaPorc || 16;
+  const neto = r.neto || r.subtotal || 0;
+  const iva  = neto * (ivaP / 100);
+  const total= neto + iva;
 
-  const fParts  = (r.fecha||'').split('-');
+  const fParts = (r.fecha||'').split('-');
   const dia  = fParts[2]||'';
   const mes  = fParts[1]||'';
   const anio = fParts[0]||'';
 
+  // Items + filas vacías para rellenar la tabla
   const items   = r.items || [];
   const minRows = Math.max(items.length, 13);
   let iRows = items.map(it => `<tr>
@@ -1979,94 +1980,98 @@ function printFact(r) {
     <td class="tr b1 fw">${it.total ? fmt(it.total) : ''}</td>
   </tr>`).join('');
   for (let i = items.length; i < minRows; i++) {
-    iRows += `<tr style="height:20px"><td class="b1"></td><td class="b1"></td><td class="b1"></td><td class="b1"></td></tr>`;
+    iRows += `<tr style="height:21px"><td class="b1"></td><td class="b1"></td><td class="b1"></td><td class="b1"></td></tr>`;
   }
 
   const logoHdr = logoSrc
-    ? `<img src="${logoSrc}" style="max-height:55px;max-width:180px;object-fit:contain;display:block;margin:0 auto 4px">`
+    ? `<img src="${logoSrc}" style="max-height:52px;max-width:160px;object-fit:contain;display:block;margin:0 auto 3px">`
     : '';
 
   const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
   <title>Factura N° ${r.folio||''}</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:Arial,sans-serif;font-size:11.5px;color:#000;padding:18px 22px;max-width:700px;margin:0 auto}
-    .hdr{text-align:center;margin-bottom:8px;line-height:1.35}
-    .hdr .l1{font-size:15px;font-weight:700}
-    .hdr .l2{font-size:20px;font-weight:900;letter-spacing:.5px}
-    .hdr .l3{font-size:11px}
-    .top{display:grid;grid-template-columns:1fr auto;border:1px solid #000}
-    .top-left{padding:5px 8px;border-right:1px solid #000}
-    .top-right{display:flex;flex-direction:column}
-    .tr-email{padding:4px 10px;border-bottom:1px solid #000;font-size:10.5px;line-height:1.5}
-    .tr-factura{display:flex;align-items:center;gap:0;flex:1}
-    .fac-label{padding:5px 12px;font-weight:900;font-size:16px;letter-spacing:1px;border-right:1px solid #000;white-space:nowrap}
-    .date-grid{display:flex}
-    .dbox{text-align:center;border-left:1px solid #000;padding:3px 10px;min-width:42px}
-    .dbox span{display:block;font-size:9px;font-weight:700;color:#444}
-    .num-row{border:1px solid #000;border-top:none;display:flex;justify-content:space-between;align-items:center;padding:3px 8px;margin-bottom:4px}
-    .nf{color:red;font-size:22px;font-weight:900;letter-spacing:2px}
-    .client-box{border:1px solid #000;padding:5px 8px;margin-bottom:0}
-    .cl{display:flex;align-items:flex-end;margin-bottom:4px;gap:6px}
-    .cl label{white-space:nowrap;font-size:11px}
-    .cl-line{flex:1;border-bottom:1px solid #000;min-height:15px;padding:0 3px;font-size:11.5px}
+    body{font-family:Arial,sans-serif;font-size:11.5px;color:#000;padding:16px 20px;max-width:710px;margin:0 auto}
+    /* ── Cabecera empresa ── */
+    .hdr{text-align:center;margin-bottom:6px;line-height:1.35}
+    .hdr .l1{font-size:14px;font-weight:700}
+    .hdr .l2{font-size:19px;font-weight:900;letter-spacing:.5px}
+    .hdr .l3{font-size:10.5px}
+    /* ── Fila N°Control / Email / Factura ── */
+    .top{width:100%;border-collapse:collapse;border:1px solid #000;margin-bottom:0}
+    .top td{border:1px solid #000;vertical-align:middle;padding:4px 8px}
+    .td-ctrl{width:30%}
+    .td-info{width:40%;font-size:10.5px;line-height:1.6;text-align:center}
+    .td-fac{width:30%;text-align:center}
+    .fac-lbl{font-weight:900;font-size:16px;letter-spacing:1px;display:block;margin-bottom:4px}
+    .date-row{display:flex;justify-content:center;gap:0;border:1px solid #000;display:inline-flex}
+    .dbox{text-align:center;padding:2px 8px;border-left:1px solid #000;min-width:38px}
+    .dbox:first-child{border-left:none}
+    .dbox span{display:block;font-size:8.5px;font-weight:700}
+    /* ── N° Control grande ── */
+    .nctrl-row{border:1px solid #000;border-top:none;padding:4px 10px;margin-bottom:0}
+    .nctrl{color:red;font-size:23px;font-weight:900;letter-spacing:3px}
+    /* ── Cliente ── */
+    .cli{border:1px solid #000;border-top:none;padding:5px 8px}
+    .cli-r{display:flex;align-items:flex-end;gap:6px;margin-bottom:3px}
+    .cli-r label{white-space:nowrap;font-size:11px;font-weight:600}
+    .cli-line{flex:1;border-bottom:1px solid #000;min-height:15px;padding:0 3px;font-size:11.5px}
+    /* ── Tabla ítems ── */
     table.it{width:100%;border-collapse:collapse}
-    table.it th{border:1px solid #000;padding:4px 6px;font-size:11px;text-align:center;font-weight:700}
-    table.it td{border-top:none}
+    table.it th{border:1px solid #000;padding:4px 6px;font-size:11px;font-weight:700;text-align:center}
     .b1{border:1px solid #000;padding:3px 5px;font-size:11px}
     .tc{text-align:center}.tr{text-align:right}.fw{font-weight:600}
-    .foot{display:grid;grid-template-columns:1fr 220px;border:1px solid #000;border-top:none}
-    .foot-left{padding:8px 10px;border-right:1px solid #000}
-    .foot-left .fn{color:red;font-size:18px;font-weight:900;margin:3px 0}
-    .foot-left .orig{color:red;font-weight:700;font-size:12px;margin-top:6px}
-    .tot-row{display:flex;justify-content:space-between;padding:5px 10px;border-bottom:1px solid #000;font-size:11.5px}
-    .tot-row:last-child{border-bottom:none;font-weight:700}
-    .seniat{margin-top:6px;font-size:8px;text-align:center;color:#555;line-height:1.6;border-top:1px solid #ccc;padding-top:4px}
+    /* ── Pie ── */
+    .foot{width:100%;border-collapse:collapse;border:1px solid #000;border-top:none}
+    .foot td{border:1px solid #000;vertical-align:top;padding:7px 10px}
+    .td-orig .fn{color:red;font-size:19px;font-weight:900;margin:4px 0;letter-spacing:2px}
+    .td-orig .orig{color:red;font-weight:700;font-size:12px;margin-top:8px}
+    .td-tots .tot-row{display:flex;justify-content:space-between;padding:5px 4px;border-bottom:1px solid #ccc;font-size:11.5px}
+    .td-tots .tot-row:last-child{border-bottom:none;font-weight:700}
+    /* ── SENIAT ── */
+    .seniat{border:1px solid #000;border-top:none;padding:5px 8px;font-size:8px;color:#333;line-height:1.7;text-align:center}
     @media print{body{padding:10px}}
   </style></head><body>
+
   <div class="hdr">
     ${logoHdr}
     <div class="l1">Agencia Naviera y Aduanal</div>
     <div class="l2">MARIMAR, C.A.</div>
-    <div class="l3">Calle Simón Rodríguez, N° 10 &nbsp;|&nbsp; Teléfono: ${e.telefono||'0293-431.12.11'}</div>
-    <div class="l3">${e.ciudad||'Cumaná – Estado Sucre'}</div>
+    <div class="l3">Calle Simón Rodríguez, N° 10, Teléfono: ${e.telefono||'0293 - 431.12.11'}</div>
+    <div class="l3">${e.ciudad||'Cumaná – Estado Sucre.'}</div>
   </div>
 
-  <div class="top">
-    <div class="top-left">
-      <span style="font-weight:700">N° DE CONTROL &nbsp;</span>
-      <span style="color:red;font-weight:700">${r.ncontrol||'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}</span>
-    </div>
-    <div class="top-right">
-      <div class="tr-email">
-        Email: ${e.email||'agencianaviera@marimargroup.com'} &nbsp;|&nbsp; ${e.web||'marimargroup.com'}<br>
+  <table class="top">
+    <tr>
+      <td class="td-ctrl"><strong>N° DE CONTROL</strong></td>
+      <td class="td-info">
+        Email: ${e.email||'ag.marimar46@gmail.com'}<br>
         RIF: ${e.rut||'J-30029443-9'}
-      </div>
-      <div class="tr-factura">
-        <div class="fac-label">FACTURA</div>
-        <div class="date-grid">
+      </td>
+      <td class="td-fac">
+        <span class="fac-lbl">FACTURA</span>
+        <div class="date-row">
           <div class="dbox"><span>DIA</span>${dia}</div>
           <div class="dbox"><span>MES</span>${mes}</div>
           <div class="dbox"><span>AÑO</span>${anio}</div>
         </div>
-      </div>
-    </div>
+      </td>
+    </tr>
+  </table>
+
+  <div class="nctrl-row">
+    <span class="nctrl">N° &nbsp; ${r.ncontrol||'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}</span>
   </div>
 
-  <div class="num-row">
-    <div class="nf">N° &nbsp; ${r.folio||'—'}</div>
-    ${r.formaPago ? `<div style="font-size:11px">Forma de pago: <b>${r.formaPago}</b></div>` : ''}
-  </div>
-
-  <div class="client-box">
-    <div class="cl">
+  <div class="cli">
+    <div class="cli-r">
       <label>Nombre o Razón Social:</label>
-      <div class="cl-line">${r.razonSocial||''}</div>
+      <div class="cli-line">${r.razonSocial||''}</div>
     </div>
-    <div class="cl" style="justify-content:flex-end">
-      <label>RIF:</label>
-      <div class="cl-line" style="max-width:240px">${r.rut||''}</div>
-      ${r.direccion?`<label style="margin-left:12px">Dirección:</label><div class="cl-line" style="max-width:240px">${r.direccion}</div>`:''}
+    <div class="cli-r">
+      <label>Rif:</label>
+      <div class="cli-line" style="max-width:200px">${r.rut||''}</div>
+      ${r.direccion?`<label style="margin-left:14px">Dirección:</label><div class="cli-line" style="max-width:230px">${r.direccion}</div>`:''}
     </div>
   </div>
 
@@ -2074,30 +2079,33 @@ function printFact(r) {
     <thead><tr>
       <th style="width:80px">CANT</th>
       <th>CONCEPTO O DESCRIPCIÓN</th>
-      <th style="width:110px">P. Unit.</th>
-      <th style="width:120px">TOTAL</th>
+      <th style="width:105px">P. Unit.</th>
+      <th style="width:115px">TOTAL</th>
     </tr></thead>
     <tbody>${iRows}</tbody>
   </table>
 
-  <div class="foot">
-    <div class="foot-left">
-      <div>FACTURA</div>
-      <div class="fn">N° &nbsp; ${r.folio||'—'}</div>
-      ${r.obs ? `<div style="font-size:10px;margin-top:5px;color:#444">${r.obs}</div>` : ''}
-      <div class="orig">ORIGINAL: CLIENTE</div>
-    </div>
-    <div>
-      <div class="tot-row"><span>BASE IMPONIBLE</span><span>${fmt(neto)}</span></div>
-      <div class="tot-row"><span>I.V.A.: (${ivaP}%)</span><span>${fmt(iva)}</span></div>
-      <div class="tot-row"><span>Total a Pagar:</span><span>${fmt(total)}</span></div>
-    </div>
-  </div>
+  <table class="foot">
+    <tr>
+      <td class="td-orig" style="width:55%">
+        FACTURA
+        <div class="fn">N° &nbsp; ${r.folio||'—'}</div>
+        ${r.obs?`<div style="font-size:10px;color:#333;margin-top:4px">${r.obs}</div>`:''}
+        ${r.formaPago?`<div style="font-size:10px;margin-top:6px">Forma de pago: <b>${r.formaPago}</b></div>`:''}
+        <div class="orig">ORIGINAL: CLIENTE</div>
+      </td>
+      <td class="td-tots">
+        <div class="tot-row"><span>BASE IMPONIBLE</span><span>${fmt(neto)}</span></div>
+        <div class="tot-row"><span>I.V.A.:&nbsp;(${ivaP}&nbsp;%)</span><span>${fmt(iva)}</span></div>
+        <div class="tot-row"><span>Total a Pagar:</span><span><b>${fmt(total)}</b></span></div>
+      </td>
+    </tr>
+  </table>
 
-  <div class="seniat">${e.seniat||'Documento emitido por Agencia Naviera y Aduanal Marimar, C.A. — RIF: J-30029443-9'}</div>
+  <div class="seniat">${e.seniat||'Autorizado por Providencia Nº SENIAT — Agencia Naviera y Aduanal Marimar, C.A. — RIF: J-30029443-9'}</div>
   <script>window.onload=()=>window.print()<\/script></body></html>`;
 
-  const w = window.open('', '_blank', 'width=760,height=900');
+  const w = window.open('', '_blank', 'width=760,height=960');
   w.document.write(html);
   w.document.close();
 }

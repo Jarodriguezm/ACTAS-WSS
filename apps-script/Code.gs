@@ -20,7 +20,7 @@ const EMPRESA = {
   telefono:  '0293-431.12.11',
   web:       'https://marimargroup.com/',
   ivaPorc:   16,
-  seniat:    'Autorizado por Providencia Nº SENIAT. Documento digital emitido por Agencia Naviera y Aduanal Marimar, C.A. — RIF: J-30029443-9',
+  seniat:    'Tipografia Y Papeleria Rosales, C.A. - Calle Las Delicias, N° 46 Caigüire, Telefax: (0293) 431.80.96 - Cumaná - RIF: J-30282010-3 | Autorizado por Providencia Nº SENIAT/07/00057 de Fecha 30/01/2008, Control desde el N° 00 04801 Hasta el N° 00 05300 | Factura desde el N°. 09601 hasta el N°. 10100, Elaborado el 31/07/2019',
 };
 
 const SHEET_NAMES = {
