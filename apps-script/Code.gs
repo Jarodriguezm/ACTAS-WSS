@@ -7,12 +7,12 @@ const SPREADSHEET_ID = '1CzVPvS3FO533RYypXVWF6XN-4vxEADCegzVWm_eHoRE';
 // ── Logo: pega el ID del archivo en Google Drive ─────────────
 // Sube el logo a Drive → clic derecho → Obtener enlace
 // El ID es la parte larga entre /d/ y /view en el enlace
-const LOGO_DRIVE_ID = '';  // ← pega aquí el ID, ej: '1A2B3cXyZ...'
+const LOGO_DRIVE_ID = '1wTNDAnEGfbej0U_5PwZLddNYmxlQOlKg';  // logo_wss-removebg-preview.png
 
 // ── Datos de la empresa emisora (para facturas) ──────────────
 const EMPRESA = {
   nombre:    'MARIMAR AGENCIA NAVIERA Y ADUANAL CA',
-  rut:       '',          // ← tu RUT empresa
+  rut:       'J-30029443-9',
   giro:      'Agencia Naviera y Aduanal',
   direccion: '',          // ← tu dirección
   ciudad:    '',          // ← tu ciudad
