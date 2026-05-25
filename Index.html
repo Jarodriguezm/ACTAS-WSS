@@ -331,8 +331,7 @@ html,body{height:100%;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;col
     <img id="nav-logo"
          src="https://lh3.googleusercontent.com/d/1yFD7ZHpeSTZStxTU6RCtbbuASY-NhluD"
          style="height:30px;width:auto;object-fit:contain;border-radius:3px;flex-shrink:0;background:transparent"
-         alt="Marimar"
-         onerror="this.style.display='none';document.getElementById('nav-mg').style.display='flex'">
+         alt="Marimar">
     <div class="mg" id="nav-mg" style="display:none">MG</div>
     <span>Marimar Group</span>
   </div>
@@ -2141,6 +2140,17 @@ function openSheet() {
     const el = document.getElementById(id);
     if (el) el.value = today;
   });
+
+  // Fallback del logo: si la imagen no carga, muestra el bloque MG
+  const navLogo = document.getElementById('nav-logo');
+  const navMg   = document.getElementById('nav-mg');
+  if (navLogo) {
+    navLogo.onerror = function() {
+      navLogo.style.display = 'none';
+      if (navMg) navMg.style.display = 'flex';
+    };
+  }
+
   buildSidebar('comercial');
   loadDashboard();
   loadLogo();
