@@ -1953,16 +1953,23 @@ function loadNextFolio() {
 
 // ── loadLogo ──────────────────────────────────────────────────
 function loadLogo() {
+  const LOGO_ID      = '1yFD7ZHpeSTZStxTU6RCtbbuASY-NhluD';
+  const DRIVE_URL    = 'https://drive.google.com/uc?id=' + LOGO_ID + '&export=view';
+
+  function applyLogo(src) {
+    if (!src) return;
+    logoSrc = src;
+    const img = document.getElementById('nav-logo');
+    const mg  = document.getElementById('nav-mg');
+    if (img) { img.src = src; img.style.display = 'block'; }
+    if (mg)  mg.style.display = 'none';
+  }
+
   google.script.run
-    .withSuccessHandler(src => {
-      if (!src) return;
-      logoSrc = src;
-      const img = document.getElementById('nav-logo');
-      const mg  = document.getElementById('nav-mg');
-      if (img) { img.src = src; img.style.display = 'block'; }
-      if (mg)  mg.style.display = 'none';
-    })
+    .withSuccessHandler(src => applyLogo(src || DRIVE_URL))
+    .withFailureHandler(() => applyLogo(DRIVE_URL))
     .getLogoBase64();
+
   google.script.run
     .withSuccessHandler(d => { if (d) EMPRESA_DATA = d; })
     .getEmpresaData();

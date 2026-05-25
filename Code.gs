@@ -67,7 +67,10 @@ function getLogoBase64() {
     const blob  = DriveApp.getFileById(LOGO_DRIVE_ID).getBlob();
     const b64   = Utilities.base64Encode(blob.getBytes());
     return 'data:' + blob.getContentType() + ';base64,' + b64;
-  } catch(e) { return ''; }
+  } catch(e) {
+    Logger.log('getLogoBase64 error: ' + e.message);
+    return '';
+  }
 }
 
 function getEmpresaData() {
