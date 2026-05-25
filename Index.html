@@ -328,8 +328,12 @@ html,body{height:100%;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;col
 <!-- ═══════════ TOP NAV ═══════════ -->
 <div id="topnav">
   <div class="tn-brand">
-    <div class="mg" id="nav-mg">MG</div>
-    <img id="nav-logo" style="display:none;height:30px;width:auto;object-fit:contain;border-radius:3px;flex-shrink:0" alt="Marimar">
+    <img id="nav-logo"
+         src="https://lh3.googleusercontent.com/d/1yFD7ZHpeSTZStxTU6RCtbbuASY-NhluD"
+         style="height:30px;width:auto;object-fit:contain;border-radius:3px;flex-shrink:0;background:transparent"
+         alt="Marimar"
+         onerror="this.style.display='none';document.getElementById('nav-mg').style.display='flex'">
+    <div class="mg" id="nav-mg" style="display:none">MG</div>
     <span>Marimar Group</span>
   </div>
   <div class="tn-links">
@@ -1952,23 +1956,11 @@ function loadNextFolio() {
 }
 
 // ── loadLogo ──────────────────────────────────────────────────
+// El nav ya muestra el logo directamente en el HTML.
+// Esta función solo carga logoSrc para los PDFs.
 function loadLogo() {
-  const LOGO_ID      = '1yFD7ZHpeSTZStxTU6RCtbbuASY-NhluD';
-  const DRIVE_URL    = 'https://lh3.googleusercontent.com/d/' + LOGO_ID;
-
-  function applyLogo(src) {
-    if (!src) return;
-    logoSrc = src;
-    const img = document.getElementById('nav-logo');
-    const mg  = document.getElementById('nav-mg');
-    if (img) { img.src = src; img.style.display = 'block'; }
-    if (mg)  mg.style.display = 'none';
-  }
-
-  google.script.run
-    .withSuccessHandler(src => applyLogo(src || DRIVE_URL))
-    .withFailureHandler(() => applyLogo(DRIVE_URL))
-    .getLogoBase64();
+  const LOGO_ID = '1yFD7ZHpeSTZStxTU6RCtbbuASY-NhluD';
+  logoSrc = 'https://lh3.googleusercontent.com/d/' + LOGO_ID;
 
   google.script.run
     .withSuccessHandler(d => { if (d) EMPRESA_DATA = d; })
