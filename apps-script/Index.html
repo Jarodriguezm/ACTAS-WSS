@@ -988,8 +988,10 @@ html,body{height:100%;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;col
             <div class="f-card-hdr">🧾 Datos del Documento</div>
             <div class="f-body">
               <div class="f-grid fg-4">
-                <div class="f-field"><label>N° Folio</label><input type="text" id="fac-folio" required placeholder="FAC-0001" readonly style="background:#f5f5f5"></div>
+                <div class="f-field"><label>N° Factura</label><input type="text" id="fac-folio" required placeholder="05121" readonly style="background:#f5f5f5"></div>
+                <div class="f-field"><label>N° de Control</label><input type="text" id="fac-ncontrol" placeholder="09921"></div>
                 <div class="f-field"><label>Fecha</label><input type="date" id="fac-fecha" required></div>
+                <div class="f-field"><label>IVA %</label><input type="number" id="fac-ivaPorc" value="16" min="0" max="100" oninput="recalc('facturas')"></div>
                 <div class="f-field"><label>Forma de Pago</label>
                   <select id="fac-formaPago"><option>Contado</option><option>30 días</option><option>60 días</option><option>Transferencia</option><option>Cheque</option></select>
                 </div>
@@ -1008,30 +1010,30 @@ html,body{height:100%;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;col
                     <option value="">— Seleccionar cliente —</option>
                   </select>
                 </div>
-                <div class="f-field"><label>RUT</label><input type="text" id="fac-rut" required placeholder="12.345.678-9"></div>
-                <div class="f-field"><label>Razón Social</label><input type="text" id="fac-razonSocial" required placeholder="Nombre o empresa"></div>
-                <div class="f-field sp2"><label>Giro / Actividad</label><input type="text" id="fac-giro"></div>
+                <div class="f-field"><label>Nombre o Razón Social</label><input type="text" id="fac-razonSocial" required placeholder="Empresa o persona"></div>
+                <div class="f-field"><label>RIF</label><input type="text" id="fac-rut" required placeholder="J-30000000-0"></div>
+                <div class="f-field"><label>Dirección</label><input type="text" id="fac-direccion"></div>
                 <div class="f-field"><label>Email</label><input type="email" id="fac-email"></div>
-                <div class="f-field sp2"><label>Dirección</label><input type="text" id="fac-direccion"></div>
-                <div class="f-field"><label>Ciudad</label><input type="text" id="fac-ciudad"></div>
+                <div class="f-field"><label>Teléfono</label><input type="text" id="fac-ciudad"></div>
               </div>
+              <input type="hidden" id="fac-giro">
             </div>
           </div>
           <div class="f-card">
-            <div class="f-card-hdr">📦 Ítems / Servicios</div>
+            <div class="f-card-hdr">📦 Concepto / Servicios</div>
             <div class="f-body">
               <div class="items-wrap">
                 <table class="itbl">
-                  <thead><tr><th style="width:36px">#</th><th>Descripción</th><th style="width:80px">Unidad</th><th style="width:70px">Cant.</th><th style="width:110px">P.Unit.</th><th style="width:120px">Total</th><th style="width:30px"></th></tr></thead>
+                  <thead><tr><th style="width:36px">#</th><th>Concepto o Descripción</th><th style="width:80px">Unidad</th><th style="width:70px">Cant.</th><th style="width:110px">P.Unit.</th><th style="width:120px">Total</th><th style="width:30px"></th></tr></thead>
                   <tbody id="facturas-items-body"></tbody>
                 </table>
               </div>
               <div class="items-footer">
                 <button type="button" class="btn btn-ghost btn-sm" onclick="addItem('facturas')">➕ Agregar ítem</button>
                 <div class="total-box">
-                  <div class="t-row"><span>Neto</span><span id="facturas-subtotal">$0</span></div>
-                  <div class="t-row"><span>IVA (19%)</span><span id="facturas-iva">$0</span></div>
-                  <div class="t-row grand"><span>TOTAL</span><span id="facturas-total">$0</span></div>
+                  <div class="t-row"><span>Base Imponible</span><span id="facturas-subtotal">$0</span></div>
+                  <div class="t-row"><span id="facturas-iva-lbl">IVA (16%)</span><span id="facturas-iva">$0</span></div>
+                  <div class="t-row grand"><span>Total a Pagar</span><span id="facturas-total">$0</span></div>
                 </div>
               </div>
             </div>
@@ -1599,10 +1601,13 @@ function recalc(type) {
     tr.cells[5].textContent = '$' + fmt(line);
     sub += line;
   });
-  const iva = sub * 0.19;
+  const ivaP  = type==='facturas' ? (parseFloat(document.getElementById('fac-ivaPorc')?.value)||16) : 19;
+  const iva   = sub * (ivaP/100);
   document.getElementById(type+'-subtotal').textContent = '$'+fmt(sub);
   document.getElementById(type+'-iva').textContent      = '$'+fmt(iva);
   document.getElementById(type+'-total').textContent    = '$'+fmt(sub+iva);
+  const ivaLbl = document.getElementById(type+'-iva-lbl');
+  if (ivaLbl) ivaLbl.textContent = 'IVA ('+ivaP+'%)';
 }
 
 function getItems(type) {
@@ -1808,20 +1813,20 @@ function printRecord(type, id) {
 
 function printDoc(type) {
   if (type === 'facturas') {
-    const items = getItems('facturas');
-    const neto  = items.reduce((a,i)=>a+i.total,0);
+    const items  = getItems('facturas');
+    const neto   = items.reduce((a,i)=>a+i.total,0);
+    const ivaP   = parseFloat(document.getElementById('fac-ivaPorc')?.value)||16;
     printFact({
       folio:      document.getElementById('fac-folio').value,
+      ncontrol:   document.getElementById('fac-ncontrol').value,
       fecha:      document.getElementById('fac-fecha').value,
       rut:        document.getElementById('fac-rut').value,
       razonSocial:document.getElementById('fac-razonSocial').value,
-      giro:       document.getElementById('fac-giro').value,
       direccion:  document.getElementById('fac-direccion').value,
-      ciudad:     document.getElementById('fac-ciudad').value,
       email:      document.getElementById('fac-email').value,
       formaPago:  document.getElementById('fac-formaPago').value,
       obs:        document.getElementById('fac-obs').value,
-      items, neto, iva:neto*0.19, total:neto*1.19,
+      ivaPorc: ivaP, items, neto, iva:neto*(ivaP/100), total:neto*(1+ivaP/100),
     });
     return;
   }
@@ -1904,21 +1909,23 @@ function openPrintWin(type, r) {
 // ── saveFact ──────────────────────────────────────────────────
 function saveFact(e) {
   e.preventDefault();
-  const items = getItems('facturas');
-  const neto  = items.reduce((a,i)=>a+i.total,0);
-  const data  = {
+  const items  = getItems('facturas');
+  const neto   = items.reduce((a,i)=>a+i.total,0);
+  const ivaP   = parseFloat(document.getElementById('fac-ivaPorc')?.value)||16;
+  const data   = {
     folio:      document.getElementById('fac-folio').value,
+    ncontrol:   document.getElementById('fac-ncontrol').value,
     fecha:      document.getElementById('fac-fecha').value,
     rut:        document.getElementById('fac-rut').value,
     razonSocial:document.getElementById('fac-razonSocial').value,
-    giro:       document.getElementById('fac-giro').value,
+    giro:       document.getElementById('fac-giro').value||'',
     direccion:  document.getElementById('fac-direccion').value,
     ciudad:     document.getElementById('fac-ciudad').value,
     email:      document.getElementById('fac-email').value,
     formaPago:  document.getElementById('fac-formaPago').value,
     estado:     document.getElementById('fac-estado').value,
     obs:        document.getElementById('fac-obs').value,
-    items, neto, iva:neto*0.19, total:neto*1.19,
+    ivaPorc: ivaP, items, neto, iva:neto*(ivaP/100), total:neto*(1+ivaP/100),
   };
   serverSave('facturas', data);
 }
@@ -1950,88 +1957,149 @@ function loadLogo() {
     .getEmpresaData();
 }
 
-// ── printFact — formato factura chilena ───────────────────────
+// ── printFact — formato SENIAT Venezuela ──────────────────────
 function printFact(r) {
-  const e = EMPRESA_DATA;
-  const logoHtml = logoSrc
-    ? `<img src="${logoSrc}" style="max-height:70px;max-width:200px;object-fit:contain">`
-    : `<div style="font-size:20px;font-weight:900;color:#1d4373">MARIMAR GROUP</div>`;
-  const iRows = (r.items||[]).map((it,i)=>`<tr>
-    <td style="text-align:center">${i+1}</td>
-    <td>${it.desc||''}</td>
-    <td style="text-align:center">${it.unit||''}</td>
-    <td style="text-align:right">${it.qty||0}</td>
-    <td style="text-align:right">$${fmt(it.price)}</td>
-    <td style="text-align:right;font-weight:600">$${fmt(it.total)}</td>
+  const e       = EMPRESA_DATA;
+  const ivaP    = r.ivaPorc || e.ivaPorc || 16;
+  const neto    = r.neto || r.subtotal || 0;
+  const iva     = neto * (ivaP / 100);
+  const total   = neto + iva;
+
+  const fParts  = (r.fecha||'').split('-');
+  const dia  = fParts[2]||'';
+  const mes  = fParts[1]||'';
+  const anio = fParts[0]||'';
+
+  const items   = r.items || [];
+  const minRows = Math.max(items.length, 13);
+  let iRows = items.map(it => `<tr>
+    <td class="tc b1">${it.qty||''}</td>
+    <td class="b1">${it.desc||''}</td>
+    <td class="tr b1">${it.price ? fmt(it.price) : ''}</td>
+    <td class="tr b1 fw">${it.total ? fmt(it.total) : ''}</td>
   </tr>`).join('');
-  const html=`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  for (let i = items.length; i < minRows; i++) {
+    iRows += `<tr style="height:20px"><td class="b1"></td><td class="b1"></td><td class="b1"></td><td class="b1"></td></tr>`;
+  }
+
+  const logoHdr = logoSrc
+    ? `<img src="${logoSrc}" style="max-height:55px;max-width:180px;object-fit:contain;display:block;margin:0 auto 4px">`
+    : '';
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
   <title>Factura N° ${r.folio||''}</title>
   <style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#333;padding:24px;max-width:900px;margin:0 auto}
-  .dh{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:14px;border-bottom:3px solid #1d4373}
-  .dt{text-align:right}.dt .tipo{font-size:10px;background:#1d4373;color:#fff;padding:3px 8px;border-radius:2px;letter-spacing:1px}
-  .dt .folio{font-size:28px;font-weight:900;color:#1d4373;margin-top:4px}
-  .dt .fecha{font-size:11px;color:#666;margin-top:2px}
-  .parties{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
-  .pb{border:1px solid #ddd;border-radius:3px;overflow:hidden}
-  .pb-h{background:#1d4373;color:#fff;padding:5px 10px;font-size:10px;letter-spacing:.5px;font-weight:700;text-transform:uppercase}
-  .pb-b{padding:8px 10px}.pb-n{font-size:14px;font-weight:700;color:#1d4373;margin-bottom:3px}
-  .pb-r{font-size:11px;color:#555;padding:1px 0}
-  table.det{width:100%;border-collapse:collapse;margin-bottom:12px}
-  table.det th{background:#1d4373;color:#fff;padding:7px 8px;font-size:10.5px;text-align:left;font-weight:600}
-  table.det td{padding:7px 8px;border-bottom:1px solid #eee;font-size:11.5px}
-  table.det tr:last-child td{border-bottom:none}
-  .tots{display:flex;justify-content:flex-end}
-  .tb{min-width:240px;border:1px solid #ddd;border-radius:3px;overflow:hidden}
-  .tr{display:flex;justify-content:space-between;padding:7px 12px;border-bottom:1px solid #eee;font-size:12px}
-  .tr:last-child{border-bottom:none}
-  .tr.g{background:#1d4373;color:#fff;font-size:14px;font-weight:700}
-  .obs{margin-top:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:3px;padding:10px 12px;font-size:11.5px}
-  .sigs{margin-top:36px;display:flex;justify-content:space-around;text-align:center}
-  .sig{border-top:1px solid #ccc;width:180px;padding-top:7px;font-size:11px;color:#888}
-  @media print{body{padding:14px}}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:Arial,sans-serif;font-size:11.5px;color:#000;padding:18px 22px;max-width:700px;margin:0 auto}
+    .hdr{text-align:center;margin-bottom:8px;line-height:1.35}
+    .hdr .l1{font-size:15px;font-weight:700}
+    .hdr .l2{font-size:20px;font-weight:900;letter-spacing:.5px}
+    .hdr .l3{font-size:11px}
+    .top{display:grid;grid-template-columns:1fr auto;border:1px solid #000}
+    .top-left{padding:5px 8px;border-right:1px solid #000}
+    .top-right{display:flex;flex-direction:column}
+    .tr-email{padding:4px 10px;border-bottom:1px solid #000;font-size:10.5px;line-height:1.5}
+    .tr-factura{display:flex;align-items:center;gap:0;flex:1}
+    .fac-label{padding:5px 12px;font-weight:900;font-size:16px;letter-spacing:1px;border-right:1px solid #000;white-space:nowrap}
+    .date-grid{display:flex}
+    .dbox{text-align:center;border-left:1px solid #000;padding:3px 10px;min-width:42px}
+    .dbox span{display:block;font-size:9px;font-weight:700;color:#444}
+    .num-row{border:1px solid #000;border-top:none;display:flex;justify-content:space-between;align-items:center;padding:3px 8px;margin-bottom:4px}
+    .nf{color:red;font-size:22px;font-weight:900;letter-spacing:2px}
+    .client-box{border:1px solid #000;padding:5px 8px;margin-bottom:0}
+    .cl{display:flex;align-items:flex-end;margin-bottom:4px;gap:6px}
+    .cl label{white-space:nowrap;font-size:11px}
+    .cl-line{flex:1;border-bottom:1px solid #000;min-height:15px;padding:0 3px;font-size:11.5px}
+    table.it{width:100%;border-collapse:collapse}
+    table.it th{border:1px solid #000;padding:4px 6px;font-size:11px;text-align:center;font-weight:700}
+    table.it td{border-top:none}
+    .b1{border:1px solid #000;padding:3px 5px;font-size:11px}
+    .tc{text-align:center}.tr{text-align:right}.fw{font-weight:600}
+    .foot{display:grid;grid-template-columns:1fr 220px;border:1px solid #000;border-top:none}
+    .foot-left{padding:8px 10px;border-right:1px solid #000}
+    .foot-left .fn{color:red;font-size:18px;font-weight:900;margin:3px 0}
+    .foot-left .orig{color:red;font-weight:700;font-size:12px;margin-top:6px}
+    .tot-row{display:flex;justify-content:space-between;padding:5px 10px;border-bottom:1px solid #000;font-size:11.5px}
+    .tot-row:last-child{border-bottom:none;font-weight:700}
+    .seniat{margin-top:6px;font-size:8px;text-align:center;color:#555;line-height:1.6;border-top:1px solid #ccc;padding-top:4px}
+    @media print{body{padding:10px}}
   </style></head><body>
-  <div class="dh">
-    <div>${logoHtml}</div>
-    <div class="dt"><div class="tipo">FACTURA</div><div class="folio">N° ${r.folio||'—'}</div><div class="fecha">${r.fecha||''}</div></div>
+  <div class="hdr">
+    ${logoHdr}
+    <div class="l1">Agencia Naviera y Aduanal</div>
+    <div class="l2">MARIMAR, C.A.</div>
+    <div class="l3">Calle Simón Rodríguez, N° 10 &nbsp;|&nbsp; Teléfono: ${e.telefono||'0293-431.12.11'}</div>
+    <div class="l3">${e.ciudad||'Cumaná – Estado Sucre'}</div>
   </div>
-  <div class="parties">
-    <div class="pb"><div class="pb-h">Emisor</div><div class="pb-b">
-      <div class="pb-n">${e.nombre||'MARIMAR AGENCIA NAVIERA Y ADUANAL CA'}</div>
-      ${e.rut?`<div class="pb-r">RUT: ${e.rut}</div>`:''}
-      ${e.giro?`<div class="pb-r">Giro: ${e.giro}</div>`:''}
-      ${e.direccion?`<div class="pb-r">${e.direccion}${e.ciudad?', '+e.ciudad:''}</div>`:''}
-      ${e.email?`<div class="pb-r">✉ ${e.email}</div>`:''}
-      ${e.telefono?`<div class="pb-r">☎ ${e.telefono}</div>`:''}
-      ${e.web?`<div class="pb-r">🌐 ${e.web}</div>`:''}
-    </div></div>
-    <div class="pb"><div class="pb-h">Receptor</div><div class="pb-b">
-      <div class="pb-n">${r.razonSocial||'—'}</div>
-      ${r.rut?`<div class="pb-r">RUT: ${r.rut}</div>`:''}
-      ${r.giro?`<div class="pb-r">Giro: ${r.giro}</div>`:''}
-      ${r.direccion?`<div class="pb-r">${r.direccion}${r.ciudad?', '+r.ciudad:''}</div>`:''}
-      ${r.email?`<div class="pb-r">${r.email}</div>`:''}
-    </div></div>
+
+  <div class="top">
+    <div class="top-left">
+      <span style="font-weight:700">N° DE CONTROL &nbsp;</span>
+      <span style="color:red;font-weight:700">${r.ncontrol||'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}</span>
+    </div>
+    <div class="top-right">
+      <div class="tr-email">
+        Email: ${e.email||'agencianaviera@marimargroup.com'} &nbsp;|&nbsp; ${e.web||'marimargroup.com'}<br>
+        RIF: ${e.rut||'J-30029443-9'}
+      </div>
+      <div class="tr-factura">
+        <div class="fac-label">FACTURA</div>
+        <div class="date-grid">
+          <div class="dbox"><span>DIA</span>${dia}</div>
+          <div class="dbox"><span>MES</span>${mes}</div>
+          <div class="dbox"><span>AÑO</span>${anio}</div>
+        </div>
+      </div>
+    </div>
   </div>
-  <table class="det">
-    <thead><tr><th>#</th><th>Descripción</th><th>Unidad</th><th style="text-align:right">Cant.</th><th style="text-align:right">P.Unit.</th><th style="text-align:right">Total</th></tr></thead>
+
+  <div class="num-row">
+    <div class="nf">N° &nbsp; ${r.folio||'—'}</div>
+    ${r.formaPago ? `<div style="font-size:11px">Forma de pago: <b>${r.formaPago}</b></div>` : ''}
+  </div>
+
+  <div class="client-box">
+    <div class="cl">
+      <label>Nombre o Razón Social:</label>
+      <div class="cl-line">${r.razonSocial||''}</div>
+    </div>
+    <div class="cl" style="justify-content:flex-end">
+      <label>RIF:</label>
+      <div class="cl-line" style="max-width:240px">${r.rut||''}</div>
+      ${r.direccion?`<label style="margin-left:12px">Dirección:</label><div class="cl-line" style="max-width:240px">${r.direccion}</div>`:''}
+    </div>
+  </div>
+
+  <table class="it">
+    <thead><tr>
+      <th style="width:80px">CANT</th>
+      <th>CONCEPTO O DESCRIPCIÓN</th>
+      <th style="width:110px">P. Unit.</th>
+      <th style="width:120px">TOTAL</th>
+    </tr></thead>
     <tbody>${iRows}</tbody>
   </table>
-  <div class="tots"><div class="tb">
-    <div class="tr"><span>Neto</span><span>$${fmt(r.neto||r.subtotal)}</span></div>
-    <div class="tr"><span>IVA (19%)</span><span>$${fmt(r.iva)}</span></div>
-    <div class="tr g"><span>TOTAL</span><span>$${fmt(r.total)}</span></div>
-  </div></div>
-  ${r.obs?`<div class="obs"><b>Obs:</b> ${r.obs}</div>`:''}
-  ${r.formaPago?`<div style="margin-top:8px;font-size:11px;color:#555">Forma de pago: <b>${r.formaPago}</b></div>`:''}
-  <div class="sigs">
-    <div class="sig">Firma Emisor<br>&nbsp;</div>
-    <div class="sig">Receptor<br>&nbsp;</div>
+
+  <div class="foot">
+    <div class="foot-left">
+      <div>FACTURA</div>
+      <div class="fn">N° &nbsp; ${r.folio||'—'}</div>
+      ${r.obs ? `<div style="font-size:10px;margin-top:5px;color:#444">${r.obs}</div>` : ''}
+      <div class="orig">ORIGINAL: CLIENTE</div>
+    </div>
+    <div>
+      <div class="tot-row"><span>BASE IMPONIBLE</span><span>${fmt(neto)}</span></div>
+      <div class="tot-row"><span>I.V.A.: (${ivaP}%)</span><span>${fmt(iva)}</span></div>
+      <div class="tot-row"><span>Total a Pagar:</span><span>${fmt(total)}</span></div>
+    </div>
   </div>
+
+  <div class="seniat">${e.seniat||'Documento emitido por Agencia Naviera y Aduanal Marimar, C.A. — RIF: J-30029443-9'}</div>
   <script>window.onload=()=>window.print()<\/script></body></html>`;
-  const w = window.open('','_blank','width=920,height=720');
-  w.document.write(html); w.document.close();
+
+  const w = window.open('', '_blank', 'width=760,height=900');
+  w.document.write(html);
+  w.document.close();
 }
 
 // ── Sidebar search ────────────────────────────────────────────

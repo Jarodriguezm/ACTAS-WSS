@@ -19,6 +19,8 @@ const EMPRESA = {
   email:     'agencianaviera@marimargroup.com',
   telefono:  '0293-431.12.11',
   web:       'https://marimargroup.com/',
+  ivaPorc:   16,
+  seniat:    'Autorizado por Providencia Nº SENIAT. Documento digital emitido por Agencia Naviera y Aduanal Marimar, C.A. — RIF: J-30029443-9',
 };
 
 const SHEET_NAMES = {
@@ -40,9 +42,9 @@ const HEADERS = {
   oc:  ['id','num','fecha','estado','proveedor','rut','contacto','email',
         'proyecto','otRef','pago','entrega','fechaEntrega','solicitante',
         'obs','items','subtotal','iva','total','createdAt'],
-  facturas:   ['id','folio','fecha','rut','razonSocial','giro','direccion',
-               'ciudad','email','items','neto','iva','total','formaPago',
-               'estado','obs','createdAt'],
+  facturas:   ['id','folio','ncontrol','fecha','rut','razonSocial','giro',
+               'direccion','ciudad','email','items','neto','iva','ivaPorc',
+               'total','formaPago','estado','obs','createdAt'],
   clientes:   ['id','codigo','nombre','rut','giro','email','telefono',
                'direccion','ciudad','tipo','estado','obs','createdAt'],
   productos:  ['id','codigo','nombre','descripcion','unidad','precio',
