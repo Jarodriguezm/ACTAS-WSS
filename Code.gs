@@ -61,25 +61,11 @@ function doGet() {
 }
 
 // ── Logo ────────────────────────────────────────────────────
+// Devuelve la URL pública del logo — cero scopes adicionales requeridos.
+// El archivo debe estar compartido como "Cualquiera con el enlace puede ver".
 function getLogoBase64() {
   if (!LOGO_DRIVE_ID) return '';
-  try {
-    // Usa UrlFetchApp en lugar de DriveApp — no necesita scope de Drive.
-    // Requisito: el archivo en Drive debe estar compartido como
-    // "Cualquiera con el enlace puede ver".
-    const url  = 'https://drive.google.com/uc?id=' + LOGO_DRIVE_ID + '&export=view';
-    const resp = UrlFetchApp.fetch(url, { followRedirects: true, muteHttpExceptions: true });
-    if (resp.getResponseCode() !== 200) {
-      Logger.log('getLogoBase64: HTTP ' + resp.getResponseCode());
-      return '';
-    }
-    const blob = resp.getBlob();
-    const b64  = Utilities.base64Encode(blob.getBytes());
-    return 'data:' + blob.getContentType() + ';base64,' + b64;
-  } catch(e) {
-    Logger.log('getLogoBase64 error: ' + e.message);
-    return '';
-  }
+  return 'https://drive.google.com/uc?id=' + LOGO_DRIVE_ID + '&export=view';
 }
 
 function getEmpresaData() {
