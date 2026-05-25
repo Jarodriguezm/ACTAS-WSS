@@ -65,7 +65,7 @@ function doGet() {
 // El archivo debe estar compartido como "Cualquiera con el enlace puede ver".
 function getLogoBase64() {
   if (!LOGO_DRIVE_ID) return '';
-  return 'https://drive.google.com/uc?id=' + LOGO_DRIVE_ID + '&export=view';
+  return 'https://lh3.googleusercontent.com/d/' + LOGO_DRIVE_ID;
 }
 
 function getEmpresaData() {
