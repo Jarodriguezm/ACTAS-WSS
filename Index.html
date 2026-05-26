@@ -355,7 +355,65 @@ html,body{height:100%;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;col
     <div class="sb-search">
       <input type="text" id="sb-search-input" placeholder="Buscar…" oninput="sbSearch(this.value)">
     </div>
-    <div id="sidebar-nav"></div>
+    <div id="sidebar-nav">
+      <!-- COMERCIAL -->
+      <div class="sb-area" id="sba-comercial">
+        <div class="sb-section">
+          <div class="sb-title" onclick="showView('cot-nueva')"><span class="sb-ico ico-green">■</span>Cotizaciones</div>
+          <div class="sb-item" data-view="cot-nueva" onclick="showView('cot-nueva',this)">Nueva Cotización</div>
+          <div class="sb-item" data-view="cot-lista" onclick="showView('cot-lista',this)">Listado</div>
+          <div class="sb-item" data-view="cot-stats" onclick="showView('cot-stats',this)">Estadísticas</div>
+        </div>
+        <div class="sb-section">
+          <div class="sb-title" onclick="showView('ot-nueva')"><span class="sb-ico ico-blue">■</span>Órdenes de trabajo</div>
+          <div class="sb-item" data-view="ot-nueva" onclick="showView('ot-nueva',this)">Crear O.T.</div>
+          <div class="sb-item" data-view="ot-lista" onclick="showView('ot-lista',this)">Listado</div>
+          <div class="sb-item" data-view="ot-stats" onclick="showView('ot-stats',this)">Estadísticas</div>
+        </div>
+        <div class="sb-section">
+          <div class="sb-title" onclick="showView('oc-nueva')"><span class="sb-ico ico-orange">■</span>Órdenes de compra</div>
+          <div class="sb-item" data-view="oc-nueva" onclick="showView('oc-nueva',this)">Nueva orden</div>
+          <div class="sb-item" data-view="oc-lista" onclick="showView('oc-lista',this)">Listado</div>
+          <div class="sb-item" data-view="oc-stats" onclick="showView('oc-stats',this)">Estadísticas</div>
+        </div>
+        <div class="sb-section">
+          <div class="sb-title" onclick="showView('sol-nueva')"><span class="sb-ico ico-teal">■</span>Solicitud de Factura</div>
+          <div class="sb-item" data-view="sol-nueva" onclick="showView('sol-nueva',this)">Nueva Solicitud</div>
+          <div class="sb-item" data-view="sol-lista" onclick="showView('sol-lista',this)">Listado</div>
+          <div class="sb-item" data-view="sol-stats" onclick="showView('sol-stats',this)">Estadísticas</div>
+        </div>
+        <div class="sb-section">
+          <div class="sb-title" onclick="showView('facturas-nueva')"><span class="sb-ico ico-purple">■</span>Facturas</div>
+          <div class="sb-item" data-view="facturas-nueva" onclick="showView('facturas-nueva',this)">Nueva Factura</div>
+          <div class="sb-item" data-view="facturas-lista" onclick="showView('facturas-lista',this)">Listado</div>
+          <div class="sb-item" data-view="facturas-stats" onclick="showView('facturas-stats',this)">Estadísticas</div>
+        </div>
+      </div>
+      <!-- CLIENTES -->
+      <div class="sb-area" id="sba-clientes" style="display:none">
+        <div class="sb-section">
+          <div class="sb-title" onclick="showView('clientes-nuevo')"><span class="sb-ico ico-teal">■</span>Clientes</div>
+          <div class="sb-item" data-view="clientes-nuevo" onclick="showView('clientes-nuevo',this)">Nuevo Cliente</div>
+          <div class="sb-item" data-view="clientes-lista" onclick="showView('clientes-lista',this)">Listado</div>
+        </div>
+      </div>
+      <!-- PRODUCTOS -->
+      <div class="sb-area" id="sba-productos" style="display:none">
+        <div class="sb-section">
+          <div class="sb-title" onclick="showView('productos-nuevo')"><span class="sb-ico ico-purple">■</span>Productos / Servicios</div>
+          <div class="sb-item" data-view="productos-nuevo" onclick="showView('productos-nuevo',this)">Nuevo Producto</div>
+          <div class="sb-item" data-view="productos-lista" onclick="showView('productos-lista',this)">Listado</div>
+        </div>
+      </div>
+      <!-- PROVEEDORES -->
+      <div class="sb-area" id="sba-proveedores" style="display:none">
+        <div class="sb-section">
+          <div class="sb-title" onclick="showView('proveedores-nuevo')"><span class="sb-ico ico-gray">■</span>Proveedores</div>
+          <div class="sb-item" data-view="proveedores-nuevo" onclick="showView('proveedores-nuevo',this)">Nuevo Proveedor</div>
+          <div class="sb-item" data-view="proveedores-lista" onclick="showView('proveedores-lista',this)">Listado</div>
+        </div>
+      </div>
+    </div>
   </nav>
 
   <!-- MAIN -->
@@ -1279,25 +1337,8 @@ const AREAS = {
 };
 
 function buildSidebar(area) {
-  const nav = document.getElementById('sidebar-nav');
-  nav.innerHTML = '';
-  (AREAS[area] || []).forEach(sec => {
-    const s = document.createElement('div');
-    s.className = 'sb-section';
-    const t = document.createElement('div');
-    t.className = 'sb-title';
-    t.innerHTML = `<span class="sb-ico ${sec.ico}">■</span>${sec.title}`;
-    if (sec.items.length) t.onclick = () => showView(sec.items[0].view);
-    s.appendChild(t);
-    sec.items.forEach(it => {
-      const d = document.createElement('div');
-      d.className = 'sb-item';
-      d.dataset.view = it.view;
-      d.textContent  = it.lbl;
-      d.onclick = () => showView(it.view, d);
-      s.appendChild(d);
-    });
-    nav.appendChild(s);
+  document.querySelectorAll('.sb-area').forEach(el => {
+    el.style.display = el.id === 'sba-' + area ? '' : 'none';
   });
 }
 
