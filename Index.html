@@ -2047,9 +2047,7 @@ function openPrintWin(type, r) {
   </div></div>
   ${r.obs?`<div class="obs"><b>Observaciones:</b><br>${r.obs}</div>`:''}
   <div class="ft"><div class="sig">Emitido por<br>Marimar Group</div><div class="sig">${wl}<br>&nbsp;</div></div>
-  <script>window.onload=()=>window.print()<\/script></body></html>`;
-
-  const w = window.open('','_blank','width=880,height=680');
+  <${'script'}>window.onload=()=>window.print()</${'script'}></body></html>`;
   w.document.write(html); w.document.close();
 }
 
@@ -2269,7 +2267,7 @@ function printFact(r) {
   </table>
 
   <div class="seniat">${e.seniat||'Autorizado por Providencia Nº SENIAT — Agencia Naviera y Aduanal Marimar, C.A. — RIF: J-30029443-9'}</div>
-  <script>window.onload=()=>window.print()<\/script></body></html>`;
+  <${'script'}>window.onload=()=>window.print()</${'script'}></body></html>`;
 
   const w = window.open('', '_blank', 'width=760,height=960');
   w.document.write(html);
