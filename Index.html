@@ -1,0 +1,2317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Marimar Group</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --top-h:46px;
+  --sb-w:195px;
+  --blue:#1d4373;
+  --blue2:#2a5298;
+  --border:#dde1e7;
+  --bg:#ebebeb;
+  --white:#fff;
+  --text:#333;
+  --muted:#777;
+  --green:#2e7d32;
+  --orange:#e65100;
+  --red:#c62828;
+  --teal:#00695c;
+}
+html,body{height:100%;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;color:var(--text);background:var(--bg)}
+
+/* ── TOP NAV ── */
+#topnav{
+  position:fixed;top:0;left:0;right:0;height:var(--top-h);
+  background:var(--blue);color:#fff;
+  display:flex;align-items:center;z-index:200;
+  border-bottom:1px solid rgba(255,255,255,.15);
+}
+.tn-brand{
+  width:var(--sb-w);padding:0 14px;
+  display:flex;align-items:center;gap:8px;flex-shrink:0;
+  border-right:1px solid rgba(255,255,255,.15);
+  font-weight:700;font-size:14px;
+}
+.tn-brand .mg{
+  width:28px;height:28px;background:#e8941a;border-radius:5px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:900;flex-shrink:0;
+}
+.tn-links{display:flex;height:100%;margin-left:4px}
+.tnl{
+  padding:0 14px;height:100%;display:flex;align-items:center;
+  color:rgba(255,255,255,.8);cursor:pointer;font-size:12.5px;
+  border-bottom:3px solid transparent;
+  transition:background .15s,color .15s;white-space:nowrap;
+}
+.tnl:hover{background:rgba(255,255,255,.08);color:#fff}
+.tnl.active{color:#fff;border-bottom-color:#e8941a;background:rgba(255,255,255,.07)}
+.tn-right{margin-left:auto;padding:0 16px;display:flex;align-items:center;gap:14px;font-size:12px}
+.tn-user{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.85);cursor:pointer}
+.tn-user:hover{color:#fff}
+
+/* ── LAYOUT ── */
+#layout{
+  display:flex;margin-top:var(--top-h);height:calc(100vh - var(--top-h));overflow:hidden;
+}
+
+/* ── SIDEBAR ── */
+#sidebar{
+  width:var(--sb-w);background:var(--white);
+  flex-shrink:0;overflow-y:auto;
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+}
+.sb-search{padding:8px 10px;border-bottom:1px solid var(--border)}
+.sb-search input{
+  width:100%;padding:5px 8px;border:1px solid var(--border);
+  border-radius:3px;font-size:12px;outline:none;background:#f9f9f9;
+}
+.sb-search input:focus{border-color:#4a90e2}
+
+.sb-section{border-bottom:1px solid var(--border)}
+.sb-title{
+  display:flex;align-items:center;gap:7px;padding:8px 12px 6px;
+  font-size:11.5px;font-weight:700;color:var(--text);
+  cursor:pointer;user-select:none;
+}
+.sb-title .sb-ico{
+  width:16px;height:16px;border-radius:2px;
+  display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;
+}
+.ico-green{background:#43a047;color:#fff}
+.ico-blue{background:#1565c0;color:#fff}
+.ico-orange{background:#e65100;color:#fff}
+.ico-teal{background:#00695c;color:#fff}
+.ico-purple{background:#6a1b9a;color:#fff}
+.ico-gray{background:#546e7a;color:#fff}
+
+.sb-item{
+  padding:5px 12px 5px 34px;font-size:12px;
+  color:#444;cursor:pointer;
+  transition:background .12s;
+}
+.sb-item:hover{background:#f0f4ff;color:var(--blue2)}
+.sb-item.active{background:#e8f0fe;color:var(--blue2);font-weight:600}
+
+/* ── MAIN ── */
+#main{flex:1;overflow-y:auto;background:var(--bg)}
+
+/* ── LOADER ── */
+#loader{
+  display:none;position:fixed;inset:0;
+  background:rgba(255,255,255,.6);z-index:999;
+  align-items:center;justify-content:center;flex-direction:column;gap:10px;
+}
+#loader.on{display:flex}
+.spin{width:32px;height:32px;border:3px solid #ddd;border-top-color:var(--blue);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:20px;right:20px;
+  padding:10px 18px;border-radius:4px;
+  font-size:12.5px;font-weight:500;color:#fff;
+  opacity:0;transition:opacity .3s;z-index:9999;pointer-events:none;
+}
+#toast.show{opacity:1}
+#toast.ok{background:#2e7d32}
+#toast.err{background:#c62828}
+
+/* ── VIEWS ── */
+.view{display:none}.view.active{display:block}
+
+/* ── AREA HEADER ── */
+.area-header{
+  background:var(--white);border-bottom:1px solid var(--border);
+  padding:6px 16px;display:flex;align-items:center;gap:8px;
+  font-size:12px;color:var(--muted);letter-spacing:.5px;font-weight:600;
+}
+.area-header .ah-icon{font-size:14px}
+
+/* ── DASHBOARD ── */
+.dash-grid{
+  display:grid;grid-template-columns:1fr 380px;gap:0;
+}
+.dash-left{padding:12px;display:flex;flex-direction:column;gap:10px}
+.dash-right{border-left:1px solid var(--border);background:var(--white);padding:12px;display:flex;flex-direction:column;gap:0}
+
+/* Stat cards row */
+.stat-row{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:4px}
+.stat-mini{
+  background:var(--white);border:1px solid var(--border);border-radius:4px;
+  padding:10px 12px;
+}
+.stat-mini .sv{font-size:22px;font-weight:700;color:var(--blue)}
+.stat-mini .sl{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* Cards */
+.card{background:var(--white);border:1px solid var(--border);border-radius:3px}
+.card-hdr{
+  padding:8px 12px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;font-weight:600;color:var(--text);
+}
+.card-hdr .ch-badge{
+  background:var(--blue);color:#fff;font-size:10px;font-weight:700;
+  border-radius:2px;padding:1px 6px;margin-left:6px;
+}
+.card-hdr .ch-badge.orange{background:#e65100}
+.card-hdr .ch-badge.green{background:#2e7d32}
+
+/* Charts */
+.chart-section{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chart-card{background:var(--white);border:1px solid var(--border);border-radius:3px;padding:10px}
+.chart-card h4{font-size:11.5px;font-weight:600;color:var(--text);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.chart-wrap{display:flex;align-items:center;gap:10px}
+.chart-wrap canvas{max-width:120px!important;max-height:120px!important}
+.chart-legend{flex:1}
+.cl-row{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:11px;color:var(--text)}
+.cl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.cl-lbl{flex:1}
+.cl-val{font-weight:600;color:var(--muted)}
+.chart-total{text-align:center;font-size:11px;color:var(--muted);margin-top:4px}
+
+/* Tables */
+.data-table{width:100%;border-collapse:collapse;font-size:12px}
+.data-table th{
+  background:#f5f5f5;padding:6px 10px;text-align:left;
+  font-weight:600;font-size:11px;color:var(--muted);
+  border-bottom:1px solid var(--border);white-space:nowrap;
+}
+.data-table td{padding:6px 10px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:#fafafa}
+.mas-link{padding:6px 12px;font-size:11px;color:var(--blue2);cursor:pointer;text-align:center;border-top:1px solid var(--border);display:block}
+.mas-link:hover{background:#f0f4ff}
+
+/* Right panel sections */
+.rp-section{border-bottom:1px solid var(--border);margin-bottom:0}
+.rp-hdr{
+  padding:8px 10px;display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;font-weight:600;
+}
+.rp-link{font-size:11px;color:var(--blue2);cursor:pointer}
+.rp-link:hover{text-decoration:underline}
+.rp-row{
+  padding:5px 10px;display:flex;align-items:center;gap:8px;
+  font-size:11.5px;border-bottom:1px solid #f5f5f5;
+}
+.rp-row:last-child{border-bottom:none}
+.rp-row:hover{background:#fafafa}
+.rp-badge{
+  width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;color:#fff;flex-shrink:0;
+}
+.rb-c{background:#1565c0}.rb-v{background:#2e7d32}
+.rp-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rp-date{font-size:10.5px;color:var(--muted);flex-shrink:0}
+.rp-monto{font-size:11px;font-weight:600;color:var(--text);flex-shrink:0;margin-left:auto}
+.rp-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dot-orange{background:#ff9800}
+
+/* ── TOOLBAR ── */
+.toolbar{
+  background:var(--white);border-bottom:1px solid var(--border);
+  padding:8px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.tb-search{
+  padding:5px 10px;border:1px solid var(--border);border-radius:3px;
+  font-size:12px;outline:none;width:240px;
+}
+.tb-search:focus{border-color:#4a90e2}
+.tb-select{
+  padding:5px 8px;border:1px solid var(--border);border-radius:3px;
+  font-size:12px;background:var(--white);cursor:pointer;outline:none;
+}
+
+/* ── BUTTONS ── */
+.btn{
+  padding:5px 14px;border:none;border-radius:3px;font-size:12px;
+  font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;
+  transition:opacity .15s;font-family:inherit;
+}
+.btn:hover{opacity:.85}
+.btn-primary{background:var(--blue2);color:#fff}
+.btn-success{background:#2e7d32;color:#fff}
+.btn-orange{background:#e65100;color:#fff}
+.btn-red{background:#c62828;color:#fff}
+.btn-ghost{background:#fff;color:var(--text);border:1px solid var(--border)}
+.btn-sm{padding:3px 10px;font-size:11px}
+
+/* ── LIST VIEW ── */
+.list-wrap{padding:12px}
+.list-table-card{background:var(--white);border:1px solid var(--border);border-radius:3px;overflow:hidden}
+
+/* ── FORM VIEW ── */
+.form-wrap{padding:12px;max-width:1100px}
+.f-card{background:var(--white);border:1px solid var(--border);border-radius:3px;margin-bottom:10px;overflow:hidden}
+.f-card-hdr{
+  padding:9px 14px;background:#f8f8f8;border-bottom:1px solid var(--border);
+  font-size:12.5px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:7px;
+}
+.f-body{padding:14px}
+.f-grid{display:grid;gap:12px}
+.fg-2{grid-template-columns:1fr 1fr}
+.fg-3{grid-template-columns:1fr 1fr 1fr}
+.fg-4{grid-template-columns:1fr 1fr 1fr 1fr}
+.sp2{grid-column:span 2}.sp3{grid-column:span 3}.sp4{grid-column:span 4}
+.f-field{display:flex;flex-direction:column;gap:4px}
+.f-field label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+.f-field input,.f-field select,.f-field textarea{
+  padding:6px 9px;border:1px solid var(--border);border-radius:3px;
+  font-size:12.5px;font-family:inherit;color:var(--text);outline:none;background:#fff;
+  transition:border-color .15s;
+}
+.f-field input:focus,.f-field select:focus,.f-field textarea:focus{border-color:#4a90e2}
+.f-field textarea{resize:vertical;min-height:70px}
+
+/* Items table in forms */
+.items-wrap{overflow-x:auto}
+.itbl{width:100%;border-collapse:collapse;font-size:12px}
+.itbl th{background:#f5f5f5;padding:6px 8px;text-align:left;font-weight:600;font-size:11px;color:var(--muted);border:1px solid var(--border)}
+.itbl td{border:1px solid #eee;padding:3px 5px}
+.itbl input,.itbl select{width:100%;border:none;background:transparent;font-size:12px;font-family:inherit;padding:4px;outline:none;color:var(--text)}
+.itbl tr:hover td{background:#fafafa}
+.items-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap;gap:10px}
+.total-box{background:#f8f8f8;border:1px solid var(--border);border-radius:3px;padding:10px 16px;min-width:220px}
+.t-row{display:flex;justify-content:space-between;font-size:12px;padding:2px 0}
+.t-row.grand{font-size:14px;font-weight:700;padding-top:7px;border-top:2px solid var(--border);margin-top:3px}
+.form-actions{display:flex;gap:8px;justify-content:flex-end;padding:12px 14px;background:#f8f8f8;border-top:1px solid var(--border)}
+
+/* ── PILLS ── */
+.pill{display:inline-block;padding:2px 8px;border-radius:2px;font-size:11px;font-weight:600}
+.p-gray{background:#eee;color:#555}
+.p-orange{background:#fff3e0;color:#e65100}
+.p-green{background:#e8f5e9;color:#2e7d32}
+.p-red{background:#ffebee;color:#c62828}
+.p-blue{background:#e3f2fd;color:#1565c0}
+.p-teal{background:#e0f2f1;color:#00695c}
+
+/* ── STATS VIEW ── */
+.stats-wrap{padding:12px;display:grid;grid-template-columns:340px 1fr;gap:12px}
+.big-chart{background:var(--white);border:1px solid var(--border);border-radius:3px;padding:16px}
+.big-chart h3{font-size:13px;font-weight:700;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.big-chart canvas{max-width:260px!important;max-height:260px!important;margin:0 auto;display:block}
+
+/* ── MODAL ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:998;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal-box{background:#fff;border-radius:4px;padding:22px;max-width:480px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.modal-box h3{font-size:15px;font-weight:700;margin-bottom:10px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+
+@media(max-width:900px){
+  .dash-grid{grid-template-columns:1fr}
+  .dash-right{border-left:none;border-top:1px solid var(--border)}
+  .chart-section{grid-template-columns:1fr}
+  .fg-2,.fg-3,.fg-4{grid-template-columns:1fr}
+  .sp2,.sp3,.sp4{grid-column:span 1}
+  .stats-wrap{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- Loader -->
+<div id="loader"><div class="spin"></div><span style="font-size:12px;color:#666">Cargando…</span></div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- ═══════════ TOP NAV ═══════════ -->
+<div id="topnav">
+  <div class="tn-brand">
+    <img id="nav-logo"
+         src="https://lh3.googleusercontent.com/d/1yFD7ZHpeSTZStxTU6RCtbbuASY-NhluD"
+         style="height:30px;width:auto;object-fit:contain;border-radius:3px;flex-shrink:0;background:transparent"
+         alt="Marimar">
+    <div class="mg" id="nav-mg" style="display:none">MG</div>
+    <span>Marimar Group</span>
+  </div>
+  <div class="tn-links">
+    <div class="tnl active" data-area="comercial" onclick="setArea('comercial',this)">Comercial</div>
+    <div class="tnl" data-area="clientes"  onclick="setArea('clientes',this)">Clientes</div>
+    <div class="tnl" data-area="productos" onclick="setArea('productos',this)">Productos / Servicios</div>
+    <div class="tnl" data-area="proveedores" onclick="setArea('proveedores',this)">Proveedores</div>
+  </div>
+  <div class="tn-right">
+    <div class="tn-user" onclick="openSheet()">📊 Google Sheets</div>
+    <div class="tn-user">👤 Jose ▾</div>
+  </div>
+</div>
+
+<!-- ═══════════ LAYOUT ═══════════ -->
+<div id="layout">
+
+  <!-- SIDEBAR -->
+  <nav id="sidebar">
+    <div class="sb-search">
+      <input type="text" id="sb-search-input" placeholder="Buscar…" oninput="sbSearch(this.value)">
+    </div>
+    <div id="sidebar-nav"></div>
+  </nav>
+
+  <!-- MAIN -->
+  <main id="main">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div id="view-dashboard" class="view active">
+      <div class="area-header">
+        <span class="ah-icon">🏢</span> ÁREA DE COMERCIO
+      </div>
+
+      <div class="dash-grid">
+        <!-- Left -->
+        <div class="dash-left">
+          <!-- Stat mini cards -->
+          <div class="stat-row">
+            <div class="stat-mini"><div class="sv" id="d-cot">—</div><div class="sl">Cotizaciones</div></div>
+            <div class="stat-mini"><div class="sv" id="d-ot">—</div><div class="sl">Órdenes Trab.</div></div>
+            <div class="stat-mini"><div class="sv" id="d-oc">—</div><div class="sl">Órdenes Comp.</div></div>
+            <div class="stat-mini"><div class="sv" id="d-cli">—</div><div class="sl">Clientes</div></div>
+            <div class="stat-mini"><div class="sv" id="d-prov">—</div><div class="sl">Proveedores</div></div>
+            <div class="stat-mini"><div class="sv" id="d-fac" style="color:#6a1b9a">—</div><div class="sl">Facturas</div></div>
+          </div>
+
+          <!-- Charts -->
+          <div class="chart-section">
+            <div class="chart-card">
+              <h4>Estadísticas — Cotizaciones</h4>
+              <div class="chart-wrap">
+                <canvas id="chart-cot"></canvas>
+                <div class="chart-legend" id="legend-cot"></div>
+              </div>
+              <div class="chart-total" id="total-cot">Total: 0</div>
+            </div>
+            <div class="chart-card">
+              <h4>Estadísticas — Órdenes de Trabajo</h4>
+              <div class="chart-wrap">
+                <canvas id="chart-ot"></canvas>
+                <div class="chart-legend" id="legend-ot"></div>
+              </div>
+              <div class="chart-total" id="total-ot">Total: 0</div>
+            </div>
+          </div>
+
+          <!-- Cotizaciones borrador -->
+          <div class="card">
+            <div class="card-hdr">
+              Cotizaciones borrador
+              <span class="ch-badge" id="cnt-cot-bor">0</span>
+            </div>
+            <table class="data-table">
+              <thead><tr><th>N°</th><th>Cliente</th><th>Monto</th></tr></thead>
+              <tbody id="tb-cot-bor"></tbody>
+            </table>
+            <span class="mas-link" onclick="showView('cot-lista')">Más…</span>
+          </div>
+
+          <!-- OT borrador -->
+          <div class="card">
+            <div class="card-hdr">
+              Borradores de O.T.
+              <span class="ch-badge green" id="cnt-ot-bor">0</span>
+            </div>
+            <table class="data-table">
+              <thead><tr><th>N°</th><th>Cliente</th><th>Monto</th></tr></thead>
+              <tbody id="tb-ot-bor"></tbody>
+            </table>
+            <span class="mas-link" onclick="showView('ot-lista')">Más…</span>
+          </div>
+        </div>
+
+        <!-- Right panel -->
+        <div class="dash-right">
+          <div class="rp-section">
+            <div class="rp-hdr">
+              Últimos 5 clientes o prospectos
+              <span class="rp-link" onclick="showView('clientes-lista')">Lista llena</span>
+            </div>
+            <div id="rp-clientes"></div>
+          </div>
+
+          <div class="rp-section">
+            <div class="rp-hdr">
+              Proveedores: última modificación de 5
+              <span class="rp-link" onclick="showView('proveedores-lista')">Lista llena</span>
+            </div>
+            <div id="rp-proveedores"></div>
+          </div>
+
+          <div class="rp-section">
+            <div class="rp-hdr">
+              Cotizaciones abiertas
+              <span class="ch-badge" id="cnt-cot-ab">0</span>
+            </div>
+            <table class="data-table" style="font-size:11.5px">
+              <tbody id="tb-cot-ab"></tbody>
+            </table>
+          </div>
+
+          <div class="rp-section">
+            <div class="rp-hdr">
+              Órdenes para procesar
+              <span class="ch-badge orange" id="cnt-oc-pend">0</span>
+            </div>
+            <table class="data-table" style="font-size:11.5px">
+              <tbody id="tb-oc-pend"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ COT NUEVA ══ -->
+    <div id="view-cot-nueva" class="view">
+      <div class="toolbar">
+        <strong style="font-size:13px">📋 Nueva Cotización</strong>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button class="btn btn-ghost" onclick="resetForm('cot')">Limpiar</button>
+          <button class="btn btn-ghost" onclick="printDoc('cot')">🖨️ PDF</button>
+          <button class="btn btn-primary" onclick="document.getElementById('form-cot').requestSubmit()">💾 Guardar</button>
+        </div>
+      </div>
+      <div class="form-wrap">
+        <form id="form-cot" onsubmit="saveCot(event)">
+          <div class="f-card">
+            <div class="f-card-hdr">📋 Datos del Documento</div>
+            <div class="f-body">
+              <div class="f-grid fg-4">
+                <div class="f-field"><label>N° Cotización</label><input type="text" id="cot-num" required placeholder="COT-0001"></div>
+                <div class="f-field"><label>Fecha</label><input type="date" id="cot-fecha" required></div>
+                <div class="f-field"><label>Validez (días)</label><input type="number" id="cot-validez" value="30"></div>
+                <div class="f-field"><label>Estado</label>
+                  <select id="cot-estado"><option>Borrador</option><option>Pendiente</option><option>Aprobada</option><option>Rechazada</option></select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="f-card">
+            <div class="f-card-hdr">👤 Cliente</div>
+            <div class="f-body">
+              <div class="f-grid fg-3">
+                <div class="f-field"><label>Cliente</label>
+                  <select id="cot-cliente-sel" onchange="fillCliente('cot')">
+                    <option value="">— Seleccionar cliente —</option>
+                  </select>
+                </div>
+                <div class="f-field"><label>Razón Social</label><input type="text" id="cot-cliente" required placeholder="Nombre empresa"></div>
+                <div class="f-field"><label>RUT</label><input type="text" id="cot-rut" placeholder="12.345.678-9"></div>
+                <div class="f-field"><label>Contacto</label><input type="text" id="cot-contacto"></div>
+                <div class="f-field"><label>Email</label><input type="email" id="cot-email"></div>
+                <div class="f-field"><label>Proyecto / Obra</label><input type="text" id="cot-proyecto"></div>
+              </div>
+            </div>
+          </div>
+          <div class="f-card">
+            <div class="f-card-hdr">📦 Ítems</div>
+            <div class="f-body">
+              <div class="items-wrap">
+                <table class="itbl">
+                  <thead><tr><th style="width:36px">#</th><th>Descripción</th><th style="width:80px">Unidad</th><th style="width:70px">Cant.</th><th style="width:110px">P.Unit.</th><th style="width:120px">Total</th><th style="width:30px"></th></tr></thead>
+                  <tbody id="cot-items-body"></tbody>
+                </table>
+              </div>
+              <div class="items-footer">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="addItem('cot')">➕ Agregar ítem</button>
+                <div class="total-box">
+                  <div class="t-row"><span>Subtotal</span><span id="cot-subtotal">$0</span></div>
+                  <div class="t-row"><span>IVA (19%)</span><span id="cot-iva">$0</span></div>
+                  <div class="t-row grand"><span>TOTAL</span><span id="cot-total">$0</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="f-card">
+            <div class="f-card-hdr">📝 Condiciones</div>
+            <div class="f-body">
+              <div class="f-grid fg-3">
+                <div class="f-field"><label>Forma de Pago</label>
+                  <select id="cot-pago"><option>30 días</option><option>60 días</option><option>Contado</option><option>50% anticipo / 50% entrega</option><option>Otra</option></select>
+                </div>
+                <div class="f-field"><label>Tiempo de Entrega</label><input type="text" id="cot-entrega" placeholder="ej: 10 días hábiles"></div>
+                <div class="f-field"><label>Observaciones</label><input type="text" id="cot-obs"></div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ══ COT LISTA ══ -->
+    <div id="view-cot-lista" class="view">
+      <div class="toolbar">
+        <input class="tb-search" type="text" placeholder="🔍 Buscar cotización…" oninput="filterTable('cot',this.value)">
+        <select class="tb-select" onchange="filterTable('cot','',this.value)">
+          <option value="">Todos los estados</option>
+          <option>Borrador</option><option>Pendiente</option><option>Aprobada</option><option>Rechazada</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="showView('cot-nueva')">➕ Nueva Cotización</button>
+      </div>
+      <div class="list-wrap">
+        <div class="list-table-card">
+          <table class="data-table">
+            <thead><tr><th>N°</th><th>Fecha</th><th>Cliente</th><th>Proyecto</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="cot-list-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ COT STATS ══ -->
+    <div id="view-cot-stats" class="view">
+      <div class="toolbar"><strong>📊 Estadísticas Cotizaciones</strong></div>
+      <div class="stats-wrap">
+        <div class="big-chart">
+          <h3>Distribución por Estado</h3>
+          <canvas id="chart-cot-big"></canvas>
+          <div id="legend-cot-big" style="margin-top:14px"></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr">Detalle por estado</div>
+          <table class="data-table"><thead><tr><th>Estado</th><th>Cantidad</th><th>%</th></tr></thead>
+          <tbody id="cot-stats-body"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ OT NUEVA ══ -->
+    <div id="view-ot-nueva" class="view">
+      <div class="toolbar">
+        <strong style="font-size:13px">🔧 Nueva Orden de Trabajo</strong>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button class="btn btn-ghost" onclick="resetForm('ot')">Limpiar</button>
+          <button class="btn btn-ghost" onclick="printDoc('ot')">🖨️ PDF</button>
+          <button class="btn btn-success" onclick="document.getElementById('form-ot').requestSubmit()">💾 Guardar</button>
+        </div>
+      </div>
+      <div class="form-wrap">
+        <form id="form-ot" onsubmit="saveOT(event)">
+          <div class="f-card">
+            <div class="f-card-hdr">🔧 Datos OT</div>
+            <div class="f-body">
+              <div class="f-grid fg-4">
+                <div class="f-field"><label>N° OT</label><input type="text" id="ot-num" required placeholder="OT-0001"></div>
+                <div class="f-field"><label>Fecha</label><input type="date" id="ot-fecha" required></div>
+                <div class="f-field"><label>Estado</label>
+                  <select id="ot-estado"><option>Borrador</option><option>Pendiente</option><option>En proceso</option><option>Terminada</option><option>Cancelado</option></select>
+                </div>
+                <div class="f-field"><label>Prioridad</label>
+                  <select id="ot-prioridad"><option>Normal</option><option>Alta</option><option>Urgente</option><option>Baja</option></select>
+                </div>
+                <div class="f-field"><label>Fecha Inicio</label><input type="date" id="ot-inicio"></div>
+                <div class="f-field"><label>Fecha Término</label><input type="date" id="ot-termino"></div>
+                <div class="f-field"><label>Cot. Referencia</label><input type="text" id="ot-cot-ref" placeholder="COT-0001"></div>
+                <div class="f-field"><label>Materiales</label>
+                  <select id="ot-materiales"><option>Incluidos</option><option>No incluidos</option><option>Parciales</option></select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="f-card">
+            <div class="f-card-hdr">👤 Cliente y Lugar</div>
+            <div class="f-body">
+              <div class="f-grid fg-3">
+                <div class="f-field"><label>Cliente</label>
+                  <select id="ot-cliente-sel" onchange="fillCliente('ot')">
+                    <option value="">— Seleccionar cliente —</option>
+                  </select>
+                </div>
+                <div class="f-field"><label>Razón Social</label><input type="text" id="ot-cliente" required></div>
+                <div class="f-field"><label>Proyecto / Obra</label><input type="text" id="ot-proyecto"></div>
+                <div class="f-field"><label>Dirección de Trabajo</label><input type="text" id="ot-direccion"></div>
+                <div class="f-field"><label>Técnico Responsable</label><input type="text" id="ot-tecnico" required></div>
+                <div class="f-field"><label>Descripción General</label><input type="text" id="ot-descripcion" required></div>
+              </div>
+            </div>
+          </div>
+          <div class="f-card">
+            <div class="f-card-hdr">🛠️ Actividades</div>
+            <div class="f-body">
+              <div class="items-wrap">
+                <table class="itbl">
+                  <thead><tr><th style="width:36px">#</th><th>Actividad</th><th style="width:80px">Unidad</th><th style="width:70px">Cant.</th><th style="width:110px">Costo Unit.</th><th style="width:120px">Total</th><th style="width:30px"></th></tr></thead>
+                  <tbody id="ot-items-body"></tbody>
+                </table>
+              </div>
+              <div class="items-footer">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="addItem('ot')">➕ Agregar actividad</button>
+                <div class="total-box">
+                  <div class="t-row"><span>Subtotal</span><span id="ot-subtotal">$0</span></div>
+                  <div class="t-row"><span>IVA (19%)</span><span id="ot-iva">$0</span></div>
+                  <div class="t-row grand"><span>TOTAL</span><span id="ot-total">$0</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="f-card">
+            <div class="f-card-hdr">📝 Observaciones</div>
+            <div class="f-body"><div class="f-field"><textarea id="ot-obs" rows="3"></textarea></div></div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ══ OT LISTA ══ -->
+    <div id="view-ot-lista" class="view">
+      <div class="toolbar">
+        <input class="tb-search" type="text" placeholder="🔍 Buscar OT…" oninput="filterTable('ot',this.value)">
+        <select class="tb-select" onchange="filterTable('ot','',this.value)">
+          <option value="">Todos los estados</option>
+          <option>Borrador</option><option>Pendiente</option><option>En proceso</option><option>Terminada</option><option>Cancelado</option>
+        </select>
+        <button class="btn btn-success btn-sm" onclick="showView('ot-nueva')">➕ Nueva OT</button>
+      </div>
+      <div class="list-wrap">
+        <div class="list-table-card">
+          <table class="data-table">
+            <thead><tr><th>N°</th><th>Fecha</th><th>Cliente</th><th>Técnico</th><th>Total</th><th>Prioridad</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="ot-list-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ OT STATS ══ -->
+    <div id="view-ot-stats" class="view">
+      <div class="toolbar"><strong>📊 Estadísticas OT</strong></div>
+      <div class="stats-wrap">
+        <div class="big-chart">
+          <h3>Distribución por Estado</h3>
+          <canvas id="chart-ot-big"></canvas>
+          <div id="legend-ot-big" style="margin-top:14px"></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr">Detalle por estado</div>
+          <table class="data-table"><thead><tr><th>Estado</th><th>Cantidad</th><th>%</th></tr></thead>
+          <tbody id="ot-stats-body"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ OC NUEVA ══ -->
+    <div id="view-oc-nueva" class="view">
+      <div class="toolbar">
+        <strong style="font-size:13px">🛒 Nueva Orden de Compra</strong>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button class="btn btn-ghost" onclick="resetForm('oc')">Limpiar</button>
+          <button class="btn btn-ghost" onclick="printDoc('oc')">🖨️ PDF</button>
+          <button class="btn btn-orange" onclick="document.getElementById('form-oc').requestSubmit()">💾 Guardar</button>
+        </div>
+      </div>
+      <div class="form-wrap">
+        <form id="form-oc" onsubmit="saveOC(event)">
+          <div class="f-card">
+            <div class="f-card-hdr">🛒 Datos OC</div>
+            <div class="f-body">
+              <div class="f-grid fg-4">
+                <div class="f-field"><label>N° OC</label><input type="text" id="oc-num" required placeholder="OC-0001"></div>
+                <div class="f-field"><label>Fecha</label><input type="date" id="oc-fecha" required></div>
+                <div class="f-field"><label>Estado</label>
+                  <select id="oc-estado"><option>Pendiente</option><option>Aprobada</option><option>Recibida</option><option>Anulada</option></select>
+                </div>
+                <div class="f-field"><label>OT Referencia</label><input type="text" id="oc-ot-ref" placeholder="OT-0001"></div>
+              </div>
+            </div>
+          </div>
+          <div class="f-card">
+            <div class="f-card-hdr">🏭 Proveedor</div>
+            <div class="f-body">
+              <div class="f-grid fg-3">
+                <div class="f-field"><label>Proveedor</label>
+                  <select id="oc-prov-sel" onchange="fillProveedor('oc')">
+                    <option value="">— Seleccionar proveedor —</option>
+                  </select>
+                </div>
+                <div class="f-field"><label>Razón Social</label><input type="text" id="oc-proveedor" required></div>
+                <div class="f-field"><label>RUT</label><input type="text" id="oc-rut"></div>
+                <div class="f-field"><label>Contacto</label><input type="text" id="oc-contacto"></div>
+                <div class="f-field"><label>Email</label><input type="email" id="oc-email"></div>
+                <div class="f-field"><label>Proyecto / CC</label><input type="text" id="oc-proyecto"></div>
+              </div>
+            </div>
+          </div>
+          <div class="f-card">
+            <div class="f-card-hdr">📦 Ítems</div>
+            <div class="f-body">
+              <div class="items-wrap">
+                <table class="itbl">
+                  <thead><tr><th style="width:36px">#</th><th>Descripción</th><th style="width:80px">Unidad</th><th style="width:70px">Cant.</th><th style="width:110px">P.Unit.</th><th style="width:120px">Total</th><th style="width:30px"></th></tr></thead>
+                  <tbody id="oc-items-body"></tbody>
+                </table>
+              </div>
+              <div class="items-footer">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="addItem('oc')">➕ Agregar ítem</button>
+                <div class="total-box">
+                  <div class="t-row"><span>Subtotal</span><span id="oc-subtotal">$0</span></div>
+                  <div class="t-row"><span>IVA (19%)</span><span id="oc-iva">$0</span></div>
+                  <div class="t-row grand"><span>TOTAL</span><span id="oc-total">$0</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="f-card">
+            <div class="f-card-hdr">📝 Condiciones</div>
+            <div class="f-body">
+              <div class="f-grid fg-3">
+                <div class="f-field"><label>Condición de Pago</label>
+                  <select id="oc-pago"><option>30 días</option><option>60 días</option><option>Contado</option><option>Transferencia</option></select>
+                </div>
+                <div class="f-field"><label>Lugar de Entrega</label><input type="text" id="oc-entrega"></div>
+                <div class="f-field"><label>Fecha Entrega</label><input type="date" id="oc-fecha-entrega"></div>
+                <div class="f-field"><label>Solicitado por</label><input type="text" id="oc-solicitante"></div>
+                <div class="f-field sp2"><label>Observaciones</label><input type="text" id="oc-obs"></div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ══ OC LISTA ══ -->
+    <div id="view-oc-lista" class="view">
+      <div class="toolbar">
+        <input class="tb-search" type="text" placeholder="🔍 Buscar OC…" oninput="filterTable('oc',this.value)">
+        <select class="tb-select" onchange="filterTable('oc','',this.value)">
+          <option value="">Todos los estados</option>
+          <option>Pendiente</option><option>Aprobada</option><option>Recibida</option><option>Anulada</option>
+        </select>
+        <button class="btn btn-orange btn-sm" onclick="showView('oc-nueva')">➕ Nueva OC</button>
+      </div>
+      <div class="list-wrap">
+        <div class="list-table-card">
+          <table class="data-table">
+            <thead><tr><th>N°</th><th>Fecha</th><th>Proveedor</th><th>Proyecto</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="oc-list-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ OC STATS ══ -->
+    <div id="view-oc-stats" class="view">
+      <div class="toolbar"><strong>📊 Estadísticas OC</strong></div>
+      <div class="stats-wrap">
+        <div class="big-chart">
+          <h3>Distribución por Estado</h3>
+          <canvas id="chart-oc-big"></canvas>
+          <div id="legend-oc-big" style="margin-top:14px"></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr">Detalle por estado</div>
+          <table class="data-table"><thead><tr><th>Estado</th><th>Cantidad</th><th>%</th></tr></thead>
+          <tbody id="oc-stats-body"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CLIENTES NUEVO ══ -->
+    <div id="view-clientes-nuevo" class="view">
+      <div class="toolbar">
+        <strong style="font-size:13px">👥 Nuevo Cliente</strong>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button class="btn btn-ghost" onclick="resetForm('clientes')">Limpiar</button>
+          <button class="btn btn-primary" onclick="document.getElementById('form-clientes').requestSubmit()">💾 Guardar</button>
+        </div>
+      </div>
+      <div class="form-wrap">
+        <form id="form-clientes" onsubmit="saveGeneric(event,'clientes')">
+          <div class="f-card">
+            <div class="f-card-hdr">👥 Datos del Cliente</div>
+            <div class="f-body">
+              <div class="f-grid fg-3">
+                <div class="f-field"><label>Código</label><input type="text" id="clientes-codigo" placeholder="CLI-001"></div>
+                <div class="f-field sp2"><label>Razón Social / Nombre</label><input type="text" id="clientes-nombre" required placeholder="Empresa o persona"></div>
+                <div class="f-field"><label>RUT</label><input type="text" id="clientes-rut" placeholder="12.345.678-9"></div>
+                <div class="f-field sp2"><label>Giro / Actividad</label><input type="text" id="clientes-giro"></div>
+                <div class="f-field"><label>Email</label><input type="email" id="clientes-email"></div>
+                <div class="f-field"><label>Teléfono</label><input type="text" id="clientes-telefono"></div>
+                <div class="f-field"><label>Tipo</label>
+                  <select id="clientes-tipo"><option>Cliente</option><option>Prospecto</option><option>Cliente VIP</option></select>
+                </div>
+                <div class="f-field sp2"><label>Dirección</label><input type="text" id="clientes-direccion"></div>
+                <div class="f-field"><label>Ciudad</label><input type="text" id="clientes-ciudad"></div>
+                <div class="f-field"><label>Estado</label>
+                  <select id="clientes-estado"><option>Activo</option><option>Inactivo</option></select>
+                </div>
+                <div class="f-field sp3"><label>Observaciones</label><input type="text" id="clientes-obs"></div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ══ CLIENTES LISTA ══ -->
+    <div id="view-clientes-lista" class="view">
+      <div class="toolbar">
+        <input class="tb-search" type="text" placeholder="🔍 Buscar cliente…" oninput="filterTable('clientes',this.value)">
+        <select class="tb-select" onchange="filterTable('clientes','',this.value)">
+          <option value="">Todos</option><option>Cliente</option><option>Prospecto</option><option>Cliente VIP</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="showView('clientes-nuevo')">➕ Nuevo Cliente</button>
+      </div>
+      <div class="list-wrap">
+        <div class="list-table-card">
+          <table class="data-table">
+            <thead><tr><th>Código</th><th>Nombre</th><th>RUT</th><th>Email</th><th>Teléfono</th><th>Tipo</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="clientes-list-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PRODUCTOS NUEVO ══ -->
+    <div id="view-productos-nuevo" class="view">
+      <div class="toolbar">
+        <strong style="font-size:13px">📦 Nuevo Producto / Servicio</strong>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button class="btn btn-ghost" onclick="resetForm('productos')">Limpiar</button>
+          <button class="btn btn-primary" onclick="document.getElementById('form-productos').requestSubmit()">💾 Guardar</button>
+        </div>
+      </div>
+      <div class="form-wrap">
+        <form id="form-productos" onsubmit="saveGeneric(event,'productos')">
+          <div class="f-card">
+            <div class="f-card-hdr">📦 Datos del Producto / Servicio</div>
+            <div class="f-body">
+              <div class="f-grid fg-3">
+                <div class="f-field"><label>Código</label><input type="text" id="productos-codigo" placeholder="PROD-001"></div>
+                <div class="f-field sp2"><label>Nombre</label><input type="text" id="productos-nombre" required></div>
+                <div class="f-field sp3"><label>Descripción</label><input type="text" id="productos-descripcion"></div>
+                <div class="f-field"><label>Unidad</label><input type="text" id="productos-unidad" placeholder="UN, HH, m2…"></div>
+                <div class="f-field"><label>Precio Unitario</label><input type="number" id="productos-precio" placeholder="0" min="0"></div>
+                <div class="f-field"><label>Categoría</label>
+                  <select id="productos-categoria"><option>Servicio</option><option>Producto</option><option>Material</option><option>Mano de obra</option></select>
+                </div>
+                <div class="f-field"><label>Estado</label>
+                  <select id="productos-estado"><option>Activo</option><option>Inactivo</option></select>
+                </div>
+                <div class="f-field sp2"><label>Observaciones</label><input type="text" id="productos-obs"></div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ══ PRODUCTOS LISTA ══ -->
+    <div id="view-productos-lista" class="view">
+      <div class="toolbar">
+        <input class="tb-search" type="text" placeholder="🔍 Buscar producto…" oninput="filterTable('productos',this.value)">
+        <select class="tb-select" onchange="filterTable('productos','',this.value)">
+          <option value="">Todas las categorías</option>
+          <option>Servicio</option><option>Producto</option><option>Material</option><option>Mano de obra</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="showView('productos-nuevo')">➕ Nuevo Producto</button>
+      </div>
+      <div class="list-wrap">
+        <div class="list-table-card">
+          <table class="data-table">
+            <thead><tr><th>Código</th><th>Nombre</th><th>Unidad</th><th>Precio Unit.</th><th>Categoría</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="productos-list-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PROVEEDORES NUEVO ══ -->
+    <div id="view-proveedores-nuevo" class="view">
+      <div class="toolbar">
+        <strong style="font-size:13px">🏭 Nuevo Proveedor</strong>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button class="btn btn-ghost" onclick="resetForm('proveedores')">Limpiar</button>
+          <button class="btn btn-primary" onclick="document.getElementById('form-proveedores').requestSubmit()">💾 Guardar</button>
+        </div>
+      </div>
+      <div class="form-wrap">
+        <form id="form-proveedores" onsubmit="saveGeneric(event,'proveedores')">
+          <div class="f-card">
+            <div class="f-card-hdr">🏭 Datos del Proveedor</div>
+            <div class="f-body">
+              <div class="f-grid fg-3">
+                <div class="f-field"><label>Código</label><input type="text" id="proveedores-codigo" placeholder="PROV-001"></div>
+                <div class="f-field sp2"><label>Razón Social</label><input type="text" id="proveedores-nombre" required></div>
+                <div class="f-field"><label>RUT</label><input type="text" id="proveedores-rut"></div>
+                <div class="f-field sp2"><label>Giro</label><input type="text" id="proveedores-giro"></div>
+                <div class="f-field"><label>Email</label><input type="email" id="proveedores-email"></div>
+                <div class="f-field"><label>Teléfono</label><input type="text" id="proveedores-telefono"></div>
+                <div class="f-field"><label>Cond. de Pago</label>
+                  <select id="proveedores-condicionPago"><option>30 días</option><option>60 días</option><option>Contado</option><option>Otra</option></select>
+                </div>
+                <div class="f-field sp2"><label>Dirección</label><input type="text" id="proveedores-direccion"></div>
+                <div class="f-field"><label>Ciudad</label><input type="text" id="proveedores-ciudad"></div>
+                <div class="f-field"><label>Estado</label>
+                  <select id="proveedores-estado"><option>Activo</option><option>Inactivo</option></select>
+                </div>
+                <div class="f-field sp2"><label>Observaciones</label><input type="text" id="proveedores-obs"></div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ══ PROVEEDORES LISTA ══ -->
+    <div id="view-proveedores-lista" class="view">
+      <div class="toolbar">
+        <input class="tb-search" type="text" placeholder="🔍 Buscar proveedor…" oninput="filterTable('proveedores',this.value)">
+        <button class="btn btn-primary btn-sm" onclick="showView('proveedores-nuevo')">➕ Nuevo Proveedor</button>
+      </div>
+      <div class="list-wrap">
+        <div class="list-table-card">
+          <table class="data-table">
+            <thead><tr><th>Código</th><th>Nombre</th><th>RUT</th><th>Email</th><th>Teléfono</th><th>Cond. Pago</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="proveedores-list-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ FACTURAS NUEVA ══ -->
+    <div id="view-facturas-nueva" class="view">
+      <div class="toolbar">
+        <strong style="font-size:13px">🧾 Nueva Factura</strong>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button class="btn btn-ghost" onclick="resetForm('facturas')">Limpiar</button>
+          <button class="btn btn-ghost" onclick="printDoc('facturas')">🖨️ PDF</button>
+          <button class="btn btn-sm" style="background:#6a1b9a;color:#fff;border:none;border-radius:3px;padding:5px 14px;font-weight:600;font-size:12px;cursor:pointer;font-family:inherit" onclick="document.getElementById('form-facturas').requestSubmit()">💾 Guardar</button>
+        </div>
+      </div>
+      <div class="form-wrap">
+        <form id="form-facturas" onsubmit="saveFact(event)">
+          <div class="f-card">
+            <div class="f-card-hdr">🧾 Datos del Documento</div>
+            <div class="f-body">
+              <div class="f-grid fg-4">
+                <div class="f-field"><label>N° Factura</label><input type="text" id="fac-folio" required placeholder="05121" readonly style="background:#f5f5f5"></div>
+                <div class="f-field"><label>N° de Control</label><input type="text" id="fac-ncontrol" placeholder="09921"></div>
+                <div class="f-field"><label>Fecha</label><input type="date" id="fac-fecha" required></div>
+                <div class="f-field"><label>IVA %</label><input type="number" id="fac-ivaPorc" value="16" min="0" max="100" oninput="recalc('facturas')"></div>
+                <div class="f-field"><label>Forma de Pago</label>
+                  <select id="fac-formaPago"><option>Contado</option><option>30 días</option><option>60 días</option><option>Transferencia</option><option>Cheque</option></select>
+                </div>
+                <div class="f-field"><label>Estado</label>
+                  <select id="fac-estado"><option>Borrador</option><option>Emitida</option><option>Pagada</option><option>Anulada</option></select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="f-card">
+            <div class="f-card-hdr">👤 Receptor (Cliente)</div>
+            <div class="f-body">
+              <div class="f-grid fg-3">
+                <div class="f-field"><label>Seleccionar cliente</label>
+                  <select id="fac-cliente-sel" onchange="fillCliente('fac')">
+                    <option value="">— Seleccionar cliente —</option>
+                  </select>
+                </div>
+                <div class="f-field"><label>Nombre o Razón Social</label><input type="text" id="fac-razonSocial" required placeholder="Empresa o persona"></div>
+                <div class="f-field"><label>RIF</label><input type="text" id="fac-rut" required placeholder="J-30000000-0"></div>
+                <div class="f-field"><label>Dirección</label><input type="text" id="fac-direccion"></div>
+                <div class="f-field"><label>Email</label><input type="email" id="fac-email"></div>
+                <div class="f-field"><label>Teléfono</label><input type="text" id="fac-ciudad"></div>
+              </div>
+              <input type="hidden" id="fac-giro">
+            </div>
+          </div>
+          <div class="f-card">
+            <div class="f-card-hdr">📦 Concepto / Servicios</div>
+            <div class="f-body">
+              <div class="items-wrap">
+                <table class="itbl">
+                  <thead><tr><th style="width:36px">#</th><th>Concepto o Descripción</th><th style="width:80px">Unidad</th><th style="width:70px">Cant.</th><th style="width:110px">P.Unit.</th><th style="width:120px">Total</th><th style="width:30px"></th></tr></thead>
+                  <tbody id="facturas-items-body"></tbody>
+                </table>
+              </div>
+              <div class="items-footer">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="addItem('facturas')">➕ Agregar ítem</button>
+                <div class="total-box">
+                  <div class="t-row"><span>Base Imponible</span><span id="facturas-subtotal">$0</span></div>
+                  <div class="t-row"><span id="facturas-iva-lbl">IVA (16%)</span><span id="facturas-iva">$0</span></div>
+                  <div class="t-row grand"><span>Total a Pagar</span><span id="facturas-total">$0</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="f-card">
+            <div class="f-card-hdr">📝 Observaciones</div>
+            <div class="f-body">
+              <div class="f-field"><textarea id="fac-obs" rows="3" placeholder="Observaciones o comentarios…"></textarea></div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ══ FACTURAS LISTA ══ -->
+    <div id="view-facturas-lista" class="view">
+      <div class="toolbar">
+        <input class="tb-search" type="text" placeholder="🔍 Buscar factura…" oninput="filterTable('facturas',this.value)">
+        <select class="tb-select" onchange="filterTable('facturas','',this.value)">
+          <option value="">Todos los estados</option>
+          <option>Borrador</option><option>Emitida</option><option>Pagada</option><option>Anulada</option>
+        </select>
+        <button class="btn btn-sm" onclick="showView('facturas-nueva')" style="background:#6a1b9a;color:#fff;border:none;border-radius:3px;padding:5px 14px;font-weight:600;font-size:12px;cursor:pointer;font-family:inherit">➕ Nueva Factura</button>
+      </div>
+      <div class="list-wrap">
+        <div class="list-table-card">
+          <table class="data-table">
+            <thead><tr><th>Folio</th><th>Fecha</th><th>Cliente</th><th>Total</th><th>Forma Pago</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="facturas-list-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ FACTURAS STATS ══ -->
+    <div id="view-facturas-stats" class="view">
+      <div class="toolbar"><strong>📊 Estadísticas Facturas</strong></div>
+      <div class="stats-wrap">
+        <div class="big-chart">
+          <h3>Distribución por Estado</h3>
+          <canvas id="chart-facturas-big"></canvas>
+          <div id="legend-facturas-big" style="margin-top:14px"></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr">Detalle por estado</div>
+          <table class="data-table"><thead><tr><th>Estado</th><th>Cantidad</th><th>%</th></tr></thead>
+          <tbody id="facturas-stats-body"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SOL NUEVA ══ -->
+    <div id="view-sol-nueva" class="view">
+      <div class="toolbar">
+        <strong style="font-size:13px">📄 Nueva Solicitud de Factura</strong>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button class="btn btn-ghost" onclick="resetForm('sol')">Limpiar</button>
+          <button class="btn btn-ghost" onclick="printDoc('sol')">🖨️ PDF</button>
+          <button class="btn btn-sm" style="background:#00695c;color:#fff;border:none;border-radius:3px;padding:5px 14px;font-weight:600;font-size:12px;cursor:pointer;font-family:inherit" onclick="document.getElementById('form-sol').requestSubmit()">💾 Guardar</button>
+        </div>
+      </div>
+      <div class="form-wrap">
+        <form id="form-sol" onsubmit="saveSol(event)">
+          <div class="f-card">
+            <div class="f-card-hdr">📄 Datos del Documento</div>
+            <div class="f-body">
+              <div class="f-grid fg-4">
+                <div class="f-field"><label>N° Solicitud</label><input type="text" id="sol-num" required placeholder="SOL-0001"></div>
+                <div class="f-field"><label>Fecha</label><input type="date" id="sol-fecha" required></div>
+                <div class="f-field"><label>Estado</label>
+                  <select id="sol-estado"><option>Borrador</option><option>Pendiente</option><option>Aprobada</option><option>Facturada</option><option>Rechazada</option></select>
+                </div>
+                <div class="f-field"><label>Solicitado por</label><input type="text" id="sol-solicitante" placeholder="Nombre del solicitante"></div>
+              </div>
+            </div>
+          </div>
+          <div class="f-card">
+            <div class="f-card-hdr">👤 Cliente</div>
+            <div class="f-body">
+              <div class="f-grid fg-3">
+                <div class="f-field"><label>Cliente</label>
+                  <select id="sol-cliente-sel" onchange="fillCliente('sol')">
+                    <option value="">— Seleccionar cliente —</option>
+                  </select>
+                </div>
+                <div class="f-field"><label>Razón Social</label><input type="text" id="sol-cliente" required placeholder="Nombre empresa"></div>
+                <div class="f-field"><label>RIF</label><input type="text" id="sol-rut" placeholder="J-30000000-0"></div>
+                <div class="f-field"><label>Contacto</label><input type="text" id="sol-contacto"></div>
+                <div class="f-field"><label>Email</label><input type="email" id="sol-email"></div>
+                <div class="f-field"><label>Proyecto / Obra</label><input type="text" id="sol-proyecto"></div>
+              </div>
+            </div>
+          </div>
+          <div class="f-card">
+            <div class="f-card-hdr">🔗 Referencias</div>
+            <div class="f-body">
+              <div class="f-grid fg-2">
+                <div class="f-field"><label>Cotización Referencia</label><input type="text" id="sol-cotRef" placeholder="COT-0001"></div>
+                <div class="f-field"><label>OT Referencia</label><input type="text" id="sol-otRef" placeholder="OT-0001"></div>
+              </div>
+            </div>
+          </div>
+          <div class="f-card">
+            <div class="f-card-hdr">📦 Servicios a Facturar</div>
+            <div class="f-body">
+              <div class="items-wrap">
+                <table class="itbl">
+                  <thead><tr><th style="width:36px">#</th><th>Descripción</th><th style="width:80px">Unidad</th><th style="width:70px">Cant.</th><th style="width:110px">P.Unit.</th><th style="width:120px">Total</th><th style="width:30px"></th></tr></thead>
+                  <tbody id="sol-items-body"></tbody>
+                </table>
+              </div>
+              <div class="items-footer">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="addItem('sol')">➕ Agregar ítem</button>
+                <div class="total-box">
+                  <div class="t-row"><span>Subtotal</span><span id="sol-subtotal">$0</span></div>
+                  <div class="t-row"><span>IVA (16%)</span><span id="sol-iva">$0</span></div>
+                  <div class="t-row grand"><span>TOTAL</span><span id="sol-total">$0</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="f-card">
+            <div class="f-card-hdr">📝 Observaciones</div>
+            <div class="f-body"><div class="f-field"><textarea id="sol-obs" rows="3" placeholder="Motivo de la solicitud u observaciones…"></textarea></div></div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ══ SOL LISTA ══ -->
+    <div id="view-sol-lista" class="view">
+      <div class="toolbar">
+        <input class="tb-search" type="text" placeholder="🔍 Buscar solicitud…" oninput="filterTable('sol',this.value)">
+        <select class="tb-select" onchange="filterTable('sol','',this.value)">
+          <option value="">Todos los estados</option>
+          <option>Borrador</option><option>Pendiente</option><option>Aprobada</option><option>Facturada</option><option>Rechazada</option>
+        </select>
+        <button class="btn btn-sm" onclick="showView('sol-nueva')" style="background:#00695c;color:#fff;border:none;border-radius:3px;padding:5px 14px;font-weight:600;font-size:12px;cursor:pointer;font-family:inherit">➕ Nueva Solicitud</button>
+      </div>
+      <div class="list-wrap">
+        <div class="list-table-card">
+          <table class="data-table">
+            <thead><tr><th>N°</th><th>Fecha</th><th>Cliente</th><th>Proyecto</th><th>Ref. COT/OT</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="sol-list-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SOL STATS ══ -->
+    <div id="view-sol-stats" class="view">
+      <div class="toolbar"><strong>📊 Estadísticas Solicitudes de Factura</strong></div>
+      <div class="stats-wrap">
+        <div class="big-chart">
+          <h3>Distribución por Estado</h3>
+          <canvas id="chart-sol-big"></canvas>
+          <div id="legend-sol-big" style="margin-top:14px"></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr">Detalle por estado</div>
+          <table class="data-table"><thead><tr><th>Estado</th><th>Cantidad</th><th>%</th></tr></thead>
+          <tbody id="sol-stats-body"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Modal eliminación -->
+<div class="overlay" id="del-modal">
+  <div class="modal-box">
+    <h3>⚠️ Confirmar Eliminación</h3>
+    <p style="font-size:12.5px;color:#666;margin-top:6px">¿Eliminar este registro? Esta acción no se puede deshacer.</p>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-red" id="del-confirm">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ JS ═══════════ -->
+<script>
+// ── Cache & state ────────────────────────────────────────────
+const DB = { cot:[], ot:[], oc:[], sol:[], facturas:[], clientes:[], productos:[], proveedores:[] };
+const SELECTS = { clientes:[], productos:[], proveedores:[] };
+let delTarget    = null;
+let dashData     = null;
+let charts       = {};
+let EMPRESA_DATA = {};
+let logoSrc      = '';
+
+// ── Sidebar config ───────────────────────────────────────────
+const AREAS = {
+  comercial: [
+    { title:'Cotizaciones',      ico:'ico-green',  items:[
+      {lbl:'Nueva Cotización', view:'cot-nueva'},
+      {lbl:'Listado',          view:'cot-lista'},
+      {lbl:'Estadísticas',     view:'cot-stats'},
+    ]},
+    { title:'Órdenes de trabajo', ico:'ico-blue',  items:[
+      {lbl:'Crear O.T.',   view:'ot-nueva'},
+      {lbl:'Listado',      view:'ot-lista'},
+      {lbl:'Estadísticas', view:'ot-stats'},
+    ]},
+    { title:'Órdenes de compra', ico:'ico-orange', items:[
+      {lbl:'Nueva orden',  view:'oc-nueva'},
+      {lbl:'Listado',      view:'oc-lista'},
+      {lbl:'Estadísticas', view:'oc-stats'},
+    ]},
+    { title:'Solicitud de Factura', ico:'ico-teal', items:[
+      {lbl:'Nueva Solicitud', view:'sol-nueva'},
+      {lbl:'Listado',         view:'sol-lista'},
+      {lbl:'Estadísticas',    view:'sol-stats'},
+    ]},
+    { title:'Facturas', ico:'ico-purple', items:[
+      {lbl:'Nueva Factura', view:'facturas-nueva'},
+      {lbl:'Listado',       view:'facturas-lista'},
+      {lbl:'Estadísticas',  view:'facturas-stats'},
+    ]},
+  ],
+  clientes: [
+    { title:'Clientes', ico:'ico-teal', items:[
+      {lbl:'Nuevo Cliente', view:'clientes-nuevo'},
+      {lbl:'Listado',       view:'clientes-lista'},
+    ]},
+  ],
+  productos: [
+    { title:'Productos / Servicios', ico:'ico-purple', items:[
+      {lbl:'Nuevo Producto', view:'productos-nuevo'},
+      {lbl:'Listado',        view:'productos-lista'},
+    ]},
+  ],
+  proveedores: [
+    { title:'Proveedores', ico:'ico-gray', items:[
+      {lbl:'Nuevo Proveedor', view:'proveedores-nuevo'},
+      {lbl:'Listado',         view:'proveedores-lista'},
+    ]},
+  ],
+};
+
+function buildSidebar(area) {
+  const nav = document.getElementById('sidebar-nav');
+  nav.innerHTML = '';
+  (AREAS[area] || []).forEach(sec => {
+    const s = document.createElement('div');
+    s.className = 'sb-section';
+    const t = document.createElement('div');
+    t.className = 'sb-title';
+    t.innerHTML = `<span class="sb-ico ${sec.ico}">■</span>${sec.title}`;
+    if (sec.items.length) t.onclick = () => showView(sec.items[0].view);
+    s.appendChild(t);
+    sec.items.forEach(it => {
+      const d = document.createElement('div');
+      d.className = 'sb-item';
+      d.dataset.view = it.view;
+      d.textContent  = it.lbl;
+      d.onclick = () => showView(it.view, d);
+      s.appendChild(d);
+    });
+    nav.appendChild(s);
+  });
+}
+
+function setArea(area, el) {
+  document.querySelectorAll('.tnl').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  buildSidebar(area);
+  // Show first view of area
+  const first = AREAS[area]?.[0]?.items?.[0]?.view;
+  if (first) showView(first);
+}
+
+// ── View navigation ──────────────────────────────────────────
+function showView(key, navEl) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+
+  const v = document.getElementById('view-' + key);
+  if (v) v.classList.add('active');
+
+  if (navEl) navEl.classList.add('active');
+  else {
+    const match = document.querySelector(`[data-view="${key}"]`);
+    if (match) match.classList.add('active');
+  }
+
+  // Load data when entering list/stats views
+  const type = key.split('-')[0];
+  if (key === 'dashboard')   loadDashboard();
+  if (key.endsWith('-lista')) loadList(type);
+  if (key.endsWith('-stats')) loadStats(type);
+  if (key.endsWith('-nueva') || key.endsWith('-nuevo')) {
+    ensureItems(type);
+    setAutoNum(type);
+    loadSelects();
+    if (type === 'facturas') loadNextFolio();
+  }
+}
+
+// ── Loader & Toast ───────────────────────────────────────────
+function loader(on) { document.getElementById('loader').classList.toggle('on', on); }
+
+function toast(msg, ok=true) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + (ok ? 'ok' : 'err');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.className = '', 3000);
+}
+
+// ── Number format ────────────────────────────────────────────
+function fmt(n) { return Math.round(n||0).toLocaleString('es-CL'); }
+function fmtDate(d) { return d ? String(d).split('T')[0] : ''; }
+
+// ── Status pills ─────────────────────────────────────────────
+function pill(st) {
+  const m = {
+    'Borrador':'p-gray','Pendiente':'p-orange','Aprobada':'p-green',
+    'Rechazada':'p-red','En proceso':'p-blue','Terminada':'p-teal',
+    'Cancelado':'p-red','Recibida':'p-green','Anulada':'p-red',
+    'Activo':'p-green','Inactivo':'p-gray','Prospecto':'p-blue',
+    'Cliente VIP':'p-teal','Alta':'p-orange','Urgente':'p-red',
+    'Normal':'p-blue','Baja':'p-gray',
+    'Emitida':'p-teal','Pagada':'p-green','Facturada':'p-teal',
+  };
+  return `<span class="pill ${m[st]||'p-gray'}">${st||'—'}</span>`;
+}
+
+// ── Dashboard ────────────────────────────────────────────────
+function loadDashboard() {
+  loader(true);
+  google.script.run
+    .withSuccessHandler(data => {
+      dashData = data;
+      renderDashboard(data);
+      loader(false);
+    })
+    .withFailureHandler(() => { loader(false); toast('Error al cargar dashboard', false); })
+    .getDashboardData();
+}
+
+const COT_COLORS = ['#9e9e9e','#ff9800','#4caf50','#f44336','#2196f3'];
+const COT_LABELS = ['Borrador','Pendiente','Aprobada','Rechazada','Pagado'];
+const OT_COLORS  = ['#9e9e9e','#4caf50','#ff9800','#00bcd4','#f44336'];
+const OT_LABELS  = ['Borrador','Validadas','En proceso','Terminada','Cancelado'];
+
+function renderDashboard(d) {
+  // Stats
+  document.getElementById('d-cot').textContent  = d.counts.cot;
+  document.getElementById('d-ot').textContent   = d.counts.ot;
+  document.getElementById('d-oc').textContent   = d.counts.oc;
+  document.getElementById('d-cli').textContent  = d.counts.clientes;
+  document.getElementById('d-prov').textContent = d.counts.proveedores;
+  document.getElementById('d-fac').textContent  = d.counts.facturas || 0;
+
+  // Charts
+  buildDonut('chart-cot', d.cotStats, COT_LABELS, COT_COLORS, 'legend-cot', 'total-cot', d.counts.cot);
+  buildDonut('chart-ot',  d.otStats,  OT_LABELS,  OT_COLORS,  'legend-ot',  'total-ot',  d.counts.ot);
+
+  // Borrador tables
+  const cotBor = document.getElementById('tb-cot-bor');
+  document.getElementById('cnt-cot-bor').textContent = d.cotBorradores.length;
+  cotBor.innerHTML = d.cotBorradores.length
+    ? d.cotBorradores.map(r => `<tr><td><strong>${r.num}</strong></td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.cliente||''}</td><td style="text-align:right">$${fmt(r.total)}</td></tr>`).join('')
+    : '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:12px">Sin borradores</td></tr>';
+
+  const otBor = document.getElementById('tb-ot-bor');
+  document.getElementById('cnt-ot-bor').textContent = d.otBorradores.length;
+  otBor.innerHTML = d.otBorradores.length
+    ? d.otBorradores.map(r => `<tr><td><strong>${r.num}</strong></td><td>${r.cliente||''}</td><td style="text-align:right">$${fmt(r.total)}</td></tr>`).join('')
+    : '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:12px">Sin borradores</td></tr>';
+
+  // Right panel clientes
+  const rpCli = document.getElementById('rp-clientes');
+  rpCli.innerHTML = d.recentClientes.length
+    ? d.recentClientes.map(c => `<div class="rp-row"><div class="rp-badge rb-c">C</div><div class="rp-name">${c.nombre}</div><div class="rp-date">${fmtDate(c.createdAt).slice(0,10)}</div></div>`).join('')
+    : '<div style="padding:8px 10px;font-size:11px;color:#aaa">Sin clientes registrados</div>';
+
+  // Right panel proveedores
+  const rpProv = document.getElementById('rp-proveedores');
+  rpProv.innerHTML = d.recentProv.length
+    ? d.recentProv.map(p => `<div class="rp-row"><div class="rp-badge rb-v">V</div><div class="rp-name">${p.nombre}</div><div class="rp-date">${fmtDate(p.createdAt).slice(0,10)}</div></div>`).join('')
+    : '<div style="padding:8px 10px;font-size:11px;color:#aaa">Sin proveedores registrados</div>';
+
+  // Cotizaciones abiertas
+  document.getElementById('cnt-cot-ab').textContent = d.cotAbiertas.length;
+  const tbCotAb = document.getElementById('tb-cot-ab');
+  tbCotAb.innerHTML = d.cotAbiertas.map(r => `<tr>
+    <td><strong>${r.num}</strong></td>
+    <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.cliente}</td>
+    <td style="text-align:right">$${fmt(r.total)}</td>
+    <td><div class="rp-dot dot-orange"></div></td>
+  </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:#aaa;padding:10px">Sin cotizaciones abiertas</td></tr>';
+
+  // OC pendientes
+  document.getElementById('cnt-oc-pend').textContent = d.ocPendientes.length;
+  const tbOcPend = document.getElementById('tb-oc-pend');
+  tbOcPend.innerHTML = d.ocPendientes.map(r => `<tr>
+    <td><strong>${r.num}</strong></td>
+    <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.proveedor}</td>
+    <td style="text-align:right">$${fmt(r.total)}</td>
+    <td><div class="rp-dot dot-orange"></div></td>
+  </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:#aaa;padding:10px">Sin órdenes pendientes</td></tr>';
+}
+
+function buildDonut(canvasId, statsObj, labels, colors, legendId, totalId, total) {
+  const data   = labels.map(l => statsObj[l] || 0);
+  const hasData = data.some(v => v > 0);
+
+  if (charts[canvasId]) { charts[canvasId].destroy(); }
+
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  charts[canvasId] = new Chart(ctx, {
+    type:'doughnut',
+    data:{
+      labels,
+      datasets:[{ data: hasData ? data : [1], backgroundColor: hasData ? colors : ['#eee'], borderWidth:1 }]
+    },
+    options:{
+      plugins:{ legend:{display:false}, tooltip:{enabled:hasData} },
+      cutout:'65%', responsive:true, maintainAspectRatio:true,
+    }
+  });
+
+  // Legend
+  const leg = document.getElementById(legendId);
+  leg.innerHTML = labels.map((l,i) => {
+    const v = statsObj[l] || 0;
+    return `<div class="cl-row"><div class="cl-dot" style="background:${colors[i]}"></div><div class="cl-lbl">${l}</div><div class="cl-val">${v}</div></div>`;
+  }).join('');
+
+  if (totalId) document.getElementById(totalId).textContent = 'Total: ' + total;
+}
+
+// ── Load list ────────────────────────────────────────────────
+function loadList(type) {
+  loader(true);
+  google.script.run
+    .withSuccessHandler(data => {
+      DB[type] = data || [];
+      renderList(type);
+      loader(false);
+    })
+    .withFailureHandler(() => { loader(false); toast('Error al cargar datos', false); })
+    .getRecords(type);
+}
+
+function loadStats(type) {
+  loader(true);
+  google.script.run
+    .withSuccessHandler(data => {
+      DB[type] = data || [];
+      renderStats(type);
+      loader(false);
+    })
+    .withFailureHandler(() => { loader(false); })
+    .getRecords(type);
+}
+
+function loadSelects() {
+  google.script.run
+    .withSuccessHandler(sel => {
+      SELECTS.clientes    = sel.clientes    || [];
+      SELECTS.productos   = sel.productos   || [];
+      SELECTS.proveedores = sel.proveedores || [];
+      populateSelects();
+    })
+    .getSelectData();
+}
+
+function populateSelects() {
+  ['cot-cliente-sel','ot-cliente-sel','sol-cliente-sel','fac-cliente-sel'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const cur = el.value;
+    el.innerHTML = '<option value="">— Seleccionar cliente —</option>' +
+      SELECTS.clientes.map(c =>
+        `<option value="${c.id}" data-rut="${c.rut||''}" data-giro="${c.giro||''}" data-dir="${c.direccion||''}" data-ciudad="${c.ciudad||''}" data-email="${c.email||''}">${c.nombre}</option>`
+      ).join('');
+    el.value = cur;
+  });
+
+  const ocSel = document.getElementById('oc-prov-sel');
+  if (ocSel) {
+    ocSel.innerHTML = '<option value="">— Seleccionar proveedor —</option>' +
+      SELECTS.proveedores.map(p => `<option value="${p.id}" data-rut="${p.rut||''}">${p.nombre}</option>`).join('');
+  }
+}
+
+function fillCliente(type) {
+  const sel = document.getElementById(type + '-cliente-sel');
+  if (!sel) return;
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt || !opt.value) return;
+  const cli = SELECTS.clientes.find(c => String(c.id) === opt.value);
+  if (!cli) return;
+  if (type === 'fac') {
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val||''; };
+    set('fac-rut',         cli.rut);
+    set('fac-razonSocial', cli.nombre);
+    set('fac-giro',        cli.giro);
+    set('fac-direccion',   cli.direccion);
+    set('fac-ciudad',      cli.ciudad);
+    set('fac-email',       cli.email);
+  } else {
+    const nameEl = document.getElementById(type + '-cliente');
+    if (nameEl) nameEl.value = cli.nombre;
+    const rutEl  = document.getElementById(type + '-rut');
+    if (rutEl)  rutEl.value  = cli.rut || '';
+  }
+}
+
+function fillProveedor() {
+  const sel = document.getElementById('oc-prov-sel');
+  if (!sel) return;
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt || !opt.value) return;
+  const prov = SELECTS.proveedores.find(p => String(p.id) === opt.value);
+  if (prov) {
+    document.getElementById('oc-proveedor').value = prov.nombre;
+    document.getElementById('oc-rut').value = prov.rut;
+  }
+}
+
+// ── Render lists ─────────────────────────────────────────────
+function renderList(type, textF='', statusF='') {
+  const body = document.getElementById(type + '-list-body');
+  if (!body) return;
+
+  let data = DB[type].filter(r => {
+    const s  = textF.toLowerCase();
+    const ok = !s || JSON.stringify(r).toLowerCase().includes(s);
+    const sf = type === 'productos' ? 'categoria' : 'estado';
+    const st = !statusF || r[sf] === statusF;
+    return ok && st;
+  });
+
+  if (!data.length) {
+    const cols = {cot:7,ot:8,oc:7,sol:8,facturas:7,clientes:8,productos:7,proveedores:8};
+    body.innerHTML = `<tr><td colspan="${cols[type]||6}" style="text-align:center;color:#aaa;padding:20px">Sin registros</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = data.map(r => {
+    const acts = `<div style="display:flex;gap:4px">
+      <button class="btn btn-ghost btn-sm" onclick="cycleStatus('${type}',${r.id})">⚡</button>
+      <button class="btn btn-ghost btn-sm" onclick="printRecord('${type}',${r.id})">🖨️</button>
+      <button class="btn btn-red btn-sm" onclick="confirmDel('${type}',${r.id})">🗑️</button>
+    </div>`;
+
+    if (type==='cot') return `<tr>
+      <td><strong>${r.num}</strong></td><td>${r.fecha}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.cliente}</td>
+      <td>${r.proyecto||'—'}</td><td style="text-align:right">$${fmt(r.total)}</td>
+      <td>${pill(r.estado)}</td><td>${acts}</td></tr>`;
+
+    if (type==='ot') return `<tr>
+      <td><strong>${r.num}</strong></td><td>${r.fecha}</td>
+      <td>${r.cliente}</td><td>${r.tecnico}</td>
+      <td style="text-align:right">$${fmt(r.total)}</td>
+      <td>${pill(r.prioridad)}</td><td>${pill(r.estado)}</td><td>${acts}</td></tr>`;
+
+    if (type==='oc') return `<tr>
+      <td><strong>${r.num}</strong></td><td>${r.fecha}</td>
+      <td>${r.proveedor}</td><td>${r.proyecto||'—'}</td>
+      <td style="text-align:right">$${fmt(r.total)}</td>
+      <td>${pill(r.estado)}</td><td>${acts}</td></tr>`;
+
+    if (type==='clientes') return `<tr>
+      <td>${r.codigo||'—'}</td>
+      <td><strong>${r.nombre}</strong></td>
+      <td>${r.rut||'—'}</td><td>${r.email||'—'}</td>
+      <td>${r.telefono||'—'}</td>
+      <td>${pill(r.tipo)}</td><td>${pill(r.estado)}</td>
+      <td>${acts}</td></tr>`;
+
+    if (type==='productos') return `<tr>
+      <td>${r.codigo||'—'}</td>
+      <td><strong>${r.nombre}</strong></td>
+      <td>${r.unidad||'—'}</td>
+      <td style="text-align:right">$${fmt(r.precio)}</td>
+      <td>${pill(r.categoria)}</td><td>${pill(r.estado)}</td>
+      <td>${acts}</td></tr>`;
+
+    if (type==='proveedores') return `<tr>
+      <td>${r.codigo||'—'}</td>
+      <td><strong>${r.nombre}</strong></td>
+      <td>${r.rut||'—'}</td><td>${r.email||'—'}</td>
+      <td>${r.telefono||'—'}</td>
+      <td>${r.condicionPago||'—'}</td><td>${pill(r.estado)}</td>
+      <td>${acts}</td></tr>`;
+
+    if (type==='sol') return `<tr>
+      <td><strong>${r.num}</strong></td><td>${r.fecha}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.cliente}</td>
+      <td>${r.proyecto||'—'}</td>
+      <td style="font-size:11px;color:#666">${r.cotRef||r.otRef||'—'}</td>
+      <td style="text-align:right">$${fmt(r.total)}</td>
+      <td>${pill(r.estado)}</td><td>${acts}</td></tr>`;
+
+    if (type==='facturas') return `<tr>
+      <td><strong>${r.folio||'—'}</strong></td><td>${fmtDate(r.fecha)}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.razonSocial||'—'}</td>
+      <td style="text-align:right">$${fmt(r.total)}</td>
+      <td>${r.formaPago||'—'}</td>
+      <td>${pill(r.estado)}</td><td>${acts}</td></tr>`;
+
+    return '';
+  }).join('');
+}
+
+function filterTable(type, text, status) {
+  renderList(type, text||'', status||'');
+}
+
+// ── Stats charts ─────────────────────────────────────────────
+function renderStats(type) {
+  const stats = {};
+  DB[type].forEach(r => { const s = r.estado||'Sin estado'; stats[s]=(stats[s]||0)+1; });
+
+  const labels = Object.keys(stats);
+  const vals   = Object.values(stats);
+  const total  = vals.reduce((a,b)=>a+b,0);
+  const clrs   = ['#1565c0','#2e7d32','#e65100','#c62828','#00695c','#6a1b9a','#546e7a'];
+
+  const cId = `chart-${type}-big`;
+  if (charts[cId]) charts[cId].destroy();
+
+  const ctx = document.getElementById(cId);
+  if (ctx) {
+    charts[cId] = new Chart(ctx.getContext('2d'), {
+      type:'doughnut',
+      data:{ labels, datasets:[{ data:vals, backgroundColor:clrs.slice(0,labels.length), borderWidth:1 }]},
+      options:{ plugins:{legend:{display:false}}, cutout:'60%', responsive:true }
+    });
+  }
+
+  const legId = `legend-${type}-big`;
+  const leg = document.getElementById(legId);
+  if (leg) leg.innerHTML = labels.map((l,i)=>`<div class="cl-row" style="font-size:12px;padding:3px 0">
+    <div class="cl-dot" style="background:${clrs[i]||'#ccc'}"></div>
+    <div class="cl-lbl">${l}</div><div class="cl-val">${vals[i]}</div>
+  </div>`).join('');
+
+  const bId = `${type}-stats-body`;
+  const bdy = document.getElementById(bId);
+  if (bdy) bdy.innerHTML = labels.map((l,i)=>`<tr>
+    <td>${pill(l)}</td>
+    <td style="text-align:right"><strong>${vals[i]}</strong></td>
+    <td style="text-align:right">${total ? Math.round(vals[i]/total*100) : 0}%</td>
+  </tr>`).join('');
+}
+
+// ── Items table ──────────────────────────────────────────────
+function ensureItems(type) {
+  if (!['cot','ot','oc','sol','facturas'].includes(type)) return;
+  const tb = document.getElementById(type + '-items-body');
+  if (tb && tb.children.length === 0) addItem(type);
+}
+
+function addItem(type) {
+  const tb = document.getElementById(type + '-items-body');
+  if (!tb) return;
+  const idx = tb.children.length + 1;
+  const tr  = document.createElement('tr');
+  tr.innerHTML = `
+    <td style="text-align:center;color:#aaa;font-size:11px">${idx}</td>
+    <td><input type="text" placeholder="Descripción del ítem"></td>
+    <td><input type="text" placeholder="UN" style="text-align:center"></td>
+    <td><input type="number" placeholder="0" min="0" oninput="recalc('${type}')" style="text-align:right"></td>
+    <td><input type="number" placeholder="0" min="0" oninput="recalc('${type}')" style="text-align:right"></td>
+    <td style="text-align:right;font-weight:600;color:var(--blue2)">$0</td>
+    <td><button type="button" style="background:none;border:none;cursor:pointer;color:#c62828;font-size:14px" onclick="removeItem(this,'${type}')">✕</button></td>`;
+  tb.appendChild(tr);
+  recalc(type);
+}
+
+function removeItem(btn, type) {
+  btn.closest('tr').remove();
+  const tb = document.getElementById(type + '-items-body');
+  Array.from(tb.children).forEach((tr,i) => { tr.cells[0].textContent = i+1; });
+  recalc(type);
+}
+
+function recalc(type) {
+  const tb = document.getElementById(type + '-items-body');
+  if (!tb) return;
+  let sub = 0;
+  Array.from(tb.children).forEach(tr => {
+    const qty   = parseFloat(tr.cells[3].querySelector('input')?.value)||0;
+    const price = parseFloat(tr.cells[4].querySelector('input')?.value)||0;
+    const line  = qty * price;
+    tr.cells[5].textContent = '$' + fmt(line);
+    sub += line;
+  });
+  const ivaP  = (type==='facturas' || type==='sol')
+    ? (type==='facturas' ? (parseFloat(document.getElementById('fac-ivaPorc')?.value)||16) : 16)
+    : 19;
+  const iva   = sub * (ivaP/100);
+  document.getElementById(type+'-subtotal').textContent = '$'+fmt(sub);
+  document.getElementById(type+'-iva').textContent      = '$'+fmt(iva);
+  document.getElementById(type+'-total').textContent    = '$'+fmt(sub+iva);
+  const ivaLbl = document.getElementById(type+'-iva-lbl');
+  if (ivaLbl) ivaLbl.textContent = 'IVA ('+ivaP+'%)';
+}
+
+function getItems(type) {
+  const tb = document.getElementById(type + '-items-body');
+  if (!tb) return [];
+  return Array.from(tb.children).map(tr => ({
+    desc:  tr.cells[1].querySelector('input')?.value||'',
+    unit:  tr.cells[2].querySelector('input')?.value||'',
+    qty:   parseFloat(tr.cells[3].querySelector('input')?.value)||0,
+    price: parseFloat(tr.cells[4].querySelector('input')?.value)||0,
+    total: (parseFloat(tr.cells[3].querySelector('input')?.value)||0)*
+           (parseFloat(tr.cells[4].querySelector('input')?.value)||0),
+  }));
+}
+
+// ── Auto num ─────────────────────────────────────────────────
+function setAutoNum(type) {
+  const pfx = {cot:'COT',ot:'OT',oc:'OC',sol:'SOL'}[type];
+  if (!pfx) return;
+  const el = document.getElementById(type + '-num');
+  if (el && !el.dataset.edited) {
+    el.value = pfx + '-' + String(DB[type].length + 1).padStart(4,'0');
+  }
+}
+
+// ── Save ─────────────────────────────────────────────────────
+function saveCot(e) {
+  e.preventDefault();
+  const items = getItems('cot');
+  const sub   = items.reduce((a,i)=>a+i.total,0);
+  const data  = {
+    num:    document.getElementById('cot-num').value,
+    fecha:  document.getElementById('cot-fecha').value,
+    validez:document.getElementById('cot-validez').value,
+    estado: document.getElementById('cot-estado').value,
+    cliente:document.getElementById('cot-cliente').value,
+    rut:    document.getElementById('cot-rut').value,
+    contacto:document.getElementById('cot-contacto').value,
+    email:  document.getElementById('cot-email').value,
+    proyecto:document.getElementById('cot-proyecto').value,
+    pago:   document.getElementById('cot-pago').value,
+    entrega:document.getElementById('cot-entrega').value,
+    obs:    document.getElementById('cot-obs').value,
+    items, subtotal:sub, iva:sub*0.19, total:sub*1.19,
+  };
+  serverSave('cot', data);
+}
+
+function saveOT(e) {
+  e.preventDefault();
+  const items = getItems('ot');
+  const sub   = items.reduce((a,i)=>a+i.total,0);
+  const data  = {
+    num:      document.getElementById('ot-num').value,
+    fecha:    document.getElementById('ot-fecha').value,
+    estado:   document.getElementById('ot-estado').value,
+    prioridad:document.getElementById('ot-prioridad').value,
+    inicio:   document.getElementById('ot-inicio').value,
+    termino:  document.getElementById('ot-termino').value,
+    cliente:  document.getElementById('ot-cliente').value,
+    proyecto: document.getElementById('ot-proyecto').value,
+    direccion:document.getElementById('ot-direccion').value,
+    tecnico:  document.getElementById('ot-tecnico').value,
+    descripcion:document.getElementById('ot-descripcion').value,
+    materiales:document.getElementById('ot-materiales').value,
+    cotRef:   document.getElementById('ot-cot-ref').value,
+    obs:      document.getElementById('ot-obs').value,
+    items, subtotal:sub, iva:sub*0.19, total:sub*1.19,
+  };
+  serverSave('ot', data);
+}
+
+function saveOC(e) {
+  e.preventDefault();
+  const items = getItems('oc');
+  const sub   = items.reduce((a,i)=>a+i.total,0);
+  const data  = {
+    num:      document.getElementById('oc-num').value,
+    fecha:    document.getElementById('oc-fecha').value,
+    estado:   document.getElementById('oc-estado').value,
+    proveedor:document.getElementById('oc-proveedor').value,
+    rut:      document.getElementById('oc-rut').value,
+    contacto: document.getElementById('oc-contacto').value,
+    email:    document.getElementById('oc-email').value,
+    proyecto: document.getElementById('oc-proyecto').value,
+    otRef:    document.getElementById('oc-ot-ref').value,
+    pago:     document.getElementById('oc-pago').value,
+    entrega:  document.getElementById('oc-entrega').value,
+    fechaEntrega:document.getElementById('oc-fecha-entrega').value,
+    solicitante:document.getElementById('oc-solicitante').value,
+    obs:      document.getElementById('oc-obs').value,
+    items, subtotal:sub, iva:sub*0.19, total:sub*1.19,
+  };
+  serverSave('oc', data);
+}
+
+function saveGeneric(e, type) {
+  e.preventDefault();
+  const fields = {
+    clientes:   ['codigo','nombre','rut','giro','email','telefono','direccion','ciudad','tipo','estado','obs'],
+    productos:  ['codigo','nombre','descripcion','unidad','precio','categoria','estado','obs'],
+    proveedores:['codigo','nombre','rut','giro','email','telefono','direccion','ciudad','condicionPago','estado','obs'],
+  };
+  const data = {};
+  (fields[type]||[]).forEach(f => {
+    const el = document.getElementById(type+'-'+f);
+    data[f] = el ? el.value : '';
+  });
+  serverSave(type, data);
+}
+
+function serverSave(type, data) {
+  loader(true);
+  google.script.run
+    .withSuccessHandler(res => {
+      data.id = res.id;
+      DB[type].push(data);
+      loader(false);
+      toast('✅ Guardado correctamente');
+      resetForm(type);
+      const listView = type.includes('otes') || type.includes('ores') ? type+'-lista' : type+'-lista';
+      showView(listView);
+    })
+    .withFailureHandler(() => { loader(false); toast('Error al guardar', false); })
+    .saveRecord(type, data);
+}
+
+// ── Reset form ────────────────────────────────────────────────
+function resetForm(type) {
+  const frm = document.getElementById('form-'+type);
+  if (frm) frm.reset();
+  if (['cot','ot','oc','sol','facturas'].includes(type)) {
+    const tb = document.getElementById(type+'-items-body');
+    if (tb) tb.innerHTML = '';
+    if (type !== 'facturas') {
+      const numEl = document.getElementById(type+'-num');
+      if (numEl) numEl.dataset.edited = '';
+    }
+    addItem(type);
+    if (type === 'facturas') loadNextFolio();
+  }
+  const today = new Date().toISOString().split('T')[0];
+  const fechaId = type === 'facturas' ? 'fac-fecha' : type+'-fecha';
+  const dateEl  = document.getElementById(fechaId);
+  if (dateEl) dateEl.value = today;
+}
+
+// ── Cycle status ─────────────────────────────────────────────
+function cycleStatus(type, id) {
+  const maps = {
+    cot:      ['Borrador','Pendiente','Aprobada','Rechazada'],
+    ot:       ['Borrador','Pendiente','En proceso','Terminada','Cancelado'],
+    oc:       ['Pendiente','Aprobada','Recibida','Anulada'],
+    sol:      ['Borrador','Pendiente','Aprobada','Facturada','Rechazada'],
+    facturas: ['Borrador','Emitida','Pagada','Anulada'],
+    clientes:   ['Activo','Inactivo'],
+    productos:  ['Activo','Inactivo'],
+    proveedores:['Activo','Inactivo'],
+  };
+  const r    = DB[type].find(x => Number(x.id)===Number(id));
+  if (!r) return;
+  const opts = maps[type] || [];
+  const next = opts[(opts.indexOf(r.estado)+1) % opts.length];
+  loader(true);
+  google.script.run
+    .withSuccessHandler(() => {
+      r.estado = next;
+      renderList(type);
+      loader(false);
+      toast('Estado: ' + next);
+    })
+    .withFailureHandler(() => { loader(false); toast('Error',false); })
+    .updateStatus(type, id, next);
+}
+
+// ── Delete ────────────────────────────────────────────────────
+function confirmDel(type, id) {
+  delTarget = { type, id };
+  document.getElementById('del-modal').classList.add('open');
+}
+function closeModal() { delTarget=null; document.getElementById('del-modal').classList.remove('open'); }
+
+document.getElementById('del-confirm').onclick = function() {
+  if (!delTarget) return;
+  const { type, id } = delTarget;
+  closeModal(); loader(true);
+  google.script.run
+    .withSuccessHandler(() => {
+      DB[type] = DB[type].filter(r=>Number(r.id)!==Number(id));
+      renderList(type); loader(false);
+      toast('Registro eliminado');
+    })
+    .withFailureHandler(() => { loader(false); toast('Error',false); })
+    .deleteRecord(type, id);
+};
+
+// ── Print ─────────────────────────────────────────────────────
+function printRecord(type, id) {
+  const r = DB[type].find(x => Number(x.id)===Number(id));
+  if (!r) return;
+  if (type === 'facturas') printFact(r);
+  else openPrintWin(type, r);
+}
+
+function printDoc(type) {
+  if (type === 'facturas') {
+    const items  = getItems('facturas');
+    const neto   = items.reduce((a,i)=>a+i.total,0);
+    const ivaP   = parseFloat(document.getElementById('fac-ivaPorc')?.value)||16;
+    printFact({
+      folio:      document.getElementById('fac-folio').value,
+      ncontrol:   document.getElementById('fac-ncontrol').value,
+      fecha:      document.getElementById('fac-fecha').value,
+      rut:        document.getElementById('fac-rut').value,
+      razonSocial:document.getElementById('fac-razonSocial').value,
+      direccion:  document.getElementById('fac-direccion').value,
+      email:      document.getElementById('fac-email').value,
+      formaPago:  document.getElementById('fac-formaPago').value,
+      obs:        document.getElementById('fac-obs').value,
+      ivaPorc: ivaP, items, neto, iva:neto*(ivaP/100), total:neto*(1+ivaP/100),
+    });
+    return;
+  }
+  if (!['cot','ot','oc','sol'].includes(type)) return;
+  const items = getItems(type);
+  const sub   = items.reduce((a,i)=>a+i.total,0);
+  openPrintWin(type, { ...collectFormVals(type), items, subtotal:sub, iva:sub*0.19, total:sub*1.19 });
+}
+
+function collectFormVals(type) {
+  const ids = {
+    cot:['num','fecha','validez','cliente','rut','contacto','email','proyecto','pago','entrega','obs','estado'],
+    ot: ['num','fecha','estado','prioridad','cliente','proyecto','tecnico','descripcion','obs'],
+    oc: ['num','fecha','estado','proveedor','rut','contacto','email','proyecto','pago','entrega','solicitante','obs'],
+    sol:['num','fecha','estado','cliente','rut','contacto','email','proyecto','cotRef','otRef','solicitante','obs'],
+  };
+  const d = {};
+  (ids[type]||[]).forEach(f => {
+    const el = document.getElementById(type+'-'+f) || document.getElementById(type+'-'+f.replace('proveedor','proveedor'));
+    d[f] = el ? el.value : '';
+  });
+  return d;
+}
+
+function openPrintWin(type, r) {
+  const lbl = {cot:'COTIZACIÓN',ot:'ORDEN DE TRABAJO',oc:'ORDEN DE COMPRA',sol:'SOLICITUD DE FACTURA'}[type];
+  const col = {cot:'#1d4373',ot:'#2e7d32',oc:'#e65100',sol:'#00695c'}[type];
+  const who = type==='oc' ? r.proveedor : r.cliente;
+  const wl  = type==='oc' ? 'Proveedor' : 'Cliente';
+
+  const iHtml = (r.items||[]).map((it,i)=>`<tr>
+    <td style="text-align:center">${i+1}</td><td>${it.desc}</td>
+    <td style="text-align:center">${it.unit}</td>
+    <td style="text-align:right">${it.qty}</td>
+    <td style="text-align:right">$${fmt(it.price)}</td>
+    <td style="text-align:right;font-weight:600">$${fmt(it.total)}</td></tr>`).join('');
+
+  const logoHdrPrint = logoSrc
+    ? `<img src="${logoSrc}" style="max-height:54px;max-width:150px;object-fit:contain;display:block;background:transparent">`
+    : '';
+
+  const html=`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${lbl} ${r.num}</title>
+  <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',sans-serif;font-size:13px;color:#333;padding:28px}
+  .h{background:${col};color:#fff;padding:16px 28px;border-radius:6px 6px 0 0;display:flex;justify-content:space-between;align-items:center}
+  .h h1{font-size:20px}.h .n{font-size:26px;font-weight:700}
+  .h-left{display:flex;align-items:center;gap:16px}
+  .m{background:#f8f8f8;border:1px solid #ddd;border-top:none;padding:14px 22px}
+  .m table{width:100%;border-collapse:collapse}.m td{padding:4px 8px;vertical-align:top;width:25%}
+  .s{margin-top:18px}.s h3{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:6px}
+  table.it{width:100%;border-collapse:collapse}table.it th{background:${col};color:#fff;padding:7px 8px;font-size:11px;text-align:left}
+  table.it td{padding:7px 8px;border-bottom:1px solid #eee}
+  .tot{display:flex;justify-content:flex-end;margin-top:14px}
+  .tb{min-width:240px;border:1px solid #ddd;border-radius:4px;overflow:hidden}
+  .tr{display:flex;justify-content:space-between;padding:6px 14px;border-bottom:1px solid #eee;font-size:12px}
+  .tr.g{background:${col};color:#fff;font-size:14px;font-weight:700;border-bottom:none}
+  .obs{background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:10px 14px;margin-top:12px;font-size:12px}
+  .ft{margin-top:36px;display:flex;justify-content:space-around;text-align:center}
+  .sig{border-top:1px solid #ccc;width:180px;padding-top:7px;font-size:11px;color:#888}
+  @media print{body{padding:14px}}</style></head><body>
+  <div class="h">
+    <div class="h-left">
+      ${logoHdrPrint}
+      <div><div style="font-size:11px;opacity:.8">MARIMAR GROUP</div><h1>${lbl}</h1></div>
+    </div>
+    <div class="n">${r.num||''}</div>
+  </div>
+  <div class="m"><table>
+    <tr><td><b>${wl}:</b></td><td>${who||''}</td><td><b>Fecha:</b></td><td>${r.fecha||''}</td></tr>
+    ${type==='cot'?`<tr><td><b>Proyecto:</b></td><td>${r.proyecto||''}</td><td><b>Pago:</b></td><td>${r.pago||''}</td></tr>
+    <tr><td><b>Contacto:</b></td><td>${r.contacto||''}</td><td><b>Entrega:</b></td><td>${r.entrega||''} días</td></tr>`:
+    type==='ot'?`<tr><td><b>Técnico:</b></td><td>${r.tecnico||''}</td><td><b>Proyecto:</b></td><td>${r.proyecto||''}</td></tr>
+    <tr><td><b>Prioridad:</b></td><td>${r.prioridad||''}</td><td><b>Estado:</b></td><td>${r.estado||''}</td></tr>`:
+    `<tr><td><b>RUT:</b></td><td>${r.rut||''}</td><td><b>Pago:</b></td><td>${r.pago||''}</td></tr>
+    <tr><td><b>Proyecto:</b></td><td>${r.proyecto||''}</td><td><b>Solicitante:</b></td><td>${r.solicitante||''}</td></tr>`}
+  </table></div>
+  <div class="s"><h3>Detalle</h3>
+  <table class="it"><thead><tr><th>#</th><th>Descripción</th><th>Unidad</th><th style="text-align:right">Cant.</th><th style="text-align:right">P.Unit.</th><th style="text-align:right">Total</th></tr></thead>
+  <tbody>${iHtml}</tbody></table></div>
+  <div class="tot"><div class="tb">
+    <div class="tr"><span>Subtotal</span><span>$${fmt(r.subtotal)}</span></div>
+    <div class="tr"><span>IVA (19%)</span><span>$${fmt(r.iva)}</span></div>
+    <div class="tr g"><span>TOTAL</span><span>$${fmt(r.total)}</span></div>
+  </div></div>
+  ${r.obs?`<div class="obs"><b>Observaciones:</b><br>${r.obs}</div>`:''}
+  <div class="ft"><div class="sig">Emitido por<br>Marimar Group</div><div class="sig">${wl}<br>&nbsp;</div></div>
+  <script>window.onload=()=>window.print()<\/script></body></html>`;
+
+  const w = window.open('','_blank','width=880,height=680');
+  w.document.write(html); w.document.close();
+}
+
+// ── saveSol ───────────────────────────────────────────────────
+function saveSol(e) {
+  e.preventDefault();
+  const items = getItems('sol');
+  const sub   = items.reduce((a,i)=>a+i.total,0);
+  const ivaP  = 16;
+  const data  = {
+    num:        document.getElementById('sol-num').value,
+    fecha:      document.getElementById('sol-fecha').value,
+    estado:     document.getElementById('sol-estado').value,
+    cliente:    document.getElementById('sol-cliente').value,
+    rut:        document.getElementById('sol-rut').value,
+    contacto:   document.getElementById('sol-contacto').value,
+    email:      document.getElementById('sol-email').value,
+    proyecto:   document.getElementById('sol-proyecto').value,
+    cotRef:     document.getElementById('sol-cotRef').value,
+    otRef:      document.getElementById('sol-otRef').value,
+    solicitante:document.getElementById('sol-solicitante').value,
+    obs:        document.getElementById('sol-obs').value,
+    items, subtotal:sub, iva:sub*(ivaP/100), total:sub*(1+ivaP/100),
+  };
+  serverSave('sol', data);
+}
+
+// ── saveFact ──────────────────────────────────────────────────
+function saveFact(e) {
+  e.preventDefault();
+  const items  = getItems('facturas');
+  const neto   = items.reduce((a,i)=>a+i.total,0);
+  const ivaP   = parseFloat(document.getElementById('fac-ivaPorc')?.value)||16;
+  const data   = {
+    folio:      document.getElementById('fac-folio').value,
+    ncontrol:   document.getElementById('fac-ncontrol').value,
+    fecha:      document.getElementById('fac-fecha').value,
+    rut:        document.getElementById('fac-rut').value,
+    razonSocial:document.getElementById('fac-razonSocial').value,
+    giro:       document.getElementById('fac-giro').value||'',
+    direccion:  document.getElementById('fac-direccion').value,
+    ciudad:     document.getElementById('fac-ciudad').value,
+    email:      document.getElementById('fac-email').value,
+    formaPago:  document.getElementById('fac-formaPago').value,
+    estado:     document.getElementById('fac-estado').value,
+    obs:        document.getElementById('fac-obs').value,
+    ivaPorc: ivaP, items, neto, iva:neto*(ivaP/100), total:neto*(1+ivaP/100),
+  };
+  serverSave('facturas', data);
+}
+
+// ── loadNextFolio ─────────────────────────────────────────────
+function loadNextFolio() {
+  google.script.run
+    .withSuccessHandler(n => {
+      const el = document.getElementById('fac-folio');
+      if (el) el.value = 'FAC-' + String(n).padStart(4,'0');
+    })
+    .getNextFolio();
+}
+
+// ── loadLogo ──────────────────────────────────────────────────
+// El nav ya muestra el logo directamente en el HTML.
+// Esta función solo carga logoSrc para los PDFs.
+function loadLogo() {
+  const LOGO_ID = '1yFD7ZHpeSTZStxTU6RCtbbuASY-NhluD';
+  logoSrc = 'https://lh3.googleusercontent.com/d/' + LOGO_ID;
+
+  google.script.run
+    .withSuccessHandler(d => { if (d) EMPRESA_DATA = d; })
+    .getEmpresaData();
+}
+
+// ── printFact — formato SENIAT Venezuela ──────────────────────
+function printFact(r) {
+  const e    = EMPRESA_DATA;
+  const ivaP = r.ivaPorc || e.ivaPorc || 16;
+  const neto = r.neto || r.subtotal || 0;
+  const iva  = neto * (ivaP / 100);
+  const total= neto + iva;
+
+  const fParts = (r.fecha||'').split('-');
+  const dia  = fParts[2]||'';
+  const mes  = fParts[1]||'';
+  const anio = fParts[0]||'';
+
+  // Items + filas vacías para rellenar la tabla
+  const items   = r.items || [];
+  const minRows = Math.max(items.length, 13);
+  let iRows = items.map(it => `<tr>
+    <td class="tc b1">${it.qty||''}</td>
+    <td class="b1">${it.desc||''}</td>
+    <td class="tr b1">${it.price ? fmt(it.price) : ''}</td>
+    <td class="tr b1 fw">${it.total ? fmt(it.total) : ''}</td>
+  </tr>`).join('');
+  for (let i = items.length; i < minRows; i++) {
+    iRows += `<tr style="height:21px"><td class="b1"></td><td class="b1"></td><td class="b1"></td><td class="b1"></td></tr>`;
+  }
+
+  const logoHdr = logoSrc
+    ? `<img src="${logoSrc}" style="max-height:52px;max-width:160px;object-fit:contain;display:block;margin:0 auto 3px;background:transparent">`
+    : '';
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <title>Factura N° ${r.folio||''}</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:Arial,sans-serif;font-size:11.5px;color:#000;padding:16px 20px;max-width:710px;margin:0 auto}
+    /* ── Cabecera empresa ── */
+    .hdr{text-align:center;margin-bottom:6px;line-height:1.35}
+    .hdr .l1{font-size:14px;font-weight:700}
+    .hdr .l2{font-size:19px;font-weight:900;letter-spacing:.5px}
+    .hdr .l3{font-size:10.5px}
+    /* ── Fila N°Control / Email / Factura ── */
+    .top{width:100%;border-collapse:collapse;border:1px solid #000;margin-bottom:0}
+    .top td{border:1px solid #000;vertical-align:middle;padding:4px 8px}
+    .td-ctrl{width:30%}
+    .td-info{width:40%;font-size:10.5px;line-height:1.6;text-align:center}
+    .td-fac{width:30%;text-align:center}
+    .fac-lbl{font-weight:900;font-size:16px;letter-spacing:1px;display:block;margin-bottom:4px}
+    .date-row{display:flex;justify-content:center;gap:0;border:1px solid #000;display:inline-flex}
+    .dbox{text-align:center;padding:2px 8px;border-left:1px solid #000;min-width:38px}
+    .dbox:first-child{border-left:none}
+    .dbox span{display:block;font-size:8.5px;font-weight:700}
+    /* ── N° Control grande ── */
+    .nctrl-row{border:1px solid #000;border-top:none;padding:4px 10px;margin-bottom:0}
+    .nctrl{color:red;font-size:23px;font-weight:900;letter-spacing:3px}
+    /* ── Cliente ── */
+    .cli{border:1px solid #000;border-top:none;padding:5px 8px}
+    .cli-r{display:flex;align-items:flex-end;gap:6px;margin-bottom:3px}
+    .cli-r label{white-space:nowrap;font-size:11px;font-weight:600}
+    .cli-line{flex:1;border-bottom:1px solid #000;min-height:15px;padding:0 3px;font-size:11.5px}
+    /* ── Tabla ítems ── */
+    table.it{width:100%;border-collapse:collapse}
+    table.it th{border:1px solid #000;padding:4px 6px;font-size:11px;font-weight:700;text-align:center}
+    .b1{border:1px solid #000;padding:3px 5px;font-size:11px}
+    .tc{text-align:center}.tr{text-align:right}.fw{font-weight:600}
+    /* ── Pie ── */
+    .foot{width:100%;border-collapse:collapse;border:1px solid #000;border-top:none}
+    .foot td{border:1px solid #000;vertical-align:top;padding:7px 10px}
+    .td-orig .fn{color:red;font-size:19px;font-weight:900;margin:4px 0;letter-spacing:2px}
+    .td-orig .orig{color:red;font-weight:700;font-size:12px;margin-top:8px}
+    .td-tots .tot-row{display:flex;justify-content:space-between;padding:5px 4px;border-bottom:1px solid #ccc;font-size:11.5px}
+    .td-tots .tot-row:last-child{border-bottom:none;font-weight:700}
+    /* ── SENIAT ── */
+    .seniat{border:1px solid #000;border-top:none;padding:5px 8px;font-size:8px;color:#333;line-height:1.7;text-align:center}
+    @media print{body{padding:10px}}
+  </style></head><body>
+
+  <div class="hdr">
+    ${logoHdr}
+    <div class="l1">Agencia Naviera y Aduanal</div>
+    <div class="l2">MARIMAR, C.A.</div>
+    <div class="l3">Calle Simón Rodríguez, N° 10, Teléfono: ${e.telefono||'0293 - 431.12.11'}</div>
+    <div class="l3">${e.ciudad||'Cumaná – Estado Sucre.'}</div>
+  </div>
+
+  <table class="top">
+    <tr>
+      <td class="td-ctrl"><strong>N° DE CONTROL</strong></td>
+      <td class="td-info">
+        Email: ${e.email||'ag.marimar46@gmail.com'}<br>
+        RIF: ${e.rut||'J-30029443-9'}
+      </td>
+      <td class="td-fac">
+        <span class="fac-lbl">FACTURA</span>
+        <div class="date-row">
+          <div class="dbox"><span>DIA</span>${dia}</div>
+          <div class="dbox"><span>MES</span>${mes}</div>
+          <div class="dbox"><span>AÑO</span>${anio}</div>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <div class="nctrl-row">
+    <span class="nctrl">N° &nbsp; ${r.ncontrol||'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}</span>
+  </div>
+
+  <div class="cli">
+    <div class="cli-r">
+      <label>Nombre o Razón Social:</label>
+      <div class="cli-line">${r.razonSocial||''}</div>
+    </div>
+    <div class="cli-r">
+      <label>Rif:</label>
+      <div class="cli-line" style="max-width:200px">${r.rut||''}</div>
+      ${r.direccion?`<label style="margin-left:14px">Dirección:</label><div class="cli-line" style="max-width:230px">${r.direccion}</div>`:''}
+    </div>
+  </div>
+
+  <table class="it">
+    <thead><tr>
+      <th style="width:80px">CANT</th>
+      <th>CONCEPTO O DESCRIPCIÓN</th>
+      <th style="width:105px">P. Unit.</th>
+      <th style="width:115px">TOTAL</th>
+    </tr></thead>
+    <tbody>${iRows}</tbody>
+  </table>
+
+  <table class="foot">
+    <tr>
+      <td class="td-orig" style="width:55%">
+        FACTURA
+        <div class="fn">N° &nbsp; ${r.folio||'—'}</div>
+        ${r.obs?`<div style="font-size:10px;color:#333;margin-top:4px">${r.obs}</div>`:''}
+        ${r.formaPago?`<div style="font-size:10px;margin-top:6px">Forma de pago: <b>${r.formaPago}</b></div>`:''}
+        <div class="orig">ORIGINAL: CLIENTE</div>
+      </td>
+      <td class="td-tots">
+        <div class="tot-row"><span>BASE IMPONIBLE</span><span>${fmt(neto)}</span></div>
+        <div class="tot-row"><span>I.V.A.:&nbsp;(${ivaP}&nbsp;%)</span><span>${fmt(iva)}</span></div>
+        <div class="tot-row"><span>Total a Pagar:</span><span><b>${fmt(total)}</b></span></div>
+      </td>
+    </tr>
+  </table>
+
+  <div class="seniat">${e.seniat||'Autorizado por Providencia Nº SENIAT — Agencia Naviera y Aduanal Marimar, C.A. — RIF: J-30029443-9'}</div>
+  <script>window.onload=()=>window.print()<\/script></body></html>`;
+
+  const w = window.open('', '_blank', 'width=760,height=960');
+  w.document.write(html);
+  w.document.close();
+}
+
+// ── Sidebar search ────────────────────────────────────────────
+function sbSearch(q) {
+  document.querySelectorAll('.sb-item').forEach(el => {
+    el.style.display = !q || el.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+
+// ── Google Sheets link ────────────────────────────────────────
+function openSheet() {
+  google.script.run
+    .withSuccessHandler(url => window.open(url,'_blank'))
+    .getSpreadsheetUrl();
+}
+
+// ── Init ──────────────────────────────────────────────────────
+(function init() {
+  const today = new Date().toISOString().split('T')[0];
+  ['cot-fecha','ot-fecha','oc-fecha','sol-fecha','fac-fecha'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = today;
+  });
+
+  // Fallback del logo: si la imagen no carga, muestra el bloque MG
+  const navLogo = document.getElementById('nav-logo');
+  const navMg   = document.getElementById('nav-mg');
+  if (navLogo) {
+    navLogo.onerror = function() {
+      navLogo.style.display = 'none';
+      if (navMg) navMg.style.display = 'flex';
+    };
+  }
+
+  buildSidebar('comercial');
+  loadDashboard();
+  loadLogo();
+})();
+</script>
+</body>
+</html>
