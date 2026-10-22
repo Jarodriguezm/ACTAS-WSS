@@ -1833,7 +1833,7 @@ function printDoc(type) {
   if (!['cot','ot','oc'].includes(type)) return;
   const items = getItems(type);
   const sub   = items.reduce((a,i)=>a+i.total,0);
-  openPrintWin(type, { ...collectFormVals(type), items, subtotal:sub, iva:sub*0.19, total:sub*1.19 });
+  openPrintWin(type, { ...collectFormVals(type), items, subtotal:sub, iva:sub*0.19, total:sub*1.19, ivaPorc:19 });
 }
 
 function collectFormVals(type) {
@@ -1851,58 +1851,227 @@ function collectFormVals(type) {
 }
 
 function openPrintWin(type, r) {
+  const e   = EMPRESA_DATA;
   const lbl = {cot:'COTIZACIÓN',ot:'ORDEN DE TRABAJO',oc:'ORDEN DE COMPRA'}[type];
-  const col = {cot:'#1d4373',ot:'#2e7d32',oc:'#e65100'}[type];
+  const col = {cot:'#1d4373',ot:'#1a5c2e',oc:'#b84800'}[type];
+  const colLight = {cot:'#e8f0fe',ot:'#e8f5e9',oc:'#fff3e0'}[type];
   const who = type==='oc' ? r.proveedor : r.cliente;
   const wl  = type==='oc' ? 'Proveedor' : 'Cliente';
 
-  const iHtml = (r.items||[]).map((it,i)=>`<tr>
-    <td style="text-align:center">${i+1}</td><td>${it.desc}</td>
-    <td style="text-align:center">${it.unit}</td>
-    <td style="text-align:right">${it.qty}</td>
-    <td style="text-align:right">$${fmt(it.price)}</td>
-    <td style="text-align:right;font-weight:600">$${fmt(it.total)}</td></tr>`).join('');
+  // Fecha formateada
+  const fechaFmt = r.fecha ? (() => {
+    const [y,m,d] = r.fecha.split('-');
+    const meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    return `${parseInt(d)} de ${meses[parseInt(m)]} de ${y}`;
+  })() : '';
 
-  const html=`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${lbl} ${r.num}</title>
-  <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',sans-serif;font-size:13px;color:#333;padding:28px}
-  .h{background:${col};color:#fff;padding:22px 28px;border-radius:6px 6px 0 0;display:flex;justify-content:space-between;align-items:center}
-  .h h1{font-size:20px}.h .n{font-size:26px;font-weight:700}
-  .m{background:#f8f8f8;border:1px solid #ddd;border-top:none;padding:14px 22px}
-  .m table{width:100%;border-collapse:collapse}.m td{padding:4px 8px;vertical-align:top;width:25%}
-  .s{margin-top:18px}.s h3{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:6px}
-  table.it{width:100%;border-collapse:collapse}table.it th{background:${col};color:#fff;padding:7px 8px;font-size:11px;text-align:left}
-  table.it td{padding:7px 8px;border-bottom:1px solid #eee}
-  .tot{display:flex;justify-content:flex-end;margin-top:14px}
-  .tb{min-width:240px;border:1px solid #ddd;border-radius:4px;overflow:hidden}
-  .tr{display:flex;justify-content:space-between;padding:6px 14px;border-bottom:1px solid #eee;font-size:12px}
-  .tr.g{background:${col};color:#fff;font-size:14px;font-weight:700;border-bottom:none}
-  .obs{background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:10px 14px;margin-top:12px;font-size:12px}
-  .ft{margin-top:36px;display:flex;justify-content:space-around;text-align:center}
-  .sig{border-top:1px solid #ccc;width:180px;padding-top:7px;font-size:11px;color:#888}
-  @media print{body{padding:14px}}</style></head><body>
-  <div class="h"><div><div style="font-size:11px;opacity:.8">MARIMAR GROUP</div><h1>${lbl}</h1></div><div class="n">${r.num||''}</div></div>
-  <div class="m"><table>
-    <tr><td><b>${wl}:</b></td><td>${who||''}</td><td><b>Fecha:</b></td><td>${r.fecha||''}</td></tr>
-    ${type==='cot'?`<tr><td><b>Proyecto:</b></td><td>${r.proyecto||''}</td><td><b>Pago:</b></td><td>${r.pago||''}</td></tr>
-    <tr><td><b>Contacto:</b></td><td>${r.contacto||''}</td><td><b>Entrega:</b></td><td>${r.entrega||''} días</td></tr>`:
-    type==='ot'?`<tr><td><b>Técnico:</b></td><td>${r.tecnico||''}</td><td><b>Proyecto:</b></td><td>${r.proyecto||''}</td></tr>
-    <tr><td><b>Prioridad:</b></td><td>${r.prioridad||''}</td><td><b>Estado:</b></td><td>${r.estado||''}</td></tr>`:
-    `<tr><td><b>RUT:</b></td><td>${r.rut||''}</td><td><b>Pago:</b></td><td>${r.pago||''}</td></tr>
-    <tr><td><b>Proyecto:</b></td><td>${r.proyecto||''}</td><td><b>Solicitante:</b></td><td>${r.solicitante||''}</td></tr>`}
-  </table></div>
-  <div class="s"><h3>Detalle</h3>
-  <table class="it"><thead><tr><th>#</th><th>Descripción</th><th>Unidad</th><th style="text-align:right">Cant.</th><th style="text-align:right">P.Unit.</th><th style="text-align:right">Total</th></tr></thead>
-  <tbody>${iHtml}</tbody></table></div>
-  <div class="tot"><div class="tb">
-    <div class="tr"><span>Subtotal</span><span>$${fmt(r.subtotal)}</span></div>
-    <div class="tr"><span>IVA (19%)</span><span>$${fmt(r.iva)}</span></div>
-    <div class="tr g"><span>TOTAL</span><span>$${fmt(r.total)}</span></div>
-  </div></div>
-  ${r.obs?`<div class="obs"><b>Observaciones:</b><br>${r.obs}</div>`:''}
-  <div class="ft"><div class="sig">Emitido por<br>Marimar Group</div><div class="sig">${wl}<br>&nbsp;</div></div>
-  <script>window.onload=()=>window.print()<\/script></body></html>`;
+  const iHtml = (r.items||[]).map((it,i)=>`
+    <tr style="background:${i%2===0?'#fff':'#f9fafc'}">
+      <td style="text-align:center;color:#888;font-size:11px">${i+1}</td>
+      <td>${it.desc||''}</td>
+      <td style="text-align:center;color:#555">${it.unit||''}</td>
+      <td style="text-align:center;font-weight:600">${it.qty||0}</td>
+      <td style="text-align:right;color:#555">Bs.${fmt(it.price)}</td>
+      <td style="text-align:right;font-weight:700;color:${col}">Bs.${fmt(it.total)}</td>
+    </tr>`).join('');
 
-  const w = window.open('','_blank','width=880,height=680');
+  const logoHtml = logoSrc
+    ? `<img src="${logoSrc}" style="height:54px;width:auto;object-fit:contain;display:block" alt="Logo">`
+    : `<div style="font-size:22px;font-weight:900;color:${col};letter-spacing:-1px">MARIMAR</div>`;
+
+  const docNumBox = type==='cot'
+    ? `<div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:3px">Cotización N°</div>
+       <div style="font-size:28px;font-weight:900;color:${col};line-height:1">${r.num||''}</div>
+       <div style="font-size:11px;color:#666;margin-top:4px">${fechaFmt}</div>`
+    : `<div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:3px">${lbl} N°</div>
+       <div style="font-size:24px;font-weight:900;color:${col};line-height:1">${r.num||''}</div>
+       <div style="font-size:11px;color:#666;margin-top:4px">${fechaFmt}</div>`;
+
+  const condicionesHtml = type==='cot'
+    ? `<table style="width:100%;border-collapse:collapse;font-size:11.5px">
+        <tr><td style="padding:4px 0;color:#666;width:40%">Válida por:</td><td style="font-weight:600">${r.validez||30} días</td></tr>
+        <tr><td style="padding:4px 0;color:#666">Forma de pago:</td><td style="font-weight:600">${r.pago||''}</td></tr>
+        <tr><td style="padding:4px 0;color:#666">Tiempo de entrega:</td><td style="font-weight:600">${r.entrega||''}</td></tr>
+        ${r.contacto?`<tr><td style="padding:4px 0;color:#666">Atención a:</td><td style="font-weight:600">${r.contacto}</td></tr>`:''}
+       </table>`
+    : type==='ot'
+    ? `<table style="width:100%;border-collapse:collapse;font-size:11.5px">
+        <tr><td style="padding:4px 0;color:#666;width:40%">Técnico:</td><td style="font-weight:600">${r.tecnico||''}</td></tr>
+        <tr><td style="padding:4px 0;color:#666">Prioridad:</td><td style="font-weight:600">${r.prioridad||''}</td></tr>
+        <tr><td style="padding:4px 0;color:#666">Estado:</td><td style="font-weight:600">${r.estado||''}</td></tr>
+       </table>`
+    : `<table style="width:100%;border-collapse:collapse;font-size:11.5px">
+        <tr><td style="padding:4px 0;color:#666;width:40%">Forma de pago:</td><td style="font-weight:600">${r.pago||''}</td></tr>
+        <tr><td style="padding:4px 0;color:#666">Fecha entrega:</td><td style="font-weight:600">${r.fechaEntrega||r.entrega||''}</td></tr>
+        <tr><td style="padding:4px 0;color:#666">Solicitante:</td><td style="font-weight:600">${r.solicitante||''}</td></tr>
+       </table>`;
+
+  const html=`<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8">
+<title>${lbl} ${r.num||''}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+@page{size:A4;margin:18mm 16mm}
+body{font-family:'Segoe UI',Arial,sans-serif;font-size:12.5px;color:#333;background:#fff}
+.page{max-width:800px;margin:0 auto;padding:28px 32px 24px}
+
+/* Header */
+.doc-header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:18px;border-bottom:3px solid ${col};margin-bottom:20px}
+.co-info{flex:1}
+.co-name{font-size:13.5px;font-weight:800;color:${col};text-transform:uppercase;letter-spacing:.3px;margin:8px 0 3px}
+.co-sub{font-size:10.5px;color:#777;margin-bottom:5px}
+.co-detail{font-size:10px;color:#666;line-height:1.65}
+.co-detail a{color:#555;text-decoration:none}
+.co-tray{text-align:right;flex-shrink:0;margin-left:24px}
+.badge-years{display:inline-block;border:2px solid ${col};border-radius:3px;padding:3px 8px;font-size:9px;font-weight:700;color:${col};letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
+
+/* Acuse */
+.doc-acuse{display:flex;gap:16px;margin-bottom:18px}
+.acuse-box{flex:1;border:1px solid #dce1e9;border-radius:5px;padding:13px 16px;background:#fafbfd}
+.acuse-box h4{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:#999;margin-bottom:7px;font-weight:700}
+.acuse-box .val{font-size:13px;font-weight:700;color:#222}
+.acuse-box .sub{font-size:11px;color:#666;margin-top:2px}
+
+/* Items */
+.section-title{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:#aaa;font-weight:700;margin:20px 0 8px;border-bottom:1px solid #eee;padding-bottom:5px}
+table.items{width:100%;border-collapse:collapse;font-size:12px}
+table.items thead tr{background:${col}}
+table.items thead th{color:#fff;padding:8px 9px;font-size:10.5px;font-weight:600;letter-spacing:.3px}
+table.items tbody tr:last-child td{border-bottom:none}
+table.items td{padding:8px 9px;border-bottom:1px solid #f0f0f0;vertical-align:top}
+
+/* Totales */
+.totals-row{display:flex;justify-content:flex-end;margin-top:14px}
+.totals-box{width:260px}
+.t-line{display:flex;justify-content:space-between;padding:5px 12px;font-size:12px;border-bottom:1px solid #f0f0f0}
+.t-line.grand{background:${col};color:#fff;font-size:14px;font-weight:800;border-radius:0 0 4px 4px;padding:8px 12px;border-bottom:none}
+
+/* Condiciones */
+.conditions-row{display:flex;gap:16px;margin-top:18px}
+.cond-box{flex:1;border:1px solid #dce1e9;border-radius:5px;padding:13px 16px;background:#fafbfd}
+.cond-box h4{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:#999;margin-bottom:9px;font-weight:700}
+.obs-box{background:${colLight};border:1px solid ${col}33;border-radius:5px;padding:12px 16px;margin-top:14px;font-size:11.5px;color:#444;line-height:1.6}
+
+/* Firmas */
+.sigs{display:flex;justify-content:space-around;margin-top:40px;padding-top:14px}
+.sig-block{text-align:center;width:200px}
+.sig-line{border-top:1.5px solid #bbb;padding-top:7px;font-size:10.5px;color:#888;line-height:1.7}
+.sig-line strong{display:block;color:#444;font-size:11.5px}
+
+/* Footer */
+.doc-footer{margin-top:30px;padding-top:12px;border-top:1px solid #e8e8e8;font-size:9.5px;color:#aaa;text-align:center;line-height:1.6}
+
+@media print{.page{padding:0}.doc-footer{position:fixed;bottom:0;left:0;right:0}}
+</style></head><body>
+<div class="page">
+
+  <!-- ENCABEZADO -->
+  <div class="doc-header">
+    <div class="co-info">
+      ${logoHtml}
+      <div class="co-name">${e.nombre||'MARIMAR AGENCIA NAVIERA Y ADUANAL CA'}</div>
+      <div class="co-sub">Agencia Naviera y Aduanal</div>
+      <div class="co-detail">
+        RIF: ${e.rut||'J-30029443-9'} &nbsp;|&nbsp; ${e.direccion||'Calle Simón Rodríguez #10'}, ${e.ciudad||'Cumaná, Edo. Sucre'}<br>
+        Tel: ${e.telefono||'0293-431.12.11'} &nbsp;|&nbsp; <a href="mailto:${e.email||''}">${e.email||'agencianaviera@marimargroup.com'}</a> &nbsp;|&nbsp; <a href="${e.web||''}">${(e.web||'marimargroup.com').replace('https://','')}</a>
+      </div>
+    </div>
+    <div class="co-tray">
+      <div class="badge-years">Desde 1992 · 32 años</div>
+      ${docNumBox}
+    </div>
+  </div>
+
+  <!-- CLIENTE / CONDICIONES RÁPIDAS -->
+  <div class="doc-acuse">
+    <div class="acuse-box" style="flex:2">
+      <h4>${wl}</h4>
+      <div class="val">${who||''}</div>
+      ${r.rut?`<div class="sub">RIF: ${r.rut}</div>`:''}
+      ${r.proyecto||r.descripcion?`<div class="sub" style="margin-top:4px;color:#777">${r.proyecto||r.descripcion||''}</div>`:''}
+      ${r.email?`<div class="sub" style="color:#999;font-size:10.5px">${r.email}</div>`:''}
+    </div>
+    <div class="acuse-box" style="flex:1">
+      <h4>Documento</h4>
+      <div class="val">${r.num||''}</div>
+      <div class="sub">${fechaFmt}</div>
+    </div>
+    ${type==='cot'&&r.validez?`<div class="acuse-box" style="flex:1">
+      <h4>Validez</h4>
+      <div class="val">${r.validez} días</div>
+      <div class="sub">A partir de la fecha</div>
+    </div>`:''}
+  </div>
+
+  <!-- DESCRIPCIÓN OT -->
+  ${type==='ot'&&r.descripcion?`<div style="background:#f4f7fb;border-left:3px solid ${col};padding:10px 14px;border-radius:0 4px 4px 0;font-size:12px;color:#444;margin-bottom:14px"><b>Descripción del trabajo:</b><br>${r.descripcion}</div>`:''}
+
+  <!-- ITEMS -->
+  <div class="section-title">Detalle de servicios / productos</div>
+  <table class="items">
+    <thead><tr>
+      <th style="width:30px;text-align:center">#</th>
+      <th style="text-align:left">Descripción</th>
+      <th style="width:70px;text-align:center">Unidad</th>
+      <th style="width:60px;text-align:center">Cant.</th>
+      <th style="width:110px;text-align:right">P. Unit.</th>
+      <th style="width:120px;text-align:right">Total</th>
+    </tr></thead>
+    <tbody>${iHtml||`<tr><td colspan="6" style="text-align:center;color:#bbb;padding:18px;font-style:italic">Sin ítems</td></tr>`}</tbody>
+  </table>
+
+  <!-- TOTALES -->
+  <div class="totals-row">
+    <div class="totals-box">
+      <div style="border:1px solid #e8e8e8;border-radius:4px 4px 0 0;overflow:hidden">
+        <div class="t-line"><span style="color:#666">Subtotal</span><span>Bs.${fmt(r.subtotal)}</span></div>
+        <div class="t-line"><span style="color:#666">IVA (${r.ivaPorc||19}%)</span><span>Bs.${fmt(r.iva)}</span></div>
+      </div>
+      <div class="t-line grand"><span>TOTAL</span><span>Bs.${fmt(r.total)}</span></div>
+    </div>
+  </div>
+
+  <!-- CONDICIONES -->
+  <div class="conditions-row">
+    <div class="cond-box" style="flex:1.4">
+      <h4>Condiciones</h4>
+      ${condicionesHtml}
+    </div>
+    ${r.obs?`<div class="cond-box" style="flex:2">
+      <h4>Observaciones</h4>
+      <div style="font-size:12px;color:#444;line-height:1.65">${r.obs}</div>
+    </div>`:`<div class="cond-box" style="flex:2">
+      <h4>Notas</h4>
+      <div style="font-size:11px;color:#bbb;font-style:italic">Precios expresados en Bolívares. Válido sujeto a disponibilidad.</div>
+    </div>`}
+  </div>
+
+  <!-- FIRMAS -->
+  <div class="sigs">
+    <div class="sig-block">
+      <div class="sig-line">
+        <strong>Autorizado por</strong>
+        MARIMAR AGENCIA NAVIERA Y ADUANAL CA
+      </div>
+    </div>
+    <div class="sig-block">
+      <div class="sig-line">
+        <strong>Aceptado por</strong>
+        ${who||wl}
+      </div>
+    </div>
+  </div>
+
+  <!-- PIE -->
+  <div class="doc-footer">
+    ${e.nombre||'MARIMAR AGENCIA NAVIERA Y ADUANAL CA'} · RIF ${e.rut||'J-30029443-9'} · ${e.direccion||''}, ${e.ciudad||''} · ${e.telefono||''} · ${e.web||''}
+  </div>
+
+</div>
+<script>window.onload=()=>window.print()<\/script>
+</body></html>`;
+
+  const w = window.open('','_blank','width=900,height=720');
   w.document.write(html); w.document.close();
 }
 
