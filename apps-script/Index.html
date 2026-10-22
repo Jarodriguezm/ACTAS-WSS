@@ -1573,7 +1573,10 @@ function addItem(type) {
   const tr  = document.createElement('tr');
   tr.innerHTML = `
     <td style="text-align:center;color:#aaa;font-size:11px">${idx}</td>
-    <td><textarea rows="1" placeholder="Descripción del ítem" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'" style="width:100%;resize:none;overflow:hidden;min-height:28px;padding:4px 6px;border:none;background:transparent;font:inherit;box-sizing:border-box"></textarea></td>
+    <td style="position:relative">
+      <input type="text" placeholder="Descripción del ítem" style="width:100%;padding-right:22px;box-sizing:border-box">
+      <button type="button" title="Expandir descripción" onclick="openDescModal(this)" style="position:absolute;right:3px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#888;font-size:13px;padding:0;line-height:1">⤢</button>
+    </td>
     <td><input type="text" placeholder="UN" style="text-align:center"></td>
     <td><input type="number" placeholder="0" min="0" oninput="recalc('${type}')" style="text-align:right"></td>
     <td><input type="number" placeholder="0" min="0" oninput="recalc('${type}')" style="text-align:right"></td>
@@ -1588,6 +1591,24 @@ function removeItem(btn, type) {
   const tb = document.getElementById(type + '-items-body');
   Array.from(tb.children).forEach((tr,i) => { tr.cells[0].textContent = i+1; });
   recalc(type);
+}
+
+function openDescModal(btn) {
+  const inp = btn.previousElementSibling;
+  const modal = document.getElementById('desc-modal');
+  const ta    = document.getElementById('desc-modal-ta');
+  ta.value = inp.value;
+  modal.style.display = 'flex';
+  ta.focus();
+  modal._target = inp;
+}
+
+function closeDescModal(save) {
+  const modal = document.getElementById('desc-modal');
+  if (save && modal._target) {
+    modal._target.value = document.getElementById('desc-modal-ta').value;
+  }
+  modal.style.display = 'none';
 }
 
 function recalc(type) {
@@ -1614,7 +1635,7 @@ function getItems(type) {
   const tb = document.getElementById(type + '-items-body');
   if (!tb) return [];
   return Array.from(tb.children).map(tr => ({
-    desc:  tr.cells[1].querySelector('textarea,input')?.value||'',
+    desc:  tr.cells[1].querySelector('input[type="text"]')?.value||'',
     unit:  tr.cells[2].querySelector('input')?.value||'',
     qty:   parseFloat(tr.cells[3].querySelector('input')?.value)||0,
     price: parseFloat(tr.cells[4].querySelector('input')?.value)||0,
@@ -2312,5 +2333,17 @@ function openSheet() {
   loadLogo();
 })();
 </script>
+
+<!-- Modal expandir descripción -->
+<div id="desc-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:10px;padding:24px;width:min(600px,92vw);box-shadow:0 8px 32px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:14px">
+    <div style="font-weight:700;color:#1d4373;font-size:15px">✏️ Descripción del ítem</div>
+    <textarea id="desc-modal-ta" rows="6" placeholder="Escribe la descripción completa del ítem..." style="width:100%;border:1px solid #d0d8e4;border-radius:6px;padding:10px 12px;font:inherit;font-size:14px;resize:vertical;box-sizing:border-box;outline:none;line-height:1.5"></textarea>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button type="button" onclick="closeDescModal(false)" style="padding:8px 18px;border:1px solid #ccc;background:#fff;border-radius:6px;cursor:pointer;font-size:13px">Cancelar</button>
+      <button type="button" onclick="closeDescModal(true)" style="padding:8px 20px;background:#1d4373;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600">Guardar</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
