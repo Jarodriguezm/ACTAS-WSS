@@ -1594,21 +1594,34 @@ function removeItem(btn, type) {
 }
 
 function openDescModal(btn) {
-  const inp = btn.previousElementSibling;
-  const modal = document.getElementById('desc-modal');
-  const ta    = document.getElementById('desc-modal-ta');
-  ta.value = inp.value;
+  const inp    = btn.previousElementSibling;
+  const modal  = document.getElementById('desc-modal');
+  const editor = document.getElementById('desc-editor');
+  editor.innerHTML = inp.dataset.html || inp.value.replace(/\n/g,'<br>') || '';
   modal.style.display = 'flex';
-  ta.focus();
+  editor.focus();
   modal._target = inp;
 }
 
 function closeDescModal(save) {
   const modal = document.getElementById('desc-modal');
   if (save && modal._target) {
-    modal._target.value = document.getElementById('desc-modal-ta').value;
+    const editor = document.getElementById('desc-editor');
+    modal._target.dataset.html  = editor.innerHTML;
+    modal._target.value         = editor.innerText.trim();
   }
   modal.style.display = 'none';
+}
+
+function descCmd(cmd, val) {
+  document.getElementById('desc-editor').focus();
+  document.execCommand(cmd, false, val || null);
+}
+
+function insertNota(txt) {
+  const ed = document.getElementById('desc-editor');
+  ed.focus();
+  document.execCommand('insertHTML', false, txt);
 }
 
 function recalc(type) {
@@ -1635,7 +1648,7 @@ function getItems(type) {
   const tb = document.getElementById(type + '-items-body');
   if (!tb) return [];
   return Array.from(tb.children).map(tr => ({
-    desc:  tr.cells[1].querySelector('input[type="text"]')?.value||'',
+    desc:  (()=>{const el=tr.cells[1].querySelector('input[type="text"]');return el?.dataset?.html||el?.value||''})(),
     unit:  tr.cells[2].querySelector('input')?.value||'',
     qty:   parseFloat(tr.cells[3].querySelector('input')?.value)||0,
     price: parseFloat(tr.cells[4].querySelector('input')?.value)||0,
@@ -2334,14 +2347,66 @@ function openSheet() {
 })();
 </script>
 
-<!-- Modal expandir descripción -->
-<div id="desc-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center">
-  <div style="background:#fff;border-radius:10px;padding:24px;width:min(600px,92vw);box-shadow:0 8px 32px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:14px">
-    <div style="font-weight:700;color:#1d4373;font-size:15px">✏️ Descripción del ítem</div>
-    <textarea id="desc-modal-ta" rows="6" placeholder="Escribe la descripción completa del ítem..." style="width:100%;border:1px solid #d0d8e4;border-radius:6px;padding:10px 12px;font:inherit;font-size:14px;resize:vertical;box-sizing:border-box;outline:none;line-height:1.5"></textarea>
-    <div style="display:flex;gap:10px;justify-content:flex-end">
+<!-- Modal editor de descripción -->
+<style>
+#desc-modal .dm-toolbar button{background:#fff;border:1px solid #d0d8e4;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:13px;color:#333;line-height:1.4}
+#desc-modal .dm-toolbar button:hover{background:#e8eef6;border-color:#1d4373}
+#desc-modal .dm-toolbar select{border:1px solid #d0d8e4;border-radius:4px;padding:3px 4px;font-size:12px;cursor:pointer}
+#desc-modal .dm-sep{width:1px;background:#d0d8e4;margin:0 4px;align-self:stretch}
+#desc-editor{min-height:160px;max-height:55vh;overflow-y:auto;padding:12px 14px;font-size:14px;line-height:1.65;outline:none;resize:vertical}
+#desc-editor:empty:before{content:attr(data-ph);color:#bbb}
+#desc-editor b,#desc-editor strong{font-weight:700}
+#desc-editor ul{padding-left:18px;margin:4px 0}
+#desc-editor ol{padding-left:20px;margin:4px 0}
+.nota-pill{display:inline-block;padding:3px 10px;border:1px solid #b8cce4;border-radius:12px;font-size:11px;color:#1d4373;cursor:pointer;background:#f0f5fb;white-space:nowrap}
+.nota-pill:hover{background:#d0e3f7}
+</style>
+<div id="desc-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:10px;width:min(680px,96vw);box-shadow:0 10px 40px rgba(0,0,0,.3);display:flex;flex-direction:column;overflow:hidden">
+    <!-- Header -->
+    <div style="padding:14px 20px;border-bottom:1px solid #e8eef6;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-weight:700;color:#1d4373;font-size:15px">✏️ Descripción del ítem</span>
+      <button type="button" onclick="closeDescModal(false)" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;line-height:1">×</button>
+    </div>
+    <!-- Toolbar -->
+    <div class="dm-toolbar" style="padding:8px 14px;border-bottom:1px solid #e8eef6;display:flex;gap:4px;flex-wrap:wrap;align-items:center;background:#fafbfc">
+      <button type="button" onclick="descCmd('bold')" title="Negrita (Ctrl+B)"><b>N</b></button>
+      <button type="button" onclick="descCmd('italic')" title="Cursiva (Ctrl+I)"><i>K</i></button>
+      <button type="button" onclick="descCmd('underline')" title="Subrayado (Ctrl+U)"><u>S</u></button>
+      <div class="dm-sep"></div>
+      <button type="button" onclick="descCmd('insertUnorderedList')" title="Lista con viñetas">• Lista</button>
+      <button type="button" onclick="descCmd('insertOrderedList')" title="Lista numerada">1. Numerada</button>
+      <div class="dm-sep"></div>
+      <select onchange="descCmd('fontSize',this.value);this.value=''" title="Tamaño">
+        <option value="">Tamaño</option>
+        <option value="1">Pequeño</option>
+        <option value="3">Normal</option>
+        <option value="5">Grande</option>
+      </select>
+      <div class="dm-sep"></div>
+      <button type="button" onclick="descCmd('removeFormat')" title="Quitar formato" style="color:#c62828">✕ Formato</button>
+    </div>
+    <!-- Editor -->
+    <div style="padding:0;border-bottom:1px solid #e8eef6">
+      <div id="desc-editor" contenteditable="true" data-ph="Escribe la descripción del ítem aquí..."></div>
+    </div>
+    <!-- Notas comerciales rápidas -->
+    <div style="padding:10px 14px;border-bottom:1px solid #e8eef6;background:#fafbfc">
+      <div style="font-size:11px;font-weight:600;color:#888;margin-bottom:6px;letter-spacing:.5px">NOTAS RÁPIDAS</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        <span class="nota-pill" onclick="insertNota('<br><em>Sujeto a disponibilidad de stock</em>')">Sujeto a disponibilidad</span>
+        <span class="nota-pill" onclick="insertNota('<br><em>Precios en USD. No incluye IVA</em>')">Precio USD s/IVA</span>
+        <span class="nota-pill" onclick="insertNota('<br><em>Incluye transporte y maniobras</em>')">Incl. transporte</span>
+        <span class="nota-pill" onclick="insertNota('<br><em>No incluye gastos de aduana</em>')">Sin gastos aduana</span>
+        <span class="nota-pill" onclick="insertNota('<br><em>Validez de la oferta: 30 días</em>')">Validez 30 días</span>
+        <span class="nota-pill" onclick="insertNota('<br><em>Pago: 50% anticipo / 50% contra entrega</em>')">50/50 anticipo</span>
+        <span class="nota-pill" onclick="insertNota('<br><em>Tiempo de entrega: a confirmar</em>')">Entrega a confirmar</span>
+      </div>
+    </div>
+    <!-- Footer -->
+    <div style="padding:12px 18px;display:flex;gap:10px;justify-content:flex-end">
       <button type="button" onclick="closeDescModal(false)" style="padding:8px 18px;border:1px solid #ccc;background:#fff;border-radius:6px;cursor:pointer;font-size:13px">Cancelar</button>
-      <button type="button" onclick="closeDescModal(true)" style="padding:8px 20px;background:#1d4373;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600">Guardar</button>
+      <button type="button" onclick="closeDescModal(true)" style="padding:8px 22px;background:#1d4373;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600">✔ Guardar</button>
     </div>
   </div>
 </div>
