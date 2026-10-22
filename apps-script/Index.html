@@ -1573,7 +1573,7 @@ function addItem(type) {
   const tr  = document.createElement('tr');
   tr.innerHTML = `
     <td style="text-align:center;color:#aaa;font-size:11px">${idx}</td>
-    <td><input type="text" placeholder="Descripción del ítem"></td>
+    <td><textarea rows="1" placeholder="Descripción del ítem" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'" style="width:100%;resize:none;overflow:hidden;min-height:28px;padding:4px 6px;border:none;background:transparent;font:inherit;box-sizing:border-box"></textarea></td>
     <td><input type="text" placeholder="UN" style="text-align:center"></td>
     <td><input type="number" placeholder="0" min="0" oninput="recalc('${type}')" style="text-align:right"></td>
     <td><input type="number" placeholder="0" min="0" oninput="recalc('${type}')" style="text-align:right"></td>
@@ -1614,7 +1614,7 @@ function getItems(type) {
   const tb = document.getElementById(type + '-items-body');
   if (!tb) return [];
   return Array.from(tb.children).map(tr => ({
-    desc:  tr.cells[1].querySelector('input')?.value||'',
+    desc:  tr.cells[1].querySelector('textarea,input')?.value||'',
     unit:  tr.cells[2].querySelector('input')?.value||'',
     qty:   parseFloat(tr.cells[3].querySelector('input')?.value)||0,
     price: parseFloat(tr.cells[4].querySelector('input')?.value)||0,
