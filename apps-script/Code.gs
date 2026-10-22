@@ -63,11 +63,35 @@ function doGet() {
 // ── Logo ────────────────────────────────────────────────────
 function getLogoBase64() {
   if (!LOGO_DRIVE_ID) return '';
+
+  // Intento 1: DriveApp directo
   try {
-    const blob  = DriveApp.getFileById(LOGO_DRIVE_ID).getBlob();
-    const b64   = Utilities.base64Encode(blob.getBytes());
+    const file = DriveApp.getFileById(LOGO_DRIVE_ID);
+    // Asegurar acceso público de lectura
+    try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch(_) {}
+    const blob = file.getBlob();
+    const b64  = Utilities.base64Encode(blob.getBytes());
+    Logger.log('Logo OK via DriveApp, tipo: ' + blob.getContentType() + ', bytes: ' + blob.getBytes().length);
     return 'data:' + blob.getContentType() + ';base64,' + b64;
-  } catch(e) { return ''; }
+  } catch(e1) {
+    Logger.log('DriveApp falló: ' + e1.toString());
+  }
+
+  // Intento 2: UrlFetchApp (descarga directa del archivo)
+  try {
+    const url  = 'https://drive.google.com/uc?export=download&id=' + LOGO_DRIVE_ID;
+    const resp = UrlFetchApp.fetch(url, { followRedirects: true, muteHttpExceptions: true });
+    if (resp.getResponseCode() === 200) {
+      const b64 = Utilities.base64Encode(resp.getContent());
+      Logger.log('Logo OK via UrlFetchApp');
+      return 'data:image/jpeg;base64,' + b64;
+    }
+    Logger.log('UrlFetchApp HTTP ' + resp.getResponseCode());
+  } catch(e2) {
+    Logger.log('UrlFetchApp falló: ' + e2.toString());
+  }
+
+  return '';
 }
 
 function getEmpresaData() {
