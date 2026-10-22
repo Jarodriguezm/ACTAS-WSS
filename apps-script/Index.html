@@ -342,6 +342,7 @@ html,body{height:100%;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;col
   <div class="tn-right">
     <div class="tn-user" onclick="openSheet()">📊 Google Sheets</div>
     <div class="tn-user">👤 Jose ▾</div>
+    <div style="font-size:10px;color:rgba(255,255,255,.45);margin-left:6px;letter-spacing:.5px">v1.1</div>
   </div>
 </div>
 
@@ -1575,8 +1576,8 @@ function addItem(type) {
   tr.innerHTML = `
     <td style="text-align:center;color:#aaa;font-size:11px;vertical-align:top;padding-top:8px">${idx}</td>
     <td style="vertical-align:top">
-      <textarea class="desc-ta" rows="2" placeholder="Descripción del ítem..." style="width:100%;resize:vertical;min-height:46px;border:none;background:transparent;font:inherit;font-size:12px;padding:4px;outline:none;box-sizing:border-box;color:var(--text);display:block"></textarea>
-      <button type="button" onclick="openDescModal(this.previousElementSibling)" style="font-size:10px;color:#1d4373;background:none;border:none;cursor:pointer;padding:0 2px;margin-top:1px;text-decoration:underline">✏️ Formato / Notas</button>
+      <textarea class="desc-ta" rows="3" placeholder="Descripción del ítem..." style="width:100%;resize:vertical;min-height:60px;border:1px solid #c5d5e8;border-radius:4px;background:#fff;font:inherit;font-size:12px;padding:6px 8px;outline:none;box-sizing:border-box;color:var(--text);display:block"></textarea>
+      <button type="button" onclick="openDescModal(this.previousElementSibling)" style="font-size:11px;color:#1d4373;background:#e8f0fb;border:1px solid #b8cce4;border-radius:3px;cursor:pointer;padding:2px 7px;margin-top:3px;font-weight:600">✏️ Formato / Notas</button>
     </td>
     <td style="vertical-align:top"><input type="text" placeholder="UN" style="text-align:center"></td>
     <td style="vertical-align:top"><input type="number" placeholder="0" min="0" oninput="recalc('${type}')" style="text-align:right"></td>
