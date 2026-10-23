@@ -297,6 +297,15 @@ body.locked #layout,body.locked #topnav{filter:blur(1px);pointer-events:none}
 .itbl td{border:1px solid #eee;padding:3px 5px}
 .itbl input,.itbl select{width:100%;border:none;background:transparent;font-size:12px;font-family:inherit;padding:4px;outline:none;color:var(--text)}
 .itbl tr:hover td{background:#fafafa}
+.itbl td{vertical-align:top}
+.desc-tb{display:flex;gap:2px;align-items:center;margin-bottom:3px;flex-wrap:wrap}
+.desc-tb button{border:1px solid #c9d6e8;background:#f3f7fc;color:#1d4373;border-radius:3px;font-size:11px;min-width:24px;height:22px;padding:0 5px;cursor:pointer;font-family:inherit}
+.desc-tb button:hover{background:#dfe9f7}
+.desc-tb select{width:auto!important;max-width:190px;border:1px solid #c9d6e8!important;background:#f3f7fc!important;color:#1d4373;border-radius:3px;font-size:11px;height:22px;padding:0 4px!important;cursor:pointer;margin-left:4px}
+.desc-ed{min-height:58px;max-height:400px;overflow:auto;resize:vertical;border:1px solid #9bb7dc;border-radius:4px;background:#fff;padding:6px 8px;font-size:12px;line-height:1.45;outline:none;color:var(--text)}
+.desc-ed:focus{border-color:#4a90e2;box-shadow:0 0 0 2px rgba(74,144,226,.15)}
+.desc-ed:empty:before{content:attr(data-ph);color:#aaa}
+.desc-ed ul,.desc-ed ol{padding-left:18px;margin:2px 0}
 .items-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap;gap:10px}
 .total-box{background:#f8f8f8;border:1px solid var(--border);border-radius:3px;padding:10px 16px;min-width:220px}
 .t-row{display:flex;justify-content:space-between;font-size:12px;padding:2px 0}
@@ -1935,8 +1944,22 @@ function addItem(type) {
   const idx = tb.children.length + 1;
   const tr  = document.createElement('tr');
   tr.innerHTML = `
-    <td style="text-align:center;color:#aaa;font-size:11px">${idx}</td>
-    <td><input type="text" placeholder="Descripción del ítem"></td>
+    <td style="text-align:center;color:#aaa;font-size:11px;padding-top:30px">${idx}</td>
+    <td>
+      <div class="desc-tb">
+        <button type="button" onmousedown="event.preventDefault()" onclick="descCmd(this,'bold')" title="Negrita"><b>B</b></button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="descCmd(this,'italic')" title="Cursiva"><i>I</i></button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="descCmd(this,'underline')" title="Subrayado"><u>U</u></button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="descCmd(this,'insertUnorderedList')" title="Viñetas">•</button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="descCmd(this,'insertOrderedList')" title="Lista numerada">1.</button>
+        <button type="button" onmousedown="event.preventDefault()" onclick="descCmd(this,'removeFormat')" title="Quitar formato">✕</button>
+        <select onchange="descNota(this)" title="Insertar nota comercial">
+          <option value="">📝 Nota comercial…</option>
+          ${DESC_NOTAS.map(n => `<option>${n}</option>`).join('')}
+        </select>
+      </div>
+      <div class="desc-ed" contenteditable="true" data-ph="Descripción del ítem" onpaste="descPaste(event)"></div>
+    </td>
     <td><input type="text" placeholder="UN" style="text-align:center"></td>
     <td><input type="number" placeholder="0" min="0" oninput="recalc('${type}')" style="text-align:right"></td>
     <td><input type="number" placeholder="0" min="0" oninput="recalc('${type}')" style="text-align:right"></td>
@@ -1944,6 +1967,49 @@ function addItem(type) {
     <td><button type="button" style="background:none;border:none;cursor:pointer;color:#c62828;font-size:14px" onclick="removeItem(this,'${type}')">✕</button></td>`;
   tb.appendChild(tr);
   recalc(type);
+}
+
+const DESC_NOTAS = [
+  'Precios expresados en USD.',
+  'Precios no incluyen IVA.',
+  'Validez de la oferta: 30 días.',
+  'Tiempo de entrega sujeto a disponibilidad.',
+  'Forma de pago: 50% anticipo y 50% contra entrega.',
+  'Incluye transporte hasta el sitio.',
+  'No incluye transporte.',
+  'Garantía de 6 meses por defectos de fabricación.',
+];
+
+function descCmd(btn, cmd) {
+  const ed = btn.closest('td').querySelector('.desc-ed');
+  if (document.activeElement !== ed) ed.focus();
+  document.execCommand(cmd, false, null);
+}
+
+function descNota(sel) {
+  const nota = sel.value;
+  sel.value = '';
+  if (!nota) return;
+  const ed = sel.closest('td').querySelector('.desc-ed');
+  const line = document.createElement('div');
+  const em = document.createElement('i');
+  em.style.color = '#555';
+  em.textContent = 'Nota: ' + nota;
+  line.appendChild(em);
+  ed.appendChild(line);
+  ed.focus();
+}
+
+function descPaste(e) {
+  e.preventDefault();
+  const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+  document.execCommand('insertText', false, text);
+}
+
+function descValue(td) {
+  const ed = td.querySelector('.desc-ed');
+  if (!ed) return (td.querySelector('input') || {}).value || '';
+  return ed.textContent.trim() ? ed.innerHTML.trim() : '';
 }
 
 function removeItem(btn, type) {
@@ -1979,7 +2045,7 @@ function getItems(type) {
   const tb = document.getElementById(type + '-items-body');
   if (!tb) return [];
   return Array.from(tb.children).map(tr => ({
-    desc:  (tr.cells[1].querySelector('input') || {}).value||'',
+    desc:  descValue(tr.cells[1]),
     unit:  (tr.cells[2].querySelector('input') || {}).value||'',
     qty:   parseFloat((tr.cells[3].querySelector('input') || {}).value)||0,
     price: parseFloat((tr.cells[4].querySelector('input') || {}).value)||0,
