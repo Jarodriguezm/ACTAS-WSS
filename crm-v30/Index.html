@@ -2277,12 +2277,25 @@ function serverSave(type, data) {
       if (['clientes','productos','proveedores'].includes(type)) refreshLocalSelects();
       loader(false);
       toast('✅ Guardado correctamente');
+      archiveDoc(type, data);
       resetForm(type);
       const listView = type.includes('otes') || type.includes('ores') ? type+'-lista' : type+'-lista';
       showView(listView);
     })
     .withFailureHandler(err => { loader(false); console.error(err); toast('Error al guardar: ' + (err && err.message ? err.message : err), false); })
     .saveRecord(AUTH_TOKEN, type, data);
+}
+
+function archiveDoc(type, data) {
+  if (!['cot','ot','oc','sol','facturas'].includes(type)) return;
+  const html = type === 'facturas' ? buildFactHtml(data) : buildPrintHtml(type, data);
+  const num  = type === 'facturas' ? data.folio : data.num;
+  const who  = type === 'facturas' ? data.razonSocial : (type === 'oc' ? data.proveedor : data.cliente);
+  const name = [num, who].filter(Boolean).join(' - ') || ('Documento ' + new Date().toISOString().slice(0,10));
+  google.script.run
+    .withSuccessHandler(path => toast('📁 PDF guardado en ' + path))
+    .withFailureHandler(ex => toast('No se pudo guardar el PDF en Drive: ' + ((ex && ex.message) || ex), false))
+    .archiveDocument(AUTH_TOKEN, type, name, html);
 }
 
 // ── Reset form ────────────────────────────────────────────────
@@ -2421,6 +2434,12 @@ function collectFormVals(type) {
 }
 
 function openPrintWin(type, r) {
+  const w = window.open('','_blank','width=880,height=680');
+  w.document.write(buildPrintHtml(type, r)); w.document.close();
+  setTimeout(()=>w.print(), 400);
+}
+
+function buildPrintHtml(type, r) {
   const lbl = {cot:'COTIZACIÓN',ot:'ORDEN DE TRABAJO',oc:'ORDEN DE COMPRA',sol:'SOLICITUD DE FACTURA'}[type];
   const col = {cot:'#1d4373',ot:'#2e7d32',oc:'#e65100',sol:'#00695c'}[type];
   const who = type==='oc' ? r.proveedor : r.cliente;
@@ -2491,9 +2510,7 @@ function openPrintWin(type, r) {
   ${r.obs?`<div class="obs"><b>Observaciones:</b><br>${r.obs}</div>`:''}
   <div class="ft"><div class="sig">Emitido por<br>Marimar Group</div><div class="sig">${wl}<br>&nbsp;</div></div>
   </body></html>`;
-  const w = window.open('','_blank','width=880,height=680');
-  w.document.write(html); w.document.close();
-  setTimeout(()=>w.print(), 400);
+  return html;
 }
 
 // ── saveSol ───────────────────────────────────────────────────
@@ -2577,6 +2594,13 @@ function loadLogo() {
 
 // ── printFact — formato SENIAT Venezuela ──────────────────────
 function printFact(r) {
+  const w = window.open('', '_blank', 'width=760,height=960');
+  w.document.write(buildFactHtml(r));
+  w.document.close();
+  setTimeout(()=>w.print(), 400);
+}
+
+function buildFactHtml(r) {
   const e    = EMPRESA_DATA;
   const ivaP = r.ivaPorc || e.ivaPorc || 16;
   const neto = r.neto || r.subtotal || 0;
@@ -2726,10 +2750,7 @@ function printFact(r) {
   <div class="seniat">${e.seniat||'Autorizado por Providencia Nº SENIAT — Agencia Naviera y Aduanal Marimar, C.A. — RIF: J-30029443-9'}</div>
   </body></html>`;
 
-  const w = window.open('', '_blank', 'width=760,height=960');
-  w.document.write(html);
-  w.document.close();
-  setTimeout(()=>w.print(), 400);
+  return html;
 }
 
 // ── Sidebar search ────────────────────────────────────────────

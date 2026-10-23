@@ -466,6 +466,40 @@ function getNextFolio(token) {
   return fac.length + 1;
 }
 
+// ── Archivo de documentos en Drive ──────────────────────────
+// Mi unidad › PERSONAL JR › MARIMAR › CRM › <tipo>
+const ARCHIVO_RUTA = ['PERSONAL JR', 'MARIMAR', 'CRM'];
+const ARCHIVO_CARPETAS = { cot:'Cotizaciones', ot:'OT', oc:'OC', sol:'SDF', facturas:'Facturas' };
+
+function getSubFolder_(parent, name) {
+  const it = parent.getFoldersByName(name);
+  return it.hasNext() ? it.next() : parent.createFolder(name);
+}
+
+function getArchivoFolder_(type) {
+  let folder = DriveApp.getRootFolder();
+  ARCHIVO_RUTA.forEach(n => { folder = getSubFolder_(folder, n); });
+  return getSubFolder_(folder, ARCHIVO_CARPETAS[type]);
+}
+
+function archiveDocument(token, type, name, html) {
+  requirePermission_(token, 'write', type);
+  if (!ARCHIVO_CARPETAS[type]) throw new Error('Tipo de documento no válido');
+  const folder   = getArchivoFolder_(type);
+  const fileName = String(name).replace(/[\\/:*?"<>|]/g, '-').trim().slice(0, 150) + '.pdf';
+  const old = folder.getFilesByName(fileName);
+  while (old.hasNext()) old.next().setTrashed(true);
+  const pdf = Utilities.newBlob(html, 'text/html', 'doc.html').getAs('application/pdf').setName(fileName);
+  folder.createFile(pdf);
+  return ARCHIVO_RUTA.concat(ARCHIVO_CARPETAS[type]).join(' › ');
+}
+
+// Ejecutar una vez desde el editor para autorizar Drive y crear las carpetas.
+function autorizarDrive() {
+  Object.keys(ARCHIVO_CARPETAS).forEach(t => getArchivoFolder_(t));
+  Logger.log('Carpetas listas en Mi unidad › ' + ARCHIVO_RUTA.join(' › '));
+}
+
 // ── Notas comerciales ───────────────────────────────────────
 const NOTAS_DEFAULT = [
   'Precios expresados en USD.',
