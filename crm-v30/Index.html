@@ -325,7 +325,49 @@ body.locked #layout,body.locked #topnav{filter:blur(1px);pointer-events:none}
 .anx-meta{font-size:11px;color:var(--muted);margin-top:2px}
 .anx-empty{color:#aaa;font-size:12px;padding:6px 0}
 .anx-pend{font-size:11.5px;color:#e65100;background:#fff3e0;border-radius:3px;padding:6px 10px;margin-bottom:10px}
-@media(max-width:900px){.anx-form{grid-template-columns:1fr}}
+.fx-wrap{padding:12px 14px}
+.fx-tabs{display:flex;gap:2px;border-bottom:1px solid #c7ccd4;padding-left:6px}
+.fx-tab{padding:9px 16px;font-size:13px;color:#1d4373;cursor:pointer;border:1px solid transparent;border-bottom:none;border-radius:3px 3px 0 0;background:none;font-family:inherit;margin-bottom:-1px}
+.fx-tab:hover{text-decoration:underline}
+.fx-tab.on{background:#fff;border-color:#c7ccd4;color:#222;font-weight:600}
+.fx-tab .fx-n{background:#8a8f99;color:#fff;border-radius:3px;font-size:10px;padding:1px 5px;margin-left:4px}
+.fx-box{background:#fff;border:1px solid #c7ccd4;border-top:none;padding:16px 18px}
+.fx-head{display:flex;gap:16px;align-items:flex-start;margin-bottom:16px}
+.fx-ico{width:72px;height:72px;border:1px solid #ddd;box-shadow:0 1px 3px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;font-size:34px;background:#fafafa;flex-shrink:0}
+.fx-id{flex:1;min-width:0}
+.fx-num{font-size:16px;font-weight:700;color:#6b5a1e;margin-bottom:4px}
+.fx-sub{font-size:12.5px;color:#666}
+.fx-cli{font-size:13.5px;color:#1d4373;font-weight:600;margin:2px 0}
+.fx-right{display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.fx-nav{display:flex;align-items:center;gap:8px;font-size:12.5px}
+.fx-nav a{color:#1d4373;font-weight:700;text-decoration:none}
+.fx-nav button{border:none;background:none;font-size:20px;cursor:pointer;color:#333;line-height:1}
+.fx-badge{padding:5px 12px;border-radius:4px;font-size:12.5px;font-weight:700;color:#fff}
+.fx-badge.st-Borrador{background:#fff;color:#999;border:2px solid #ccc}
+.fx-badge.st-Pendiente{background:#3c7fbf}
+.fx-badge.st-Aprobada{background:#2aa876}
+.fx-badge.st-Rechazada{background:#c0392b}
+.fx-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-bottom:20px;align-items:start}
+.fx-tbl{width:100%;border-collapse:collapse;font-size:12.5px;border-top:2px solid #1d4373}
+.fx-tbl td{padding:7px 8px;border-bottom:1px solid #eee;vertical-align:top}
+.fx-tbl td:first-child{color:#555;width:42%}
+.fx-tot td{text-align:right}
+.fx-tot td:first-child{text-align:left}
+.fx-lines{width:100%;border-collapse:collapse;font-size:12.5px;border-top:2px solid #1d4373}
+.fx-lines th{background:#e9e9e9;text-align:left;padding:8px;font-weight:600;color:#333}
+.fx-lines td{padding:8px;border-bottom:1px solid #e6e6e6;vertical-align:middle}
+.fx-lines .num{text-align:right;white-space:nowrap}
+.fx-lines td.desc{max-width:620px}
+.fx-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin:18px 0}
+.fx-btn{background:#a68fbf;color:#fff;border:none;border-radius:3px;padding:8px 12px;font-size:12px;font-weight:700;text-transform:uppercase;cursor:pointer;font-family:inherit}
+.fx-btn:hover{background:#8f74ad}
+.fx-btn.gray{background:#e3e3e3;color:#444}
+.fx-btn.red{background:#d35d5d}
+.fx-bottom{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.fx-sec{font-size:12px;font-weight:700;text-transform:uppercase;color:#333;padding-bottom:6px;border-bottom:2px solid #1d4373;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.fx-notes td:first-child{width:22%}
+.fx-notes textarea{width:100%;min-height:160px;border:1px solid #ddd;border-radius:3px;padding:8px;font:inherit;font-size:12.5px;resize:vertical}
+@media(max-width:900px){.anx-form{grid-template-columns:1fr}.fx-grid,.fx-bottom{grid-template-columns:1fr}.fx-head{flex-wrap:wrap}}
 .items-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap;gap:10px}
 .total-box{background:#f8f8f8;border:1px solid var(--border);border-radius:3px;padding:10px 16px;min-width:220px}
 .t-row{display:flex;justify-content:space-between;font-size:12px;padding:2px 0}
@@ -536,7 +578,7 @@ body.locked #layout,body.locked #topnav{filter:blur(1px);pointer-events:none}
     <!-- ══ COT NUEVA ══ -->
     <div id="view-cot-nueva" class="view">
       <div class="toolbar">
-        <strong style="font-size:13px">📋 Nueva Cotización</strong>
+        <strong style="font-size:13px" id="cot-form-title">📋 Nueva Cotización</strong>
         <div style="margin-left:auto;display:flex;gap:8px">
           <button class="btn btn-ghost" onclick="resetForm('cot')">Limpiar</button>
           <button class="btn btn-ghost" onclick="printDoc('cot')">🖨️ PDF</button>
@@ -544,7 +586,6 @@ body.locked #layout,body.locked #topnav{filter:blur(1px);pointer-events:none}
         </div>
       </div>
       <div class="form-wrap">
-        <div id="cot-anexos-nueva"></div>
         <form id="form-cot" onsubmit="saveCot(event)">
           <div class="f-card">
             <div class="f-card-hdr">📋 Datos del Documento</div>
@@ -603,7 +644,10 @@ body.locked #layout,body.locked #topnav{filter:blur(1px);pointer-events:none}
                   <select id="cot-pago"><option>30 días</option><option>60 días</option><option>Contado</option><option>50% anticipo / 50% entrega</option><option>Otra</option></select>
                 </div>
                 <div class="f-field"><label>Tiempo de Entrega</label><input type="text" id="cot-entrega" placeholder="ej: 10 días hábiles"></div>
-                <div class="f-field"><label>Observaciones</label><input type="text" id="cot-obs"></div>
+                <div class="f-field"><label>Moneda</label>
+                  <select id="cot-moneda"><option value="USD">USD - Dólares estadounidenses</option><option value="Bs">Bs - Bolívares</option><option value="EUR">EUR - Euros</option><option value="CLP">CLP - Pesos chilenos</option></select>
+                </div>
+                <div class="f-field sp3"><label>Observaciones</label><input type="text" id="cot-obs"></div>
               </div>
             </div>
           </div>
@@ -631,13 +675,49 @@ body.locked #layout,body.locked #topnav{filter:blur(1px);pointer-events:none}
       </div>
     </div>
 
-    <!-- ══ COT ANEXOS ══ -->
-    <div id="view-cot-anexos" class="view">
-      <div class="toolbar">
-        <button class="btn btn-ghost btn-sm" onclick="showView('cot-lista')">← Volver</button>
-        <strong style="font-size:13px">📂 <span id="cot-anexos-title"></span></strong>
+    <!-- ══ COT FICHA ══ -->
+    <div id="view-cot-ficha" class="view">
+      <div class="fx-wrap">
+        <div class="fx-tabs" id="fx-tabs"></div>
+        <div class="fx-box">
+          <div class="fx-head">
+            <div class="fx-ico">📝</div>
+            <div class="fx-id">
+              <div class="fx-num" id="fx-num"></div>
+              <div id="fx-ref" class="fx-sub"></div>
+              <div id="fx-cli" class="fx-cli"></div>
+              <div id="fx-proy" class="fx-sub"></div>
+            </div>
+            <div class="fx-right">
+              <div class="fx-nav">
+                <a href="#" onclick="showView('cot-lista');return false">Volver a la lista</a>
+                <button type="button" onclick="fichaMove(-1)" title="Anterior">‹</button>
+                <button type="button" onclick="fichaMove(1)" title="Siguiente">›</button>
+              </div>
+              <span class="fx-badge" id="fx-badge"></span>
+            </div>
+          </div>
+          <div id="fx-body"></div>
+        </div>
       </div>
-      <div class="form-wrap"><div id="cot-anexos-existente"></div></div>
+    </div>
+
+    <!-- Modal enviar correo -->
+    <div class="overlay" id="mail-modal">
+      <div class="modal-box" style="max-width:600px">
+        <h3>✉️ Enviar cotización por correo</h3>
+        <div class="anx-form" style="grid-template-columns:1fr;margin-top:10px">
+          <label>Para *<input type="text" id="mail-para" placeholder="cliente@empresa.com"></label>
+          <label>CC<input type="text" id="mail-cc"></label>
+          <label>Asunto<input type="text" id="mail-asunto"></label>
+          <label>Mensaje<textarea id="mail-msg" rows="7"></textarea></label>
+          <span class="anx-meta">Se adjunta automáticamente el PDF de la cotización.</span>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="document.getElementById('mail-modal').classList.remove('open')">Cancelar</button>
+          <button class="btn btn-primary" onclick="enviarCorreo()">✉️ Enviar</button>
+        </div>
+      </div>
     </div>
 
     <!-- ══ COT STATS ══ -->
@@ -1557,12 +1637,15 @@ function showView(key, navEl) {
   if (key === 'usuarios-lista') loadAccessUsers();
   else if (key.endsWith('-lista')) loadList(type);
   if (key.endsWith('-stats')) loadStats(type);
+  if (key === 'cot-nueva') {
+    if (!COT_PRESET && EDIT.cot) resetForm('cot');
+    COT_PRESET = false;
+  }
   if (key.endsWith('-nueva') || key.endsWith('-nuevo')) {
     ensureItems(type);
     setAutoNum(type);
     loadSelects();
     if (type === 'facturas') loadNextFolio();
-    if (key === 'cot-nueva' && !ANX['cot-anexos-nueva']) anxInit('cot-anexos-nueva', { mode: 'pending' });
   }
 }
 
@@ -1865,14 +1948,14 @@ function renderList(type, textF='', statusF='') {
 
   body.innerHTML = data.map(r => {
     const acts = `<div style="display:flex;gap:4px">
-      ${type === 'cot' ? `<button class="btn btn-ghost btn-sm" title="Contactos, notas, archivos y agenda" onclick="openAnexos(${r.id})">📂</button>` : ''}
+      ${type === 'cot' ? `<button class="btn btn-ghost btn-sm" title="Abrir ficha" onclick="openFicha(${r.id})">📂</button>` : ''}
       <button class="btn btn-ghost btn-sm" onclick="cycleStatus('${type}',${r.id})">⚡</button>
       <button class="btn btn-ghost btn-sm" onclick="printRecord('${type}',${r.id})">🖨️</button>
       <button class="btn btn-red btn-sm" onclick="confirmDel('${type}',${r.id})">🗑️</button>
     </div>`;
 
     if (type==='cot') return `<tr>
-      <td><strong>${r.num}</strong></td><td>${r.fecha}</td>
+      <td><a href="#" onclick="openFicha(${r.id});return false" style="font-weight:700;color:var(--blue2)">${r.num}</a></td><td>${r.fecha}</td>
       <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.cliente}</td>
       <td>${r.proyecto||'—'}</td><td style="text-align:right">$${fmt(r.total)}</td>
       <td>${pill(r.estado)}</td><td>${acts}</td></tr>`;
@@ -2147,6 +2230,7 @@ function previewNumero(type, el) {
 
 function setAutoNum(type) {
   if (!['cot','ot','oc','sol'].includes(type)) return;
+  if (type === 'cot' && EDIT.cot) return;
   previewNumero(type, document.getElementById(type + '-num'));
 }
 
@@ -2168,8 +2252,10 @@ function saveCot(e) {
     pago:   document.getElementById('cot-pago').value,
     entrega:document.getElementById('cot-entrega').value,
     obs:    document.getElementById('cot-obs').value,
+    moneda: document.getElementById('cot-moneda').value,
     items, subtotal:sub, iva:sub*0.19, total:sub*1.19,
   };
+  if (EDIT.cot) { updateCot(EDIT.cot, data); return; }
   serverSave('cot', data);
 }
 
@@ -2302,7 +2388,8 @@ function serverSave(type, data) {
     refreshLocalSelects();
     toast('Modo local: registro solo visible en esta sesión', true);
     resetForm(type);
-    showView(type + '-lista');
+    if (type === 'cot') openFicha(data.id);
+    else showView(type + '-lista');
     return;
   }
   loader(true);
@@ -2315,10 +2402,9 @@ function serverSave(type, data) {
       loader(false);
       toast('✅ Guardado correctamente');
       archiveDoc(type, data);
-      if (type === 'cot') anxFlush('cot-anexos-nueva', res.id, data.num);
       resetForm(type);
-      const listView = type.includes('otes') || type.includes('ores') ? type+'-lista' : type+'-lista';
-      showView(listView);
+      if (type === 'cot') openFicha(data.id);
+      else showView(type + '-lista');
     })
     .withFailureHandler(err => { loader(false); console.error(err); toast('Error al guardar: ' + (err && err.message ? err.message : err), false); })
     .saveRecord(AUTH_TOKEN, type, data);
@@ -2361,7 +2447,7 @@ function anxRender(cid) {
   const c = ANX[cid], el = document.getElementById(cid);
   if (!c || !el) return;
   const n = k => c.list.filter(a => a.tipo === k).length;
-  let html = '<div class="anx-tabs">' + ANX_TABS.map(t =>
+  let html = c.hideTabs ? '' : '<div class="anx-tabs">' + ANX_TABS.map(t =>
     `<button type="button" class="anx-tab${c.tab === t.k ? ' on' : ''}" onclick="anxTab('${cid}','${t.k}')">${t.ico} ${t.lbl} <span class="anx-n">${n(t.k)}</span></button>`
   ).join('') + '</div>';
   if (c.tab) {
@@ -2370,6 +2456,7 @@ function anxRender(cid) {
     html += anxFormHtml(cid, c.tab) + anxListHtml(cid, c.tab) + '</div>';
   }
   el.innerHTML = html;
+  if (cid === 'fx-anx') fichaTabs();
 }
 
 function anxFormHtml(cid, tab) {
@@ -2377,7 +2464,9 @@ function anxFormHtml(cid, tab) {
     `<label>${label}<input type="${type}" id="${cid}-f-${name}" ${extra}></label>`;
   const btn = (txt) => `<button type="button" class="btn btn-primary btn-sm" onclick="anxAdd('${cid}','${tab}')">${txt}</button>`;
   if (tab === 'contacto') return `<div class="anx-form">
-      ${f('nombre','Nombre *')}${f('cargo','Cargo')}${f('email','Email','email')}${f('telefono','Teléfono')}
+      ${f('nombre','Nombre *')}
+      <label>Rol de contacto<select id="${cid}-f-rol">${COT_ROLES.map(x => `<option>${x}</option>`).join('')}</select></label>
+      ${f('cargo','Cargo')}${f('email','Email','email')}${f('telefono','Teléfono')}
       <div>${btn('➕ Agregar contacto')}</div></div>`;
   if (tab === 'nota') return `<div class="anx-form">
       <label class="anx-full">Nota interna<textarea id="${cid}-f-texto" rows="3" placeholder="Seguimiento, acuerdos, observaciones…"></textarea></label>
@@ -2405,12 +2494,12 @@ function anxFormHtml(cid, tab) {
 }
 
 function anxListHtml(cid, tab) {
-  const items = ANX[cid].list.filter(a => a.tipo === tab);
+  const items = ANX[cid].list.filter(a => a.tipo === tab || (tab === 'reunion' && a.tipo === 'evento'));
   if (!items.length) return '<div class="anx-empty">Sin registros.</div>';
   return items.map(a => {
     const d = a.data || {}, key = a.id || a._tmp;
     let main = '';
-    if (tab === 'contacto') main = `<b>${anxEsc(d.nombre)}</b>${d.cargo ? ' · ' + anxEsc(d.cargo) : ''}
+    if (tab === 'contacto') main = `<b>${anxEsc(d.nombre)}</b>${d.rol ? ' <span class="pill p-blue">' + anxEsc(d.rol) + '</span>' : ''}${d.cargo ? ' · ' + anxEsc(d.cargo) : ''}
       <div class="anx-meta">${[d.email && `✉️ ${anxEsc(d.email)}`, d.telefono && `📞 ${anxEsc(d.telefono)}`].filter(Boolean).join(' &nbsp; ')}</div>`;
     if (tab === 'nota') main = `<div style="white-space:pre-wrap">${anxEsc(d.texto)}</div>`;
     if (tab === 'archivo') main = (d.url ? `<a href="${anxEsc(d.url)}" target="_blank">📄 ${anxEsc(d.nombre)}</a>` : `📄 ${anxEsc(d.nombre)}`)
@@ -2418,6 +2507,7 @@ function anxListHtml(cid, tab) {
     if (tab === 'reunion') main = `<b>${anxEsc(d.titulo)}</b> — ${anxFecha(d.inicio)}
       <div class="anx-meta">${d.lugar ? '📍 ' + anxEsc(d.lugar) + ' &nbsp; ' : ''}${(d.invitados||[]).length ? '👥 ' + anxEsc(d.invitados.join(', ')) : ''}
       ${d.url ? ` &nbsp; <a href="${anxEsc(d.url)}" target="_blank">Ver en Calendar</a>` : ''}</div>`;
+    if (a.tipo === 'evento') main = `✉️ <b>${anxEsc(d.titulo)}</b><div class="anx-meta">Para: ${anxEsc(d.para)}${d.asunto ? ' · ' + anxEsc(d.asunto) : ''}</div>`;
     const meta = a.createdAt ? `<div class="anx-meta">${anxEsc(a.usuario || '')} · ${anxFecha(a.createdAt)}</div>` : '';
     return `<div class="anx-item"><div class="anx-main">${main}${meta}</div>
       <button type="button" class="btn btn-ghost btn-sm" title="Eliminar" onclick="anxDel('${cid}','${key}')">🗑️</button></div>`;
@@ -2443,7 +2533,7 @@ async function anxAdd(cid, tipo) {
   }
   let data;
   if (tipo === 'contacto') {
-    data = { nombre: anxVal(cid,'nombre'), cargo: anxVal(cid,'cargo'), email: anxVal(cid,'email'), telefono: anxVal(cid,'telefono') };
+    data = { nombre: anxVal(cid,'nombre'), rol: anxVal(cid,'rol'), cargo: anxVal(cid,'cargo'), email: anxVal(cid,'email'), telefono: anxVal(cid,'telefono') };
     if (!data.nombre) { toast('Indique el nombre del contacto', false); return; }
   }
   if (tipo === 'nota') {
@@ -2497,7 +2587,7 @@ async function anxDel(cid, key) {
     catch (ex) { loader(false); toast('Error: ' + ((ex && ex.message) || ex), false); return; }
     loader(false);
   }
-  c.list = c.list.filter(x => x !== a);
+  c.list.splice(c.list.indexOf(a), 1);
   anxRender(cid);
 }
 
@@ -2516,18 +2606,333 @@ async function anxFlush(cid, cotId, cotNum) {
   toast(fail ? `Anexos guardados: ${ok}. Con error: ${fail}` : `📂 ${ok} anexo(s) guardados en ${cotNum}`, !fail);
 }
 
-function openAnexos(id) {
-  const r = (DB.cot || []).find(x => String(x.id) === String(id));
-  if (!r) return;
-  document.getElementById('cot-anexos-title').textContent = `${r.num} · ${r.cliente || ''}`;
-  showView('cot-anexos');
-  anxInit('cot-anexos-existente', { mode: 'live', cotId: r.id, cotNum: r.num, tab: 'contacto' });
+// ── Ficha de cotización ───────────────────────────────────────
+const EDIT  = { cot: null };
+let COT_PRESET = false;
+const FICHA = { id: null, tab: 'cot', anexos: [] };
+const COT_ROLES = ['Contacto cliente seguimiento', 'Contacto facturación', 'Contacto técnico', 'Comercial seguimiento'];
+const COT_ESTADO_LBL = { Borrador:'Borrador (debe ser validado)', Pendiente:'Validada (abierta)', Aprobada:'Aceptada', Rechazada:'Rechazada' };
+
+function money(n) { return (Number(n) || 0).toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fechaDMY(d) { const s = fmtDate(d), p = s.split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : s; }
+function addDays(d, n) {
+  const s = fmtDate(d); if (!s) return '';
+  const t = new Date(s + 'T12:00:00'); t.setDate(t.getDate() + (Number(n) || 0));
+  return t.toISOString().slice(0, 10);
+}
+function cotById(id) { return (DB.cot || []).find(x => String(x.id) === String(id)); }
+function clienteDe(r) { return (SELECTS.clientes || []).find(c => c.nombre === r.cliente) || {}; }
+function itemsDe(r) {
+  let it = r.items;
+  if (typeof it === 'string') { try { it = JSON.parse(it); } catch (e) { it = []; } }
+  return Array.isArray(it) ? it : [];
+}
+function setCotTitulo() {
+  const el = document.getElementById('cot-form-title');
+  if (el) el.textContent = EDIT.cot ? '✏️ Modificar Cotización' : '📋 Nueva Cotización';
+}
+function errMsg(ex) { toast('Error: ' + ((ex && ex.message) || ex), false); }
+
+function openFicha(id, tab) {
+  const r = cotById(id);
+  if (!r) { toast('Cotización no encontrada', false); return; }
+  FICHA.id = r.id; FICHA.tab = tab || 'cot'; FICHA.anexos = [];
+  showView('cot-ficha');
+  fichaRender();
+  if (!(SELECTS.clientes || []).length) loadSelects();
   if (!IS_APPS_SCRIPT) return;
-  loader(true);
   anxRun('getAnexos', AUTH_TOKEN, r.id)
-    .then(list => { ANX['cot-anexos-existente'].list = list || []; anxRender('cot-anexos-existente'); })
-    .catch(ex => toast('Error: ' + ((ex && ex.message) || ex), false))
-    .finally(() => loader(false));
+    .then(list => { if (FICHA.id === r.id) { FICHA.anexos.push(...(list || [])); fichaRender(); } })
+    .catch(errMsg);
+}
+
+function fichaMove(d) {
+  const list = DB.cot || [];
+  const i = list.findIndex(x => String(x.id) === String(FICHA.id));
+  const next = list[i + d];
+  if (next) openFicha(next.id, FICHA.tab);
+}
+
+function fichaTab(k) { FICHA.tab = k; fichaRender(); }
+
+function fichaTabs() {
+  const a = FICHA.anexos, r = cotById(FICHA.id) || {};
+  const n = tipos => a.filter(x => tipos.includes(x.tipo)).length;
+  const notas = [r.notaPublica, r.notaPrivada].filter(x => String(x || '').trim()).length;
+  const tabs = [['cot','Cotización',0], ['contacto','Contactos/Direcciones',n(['contacto'])], ['notas','Notas',notas],
+                ['archivo','Archivos',n(['archivo'])], ['reunion','Eventos/Agenda',n(['reunion','evento'])]];
+  document.getElementById('fx-tabs').innerHTML = tabs.map(([k, l, c]) =>
+    `<button type="button" class="fx-tab${FICHA.tab === k ? ' on' : ''}" onclick="fichaTab('${k}')">${l}${c ? `<span class="fx-n">${c}</span>` : ''}</button>`).join('');
+}
+
+function fichaRender() {
+  const r = cotById(FICHA.id);
+  if (!r) return;
+  document.getElementById('fx-num').textContent = r.num || '(sin número)';
+  document.getElementById('fx-ref').textContent = r.contacto ? 'Ref. cliente: ' + r.contacto : '';
+  document.getElementById('fx-cli').textContent = '🏢 ' + (r.cliente || '');
+  document.getElementById('fx-proy').textContent = r.proyecto ? '📌 ' + r.proyecto : '';
+  const b = document.getElementById('fx-badge');
+  b.className = 'fx-badge st-' + (r.estado || 'Borrador');
+  b.textContent = COT_ESTADO_LBL[r.estado] || r.estado || 'Borrador';
+  fichaTabs();
+  const body = document.getElementById('fx-body');
+  if (FICHA.tab === 'cot') body.innerHTML = fichaCotHtml(r);
+  else if (FICHA.tab === 'notas') body.innerHTML = fichaNotasHtml(r);
+  else {
+    body.innerHTML = '<div id="fx-anx"></div>';
+    anxInit('fx-anx', { mode: 'live', cotId: r.id, cotNum: r.num, tab: FICHA.tab, list: FICHA.anexos, hideTabs: true });
+  }
+}
+
+function fichaCotHtml(r) {
+  const items = itemsDe(r), mon = r.moneda || 'USD';
+  const row = (l, v) => `<tr><td>${l}</td><td>${v || ''}</td></tr>`;
+  const left = `<table class="fx-tbl">
+    ${row('Fecha cotización', fechaDMY(r.fecha))}
+    ${row('Válida hasta', r.fecha ? `${fechaDMY(addDays(r.fecha, r.validez || 30))} <span class="anx-meta">(${anxEsc(r.validez || 30)} días)</span>` : '')}
+    ${row('Términos de pago', anxEsc(r.pago))}
+    ${row('Tiempo de entrega', anxEsc(r.entrega))}
+    ${row('Contacto', anxEsc(r.contacto))}
+    ${row('Email', anxEsc(r.email))}
+    ${row('Moneda', anxEsc(mon))}
+    ${row('Observaciones', anxEsc(r.obs))}
+  </table>`;
+  const right = `<table class="fx-tbl fx-tot">
+    <tr><td>Monto neto</td><td>${money(r.subtotal)} ${anxEsc(mon)}</td></tr>
+    <tr><td>IVA (19%)</td><td>${money(r.iva)} ${anxEsc(mon)}</td></tr>
+    <tr><td><b>Monto total</b></td><td><b>${money(r.total)} ${anxEsc(mon)}</b></td></tr>
+  </table>`;
+  const lines = `<table class="fx-lines"><thead><tr><th>Descripción</th><th class="num">IVA</th><th class="num">P.U.</th><th class="num">Cantidad</th><th class="num">Unidad</th><th class="num">Total neto</th></tr></thead><tbody>
+    ${items.length ? items.map(it => `<tr><td class="desc">${it.desc || ''}</td><td class="num">19%</td><td class="num">${money(it.price)}</td>
+      <td class="num">${anxEsc(it.qty || 0)}</td><td class="num">${anxEsc(it.unit || '')}</td><td class="num">${money(it.total)}</td></tr>`).join('')
+      : '<tr><td colspan="6" class="anx-empty">Sin líneas</td></tr>'}
+  </tbody></table>`;
+  const archivos = FICHA.anexos.filter(a => a.tipo === 'archivo');
+  const eventos  = FICHA.anexos.filter(a => a.tipo === 'reunion' || a.tipo === 'evento')
+    .slice().sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt))).slice(0, 10);
+  return `<div class="fx-grid">${left}${right}</div>${lines}
+    <div class="fx-actions">${fichaBotones(r)}</div>
+    <div class="fx-bottom">
+      <div>
+        <div class="fx-sec">Archivos <button class="btn btn-ghost btn-sm" onclick="printRecord('cot',${r.id})">🖨️ Generar PDF</button></div>
+        ${archivos.length ? archivos.map(a => `<div class="anx-item"><div class="anx-main">${a.data.url ? `<a href="${anxEsc(a.data.url)}" target="_blank">📄 ${anxEsc(a.data.nombre)}</a>` : '📄 ' + anxEsc(a.data.nombre)}
+          <div class="anx-meta">${a.data.tamano ? anxSize(a.data.tamano) : ''}</div></div></div>`).join('') : '<div class="anx-empty">Sin archivos adjuntos.</div>'}
+      </div>
+      <div>
+        <div class="fx-sec">Últimos 10 eventos vinculados <button class="btn btn-ghost btn-sm" title="Agendar" onclick="fichaTab('reunion')">➕</button></div>
+        ${eventos.length ? eventos.map(a => `<div class="anx-item"><div class="anx-main">${a.tipo === 'evento' ? '✉️' : '📅'} <b>${anxEsc(a.data.titulo)}</b>${a.data.para ? ' — ' + anxEsc(a.data.para) : ''}
+          <div class="anx-meta">${anxFecha(a.tipo === 'reunion' ? a.data.inicio : a.createdAt)} · ${anxEsc(a.usuario || '')}</div></div></div>`).join('') : '<div class="anx-empty">Sin eventos.</div>'}
+      </div>
+    </div>`;
+}
+
+function fichaBotones(r) {
+  const b = (txt, fn, cls = '') => `<button type="button" class="fx-btn ${cls}" onclick="${fn}">${txt}</button>`;
+  const id = r.id, st = r.estado || 'Borrador', out = [];
+  if (st === 'Borrador') out.push(b('Modificar', `editCot(${id})`), b('Validar', `setCotEstado(${id},'Pendiente')`));
+  else out.push(b('Reabrir', `setCotEstado(${id},'Borrador')`));
+  if (st === 'Pendiente') out.push(b('Aceptar', `setCotEstado(${id},'Aprobada')`), b('Rechazar', `setCotEstado(${id},'Rechazada')`, 'red'));
+  if (st === 'Pendiente' || st === 'Aprobada') out.push(b('Enviar correo electrónico', `openMail(${id})`));
+  if (st === 'Aprobada') out.push(b('Crear O.T.', `cotToDoc(${id},'ot')`), b('Crear solicitud de factura', `cotToDoc(${id},'sol')`));
+  out.push(b('Clonar', `clonarCot(${id})`), b('Borrar', `confirmDel('cot',${id})`, 'gray'));
+  return out.join('');
+}
+
+function setCotEstado(id, estado) {
+  const r = cotById(id);
+  if (!r) return;
+  const done = () => { r.estado = estado; fichaRender(); toast('Estado: ' + (COT_ESTADO_LBL[estado] || estado)); };
+  if (!IS_APPS_SCRIPT) { done(); return; }
+  loader(true);
+  anxRun('updateStatus', AUTH_TOKEN, 'cot', id, estado).then(done).catch(errMsg).finally(() => loader(false));
+}
+
+function fillItems(type, items) {
+  const tb = document.getElementById(type + '-items-body');
+  if (!tb) return;
+  tb.innerHTML = '';
+  (items.length ? items : [{}]).forEach(it => {
+    addItem(type);
+    const tr = tb.lastElementChild;
+    const ed = tr.querySelector('.desc-ed');
+    if (ed) ed.innerHTML = it.desc || '';
+    tr.cells[2].querySelector('input').value = it.unit || '';
+    tr.cells[3].querySelector('input').value = it.qty || '';
+    tr.cells[4].querySelector('input').value = it.price || '';
+  });
+  recalc(type);
+}
+
+function fillCotForm(r, keepNum) {
+  const set = (f, v) => { const el = document.getElementById('cot-' + f); if (el) el.value = v == null ? '' : v; };
+  ['validez','cliente','rut','contacto','email','proyecto','pago','entrega','obs'].forEach(f => set(f, r[f]));
+  set('fecha', fmtDate(r.fecha));
+  set('moneda', r.moneda || 'USD');
+  set('estado', keepNum ? (r.estado || 'Borrador') : 'Borrador');
+  set('num', keepNum ? r.num : '');
+  fillItems('cot', itemsDe(r));
+}
+
+function editCot(id) {
+  const r = cotById(id);
+  if (!r) return;
+  EDIT.cot = r.id; COT_PRESET = true;
+  showView('cot-nueva'); setCotTitulo(); fillCotForm(r, true);
+}
+
+function clonarCot(id) {
+  const r = cotById(id);
+  if (!r) return;
+  EDIT.cot = null; COT_PRESET = true;
+  showView('cot-nueva'); setCotTitulo();
+  fillCotForm(Object.assign({}, r, { fecha: new Date().toISOString().slice(0, 10) }), false);
+  setAutoNum('cot');
+  toast('Copia lista: revise los datos y presione Guardar');
+}
+
+function updateCot(id, data) {
+  delete data.num;
+  const r = cotById(id);
+  const done = () => { Object.assign(r, data); resetForm('cot'); openFicha(id); toast('✅ Cotización actualizada'); };
+  if (!IS_APPS_SCRIPT) { done(); return; }
+  loader(true);
+  anxRun('updateRecord', AUTH_TOKEN, 'cot', id, data)
+    .then(ok => { if (!ok) throw new Error('No se encontró la cotización'); done(); archiveDoc('cot', r); })
+    .catch(errMsg).finally(() => loader(false));
+}
+
+function cotToDoc(id, type) {
+  const r = cotById(id);
+  if (!r) return;
+  showView(type + '-nueva');
+  const set = (eid, v) => { const el = document.getElementById(eid); if (el) el.value = v || ''; };
+  if (type === 'ot')  { set('ot-cliente', r.cliente); set('ot-proyecto', r.proyecto); set('ot-cot-ref', r.num); }
+  if (type === 'sol') { set('sol-cliente', r.cliente); set('sol-rut', r.rut); set('sol-contacto', r.contacto);
+                        set('sol-email', r.email); set('sol-proyecto', r.proyecto); set('sol-cotRef', r.num); }
+  fillItems(type, itemsDe(r));
+  toast('Datos copiados desde ' + r.num + '. Complete y guarde.');
+}
+
+function fichaNotasHtml(r) {
+  return `<table class="fx-tbl fx-notes">
+    <tr><td>Nota (pública)<div class="anx-meta">Se imprime en el PDF como "Notas importantes del servicio".</div>
+        <button type="button" class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="notaPlantilla()">📋 Insertar notas comerciales</button></td>
+      <td><textarea id="fx-nota-pub">${anxEsc(r.notaPublica || '')}</textarea></td></tr>
+    <tr><td>Nota (privada)<div class="anx-meta">Solo visible dentro del CRM.</div></td>
+      <td><textarea id="fx-nota-priv">${anxEsc(r.notaPrivada || '')}</textarea></td></tr>
+  </table>
+  <div class="fx-actions"><button class="fx-btn" onclick="guardarNotas()">Guardar notas</button></div>`;
+}
+
+function notaPlantilla() {
+  const t = document.getElementById('fx-nota-pub');
+  t.value = (t.value ? t.value.trimEnd() + '\n' : '') + DESC_NOTAS.join('\n');
+}
+
+function guardarNotas() {
+  const r = cotById(FICHA.id);
+  const upd = { notaPublica: document.getElementById('fx-nota-pub').value, notaPrivada: document.getElementById('fx-nota-priv').value };
+  const done = () => { Object.assign(r, upd); fichaTabs(); toast('✅ Notas guardadas'); };
+  if (!IS_APPS_SCRIPT) { done(); return; }
+  loader(true);
+  anxRun('updateRecord', AUTH_TOKEN, 'cot', r.id, upd).then(done).catch(errMsg).finally(() => loader(false));
+}
+
+function openMail(id) {
+  const r = cotById(id), cli = clienteDe(r);
+  const contacto = FICHA.anexos.find(a => a.tipo === 'contacto' && a.data.email);
+  const firma = [CURRENT_USER && CURRENT_USER.name, EMPRESA_DATA.nombre].filter(Boolean).join('\n');
+  document.getElementById('mail-para').value   = r.email || cli.email || (contacto ? contacto.data.email : '');
+  document.getElementById('mail-cc').value     = '';
+  document.getElementById('mail-asunto').value = `Cotización ${r.num}${EMPRESA_DATA.nombre ? ' - ' + EMPRESA_DATA.nombre : ''}`;
+  document.getElementById('mail-msg').value    =
+    `Estimado(a) ${r.contacto || ''}:\n\nAdjuntamos la cotización ${r.num}${r.proyecto ? ' correspondiente a ' + r.proyecto : ''}.\n\nQuedamos atentos a sus comentarios.\n\nSaludos cordiales,\n${firma}`;
+  document.getElementById('mail-modal').classList.add('open');
+}
+
+function enviarCorreo() {
+  const r = cotById(FICHA.id), v = id => document.getElementById(id).value.trim();
+  if (!v('mail-para')) { toast('Indique el destinatario', false); return; }
+  if (!IS_APPS_SCRIPT) { toast('Modo local: no se envían correos', false); return; }
+  loader(true);
+  anxRun('enviarCotizacion', AUTH_TOKEN, r.id, r.num, v('mail-para'), v('mail-cc'), v('mail-asunto'),
+         document.getElementById('mail-msg').value, buildPrintHtml('cot', r))
+    .then(rec => { FICHA.anexos.push(rec); document.getElementById('mail-modal').classList.remove('open'); fichaRender(); toast('✉️ Correo enviado'); })
+    .catch(errMsg).finally(() => loader(false));
+}
+
+// ── PDF de cotización ─────────────────────────────────────────
+function buildCotPdfHtml(r) {
+  const e = EMPRESA_DATA || {}, cli = clienteDe(r), mon = anxEsc(r.moneda || 'USD'), items = itemsDe(r);
+  const emp = { nombre: e.nombre || 'MARIMAR GROUP', rut: e.rut || '', dir: [e.direccion, e.ciudad].filter(Boolean).join(', '),
+                tel: e.telefono || '', mail: e.email || '', web: e.web || '' };
+  const c = { rut: r.rut || cli.rut || '', dir: cli.direccion || '', ciudad: cli.ciudad || '',
+              tel: cli.telefono || '', mail: r.email || cli.email || '' };
+  const L = (lbl, v) => v ? `${lbl}${anxEsc(v)}<br>` : '';
+  const pie = `<div class="foot"><b>Oficina registrada: ${anxEsc(emp.nombre)}${emp.dir ? ' - ' + anxEsc(emp.dir) : ''}</b><br>
+    ${[emp.tel && 'Teléfono: ' + anxEsc(emp.tel), anxEsc(emp.web), anxEsc(emp.mail)].filter(Boolean).join(' - ')}<br>RIF: ${anxEsc(emp.rut)}</div>`;
+  const cab = `<table class="hd"><tr>
+      <td class="lg">${logoSrc ? `<img src="${logoSrc}">` : ''}</td>
+      <td class="tt">Cotización N° ${anxEsc(r.num)}</td>
+      <td class="fe">Fecha : ${fechaDMY(r.fecha)}</td></tr></table>`;
+  const filas = items.map(it => `<tr><td class="d">${it.desc || ''}</td><td class="n">${money(it.price)}</td>
+      <td class="n">${anxEsc(it.qty || 0)}</td><td class="n">${money(it.total)}</td></tr>`).join('');
+  const notas = String(r.notaPublica || '').trim();
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Cotización ${anxEsc(r.num)}</title><style>
+    @page{size:A4;margin:12mm 13mm 14mm}
+    body{font-family:Arial,Helvetica,sans-serif;font-size:10.5px;color:#222;margin:0}
+    .hd{width:100%;border-collapse:collapse;margin-bottom:22px}.hd td{vertical-align:top}
+    .lg{width:28%}.lg img{max-height:60px;max-width:170px}
+    .tt{text-align:center;font-size:15px;font-weight:700;color:#1a2a6c;padding-top:8px}
+    .fe{text-align:right;font-size:12px;color:#1a2a6c;padding-top:10px;width:28%}
+    .parts{width:100%;border-collapse:collapse;margin-bottom:6px}
+    .parts td{width:50%;vertical-align:top}
+    .lbl{font-size:9.5px;padding:0 0 3px}
+    .de{background:#e6e6e6;padding:9px 11px;color:#1a2a6c;line-height:1.5;margin-right:12px}
+    .a{border:1px solid #999;padding:9px 11px;line-height:1.5}
+    .nm{font-weight:700;font-size:11px;color:#111}
+    .intro{font-weight:700;font-size:9.5px;margin:8px 0 14px;line-height:1.5}
+    .it{width:100%;border-collapse:collapse}
+    .it th{font-weight:400;text-align:left;border-bottom:1px solid #444;padding:4px 3px}
+    .it th.n{text-align:right}
+    .it td{vertical-align:top;padding:6px 3px}
+    .it td.d{text-align:justify;padding-right:22px}
+    .it .n{text-align:right;white-space:nowrap;width:75px}
+    .tot{width:100%;border-collapse:collapse;margin-top:22px;page-break-inside:avoid}
+    .tot td{padding:3px}.tot td:last-child{text-align:right}
+    .tot tr:nth-child(odd) td{background:#f4f4f4}
+    .tot tr.g td{background:#e3e6f0;color:#1a2a6c}
+    .foot{text-align:center;font-size:8px;color:#333;border-top:1px solid #bbb;padding-top:4px;margin-top:18px;line-height:1.5}
+    .np{page-break-before:always}
+    .np h3{font-size:11px;margin:0 0 12px}
+    .np .tx{white-space:pre-wrap;font-size:9.5px;line-height:1.5}
+    .fin{text-align:center;font-size:9px;margin-top:34px;line-height:1.7}
+    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+  </style></head><body>
+  ${cab}
+  <table class="parts"><tr>
+    <td><div class="lbl">De:</div><div class="de"><span class="nm">${anxEsc(emp.nombre)}</span><br>
+      ${L('RIF: ', emp.rut)}${emp.dir ? anxEsc(emp.dir) + '<br>' : ''}<br>${L('Teléfono: ', emp.tel)}${L('Correo: ', emp.mail)}${L('Web: ', emp.web)}</div></td>
+    <td><div class="lbl">A:</div><div class="a"><span class="nm">${anxEsc(r.cliente || '')}</span><br>
+      ${L('RIF: ', c.rut)}${c.dir ? anxEsc(c.dir) + '<br>' : ''}${c.ciudad ? anxEsc(c.ciudad) + '<br>' : ''}<br>
+      ${L('Teléfono: ', c.tel)}${L('Correo: ', c.mail)}${L('Atención a: ', r.contacto)}</div></td>
+  </tr></table>
+  <div class="intro">De nuestra consideración:<br>De acuerdo a su solicitud, tenemos el agrado de hacerles llegar nuestra cotización por nuestros servicios.</div>
+  <table class="it"><thead><tr><th>Descripción</th><th class="n">PU</th><th class="n">Cantidad</th><th class="n">Total (sin IVA)</th></tr></thead>
+    <tbody>${filas}</tbody></table>
+  <table class="tot">
+    <tr><td>Sub Total (${mon})</td><td>${money(r.subtotal)}</td></tr>
+    <tr><td>Impuestos 19% (${mon})</td><td>${money(r.iva)}</td></tr>
+    <tr class="g"><td>Total (${mon})</td><td>${money(r.total)}</td></tr>
+  </table>
+  ${[r.pago && 'Condición de pago: ' + anxEsc(r.pago), r.entrega && 'Tiempo de entrega: ' + anxEsc(r.entrega),
+     'Validez de la oferta: ' + anxEsc(r.validez || 30) + ' días', r.obs && anxEsc(r.obs)].filter(Boolean).map(x => `<div style="font-size:9.5px;margin-top:4px">${x}</div>`).join('')}
+  ${pie}
+  ${notas ? `<div class="np">${cab}<h3>Notas Importantes del Servicio</h3><div class="tx">${anxEsc(notas)}</div>${pie}</div>` : ''}
+  <div class="fin">Si nos favorece con su aceptación, por favor avisarnos si no están correctos los siguientes datos que tenemos de su empresa:<br>
+    - RIF: ${anxEsc(c.rut)}<br>- Dirección de facturación: ${anxEsc([c.dir, c.ciudad].filter(Boolean).join(', '))}</div>
+  </body></html>`;
 }
 
 function archiveDoc(type, data) {
@@ -2555,7 +2960,7 @@ function resetForm(type) {
     }
     addItem(type);
     if (type === 'facturas') loadNextFolio();
-    if (type === 'cot') anxInit('cot-anexos-nueva', { mode: 'pending' });
+    if (type === 'cot') { EDIT.cot = null; setCotTitulo(); }
   }
   const today = new Date().toISOString().split('T')[0];
   const fechaId = type === 'facturas' ? 'fac-fecha' : type+'-fecha';
@@ -2608,10 +3013,12 @@ document.getElementById('del-confirm').onclick = function() {
   if (!delTarget) return;
   const { type, id } = delTarget;
   closeModal();
+  const volver = type === 'cot' && document.getElementById('view-cot-ficha').classList.contains('active');
   if (!IS_APPS_SCRIPT) {
     DB[type] = DB[type].filter(r=>Number(r.id)!==Number(id));
     renderList(type);
     toast('Registro eliminado (modo local)');
+    if (volver) showView('cot-lista');
     return;
   }
   loader(true);
@@ -2620,6 +3027,7 @@ document.getElementById('del-confirm').onclick = function() {
       DB[type] = DB[type].filter(r=>Number(r.id)!==Number(id));
       renderList(type); loader(false);
       toast('Registro eliminado');
+      if (volver) showView('cot-lista');
     })
     .withFailureHandler(() => { loader(false); toast('Error',false); })
     .deleteRecord(AUTH_TOKEN, type, id);
@@ -2665,7 +3073,7 @@ function printDoc(type) {
 
 function collectFormVals(type) {
   const ids = {
-    cot:['num','fecha','validez','cliente','rut','contacto','email','proyecto','pago','entrega','obs','estado'],
+    cot:['num','fecha','validez','cliente','rut','contacto','email','proyecto','pago','entrega','obs','estado','moneda'],
     ot: ['num','fecha','estado','prioridad','cliente','proyecto','tecnico','descripcion','obs'],
     oc: ['num','fecha','estado','proveedor','rut','contacto','email','proyecto','pago','entrega','solicitante','obs'],
     sol:['num','fecha','estado','cliente','rut','contacto','email','proyecto','cotRef','otRef','solicitante','obs'],
@@ -2685,6 +3093,7 @@ function openPrintWin(type, r) {
 }
 
 function buildPrintHtml(type, r) {
+  if (type === 'cot') return buildCotPdfHtml(r);
   const lbl = {cot:'COTIZACIÓN',ot:'ORDEN DE TRABAJO',oc:'ORDEN DE COMPRA',sol:'SOLICITUD DE FACTURA'}[type];
   const col = {cot:'#1d4373',ot:'#2e7d32',oc:'#e65100',sol:'#00695c'}[type];
   const who = type==='oc' ? r.proveedor : r.cliente;

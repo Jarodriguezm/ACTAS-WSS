@@ -122,7 +122,8 @@ const SHEET_NAMES = {
 
 const HEADERS = {
   cot: ['id','num','fecha','validez','cliente','rut','contacto','email',
-        'proyecto','pago','entrega','obs','items','subtotal','iva','total','estado','createdAt'],
+        'proyecto','pago','entrega','obs','items','subtotal','iva','total','estado','createdAt',
+        'moneda','notaPublica','notaPrivada'],
   ot:  ['id','num','fecha','estado','prioridad','inicio','termino','cliente',
         'proyecto','direccion','tecnico','descripcion','materiales','cotRef',
         'obs','items','subtotal','iva','total','createdAt'],
@@ -220,6 +221,24 @@ function initSheets(ss) {
       sheet.setFrozenRows(1);
     }
   });
+  migrarColumnas_(ss);
+}
+
+// Agrega al final de cada hoja las columnas nuevas de HEADERS (una vez por versión).
+const SCHEMA_VERSION = '2';
+function migrarColumnas_(ss) {
+  const props = PropertiesService.getScriptProperties();
+  if (props.getProperty('SCHEMA_VERSION') === SCHEMA_VERSION) return;
+  Object.keys(HEADERS).forEach(type => {
+    const sheet = ss.getSheetByName(SHEET_NAMES[type]);
+    if (!sheet || sheet.getLastColumn() === 0) return;
+    const actual = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(String);
+    const faltan = HEADERS[type].filter(h => actual.indexOf(h) < 0);
+    if (!faltan.length) return;
+    const r = sheet.getRange(1, actual.length + 1, 1, faltan.length);
+    r.setValues([faltan]).setFontWeight('bold').setBackground('#1a3a5c').setFontColor('#ffffff');
+  });
+  props.setProperty('SCHEMA_VERSION', SCHEMA_VERSION);
 }
 
 // ── CRUD ────────────────────────────────────────────────────
@@ -381,7 +400,7 @@ function getSelectData(token) {
   const user = getAuthUser_(token);
   const canRead = type => hasPermission_(user.role, 'read', type);
   return {
-    clientes:   (canRead('clientes') ? getRecordsInternal_('clientes') : []).map(c => ({ id:c.id, nombre:c.nombre, rut:c.rut||'', giro:c.giro||'', direccion:c.direccion||'', ciudad:c.ciudad||'', email:c.email||'' })),
+    clientes:   (canRead('clientes') ? getRecordsInternal_('clientes') : []).map(c => ({ id:c.id, nombre:c.nombre, rut:c.rut||'', giro:c.giro||'', direccion:c.direccion||'', ciudad:c.ciudad||'', email:c.email||'', telefono:c.telefono||'' })),
     productos:  (canRead('productos') ? getRecordsInternal_('productos') : []).map(p => ({ id:p.id, nombre:p.nombre, precio:p.precio||0, unidad:p.unidad||'' })),
     proveedores:(canRead('proveedores') ? getRecordsInternal_('proveedores') : []).map(p => ({ id:p.id, nombre:p.nombre, rut:p.rut||'' })),
   };
@@ -576,7 +595,18 @@ function sincronizarTodoSupabase() {
 }
 
 // ── Anexos de cotización: contactos, notas, archivos, agenda ─
-const ANEXO_TIPOS = ['contacto', 'nota', 'archivo', 'reunion'];
+const ANEXO_TIPOS = ['contacto', 'nota', 'archivo', 'reunion', 'evento'];
+
+function enviarCotizacion(token, cotId, cotNum, para, cc, asunto, mensaje, html) {
+  requirePermission_(token, 'write', 'cot');
+  if (!para) throw new Error('Indique el destinatario');
+  const pdf = Utilities.newBlob(html, 'text/html', 'doc.html').getAs('application/pdf').setName(cotNum + '.pdf');
+  MailApp.sendEmail({
+    to: para, cc: cc || '', subject: asunto || ('Cotización ' + cotNum),
+    body: mensaje || '', name: EMPRESA.nombre, attachments: [pdf],
+  });
+  return addAnexo(token, cotId, cotNum, 'evento', { titulo: 'Cotización enviada por correo', para: para, cc: cc || '', asunto: asunto || '' });
+}
 
 function anexoOut_(a) {
   let data = a.data;
