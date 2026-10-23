@@ -116,7 +116,8 @@ const SHEET_NAMES = {
   clientes:   'Clientes',
   productos:  'Productos',
   proveedores:'Proveedores',
-  usuarios:    'Usuarios'
+  usuarios:    'Usuarios',
+  anexos:     'CotAnexos'
 };
 
 const HEADERS = {
@@ -140,7 +141,8 @@ const HEADERS = {
                'categoria','estado','obs','createdAt'],
   proveedores:['id','codigo','nombre','rut','giro','email','telefono',
                'direccion','ciudad','condicionPago','estado','obs','createdAt'],
-  usuarios:   ['id','username','name','email','role','passwordHash','active','createdAt']
+  usuarios:   ['id','username','name','email','role','passwordHash','active','createdAt'],
+  anexos:     ['id','cotId','cotNum','tipo','data','usuario','createdAt']
 };
 
 // ── Entry point ─────────────────────────────────────────────
@@ -573,6 +575,95 @@ function sincronizarTodoSupabase() {
   Logger.log('Registros enviados a Supabase: ' + n);
 }
 
+// ── Anexos de cotización: contactos, notas, archivos, agenda ─
+const ANEXO_TIPOS = ['contacto', 'nota', 'archivo', 'reunion'];
+
+function anexoOut_(a) {
+  let data = a.data;
+  if (typeof data === 'string') { try { data = JSON.parse(data || '{}'); } catch (e) { data = {}; } }
+  return { id: Number(a.id), cotId: a.cotId, cotNum: a.cotNum, tipo: a.tipo, data: data || {}, usuario: a.usuario, createdAt: a.createdAt };
+}
+
+function getAnexos(token, cotId) {
+  requirePermission_(token, 'read', 'cot');
+  return getRecordsInternal_('anexos').filter(a => String(a.cotId) === String(cotId)).map(anexoOut_);
+}
+
+function addAnexo(token, cotId, cotNum, tipo, data) {
+  const user = requirePermission_(token, 'write', 'cot');
+  if (ANEXO_TIPOS.indexOf(tipo) < 0) throw new Error('Tipo de anexo inválido');
+  data = data || {};
+  if (tipo === 'archivo') data = guardarAdjunto_(cotNum, data);
+  if (tipo === 'reunion') data = crearReunion_(cotNum, data);
+  const sheet = getSpreadsheet().getSheetByName(SHEET_NAMES.anexos);
+  const lock  = LockService.getScriptLock();
+  lock.waitLock(20000);
+  let rec;
+  try {
+    rec = {
+      id: Date.now(), cotId: cotId, cotNum: cotNum, tipo: tipo, data: JSON.stringify(data),
+      usuario: user.name || user.username || '', createdAt: new Date().toISOString(),
+    };
+    sheet.appendRow(HEADERS.anexos.map(h => (rec[h] !== undefined ? rec[h] : '')));
+    Utilities.sleep(2);
+  } finally {
+    lock.releaseLock();
+  }
+  supabaseSync_('anexos', Object.assign({}, rec, { num: cotNum, data: data }));
+  return anexoOut_(rec);
+}
+
+function deleteAnexo(token, id) {
+  requirePermission_(token, 'write', 'cot');
+  const sheet  = getSpreadsheet().getSheetByName(SHEET_NAMES.anexos);
+  const values = sheet.getDataRange().getValues();
+  const hdr    = values[0];
+  for (let i = 1; i < values.length; i++) {
+    if (String(values[i][hdr.indexOf('id')]) !== String(id)) continue;
+    const tipo = values[i][hdr.indexOf('tipo')];
+    const d    = anexoOut_({ data: values[i][hdr.indexOf('data')] }).data;
+    try { if (tipo === 'archivo' && d.fileId) DriveApp.getFileById(d.fileId).setTrashed(true); } catch (e) { Logger.log(e); }
+    try {
+      if (tipo === 'reunion' && d.eventId) {
+        const ev = CalendarApp.getEventById(d.eventId);
+        if (ev) ev.deleteEvent();
+      }
+    } catch (e) { Logger.log(e); }
+    sheet.deleteRow(i + 1);
+    supabaseRequest_('delete', 'crm_registros?id=eq.' + encodeURIComponent(id));
+    return true;
+  }
+  return false;
+}
+
+function guardarAdjunto_(cotNum, d) {
+  if (!d.base64) throw new Error('El archivo está vacío');
+  const folder = getSubFolder_(getSubFolder_(getArchivoFolder_('cot'), 'Adjuntos'), String(cotNum || 'Sin número'));
+  const name   = String(d.nombre || 'archivo').replace(/[\\/:*?"<>|]/g, '-');
+  const file   = folder.createFile(Utilities.newBlob(Utilities.base64Decode(d.base64), d.mime || 'application/octet-stream', name));
+  return { nombre: file.getName(), tamano: file.getSize(), fileId: file.getId(), url: file.getUrl() };
+}
+
+function crearReunion_(cotNum, d) {
+  const inicio = new Date(d.inicio);
+  const fin    = new Date(d.fin);
+  if (isNaN(inicio.getTime()) || isNaN(fin.getTime())) throw new Error('Fecha u hora de la reunión inválida');
+  const invitados = (d.invitados || []).map(e => String(e).trim()).filter(e => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e));
+  const ev = CalendarApp.getDefaultCalendar().createEvent((d.titulo || 'Reunión') + ' (' + cotNum + ')', inicio, fin, {
+    location:    d.lugar || '',
+    description: (d.descripcion ? d.descripcion + '\n\n' : '') + 'Cotización: ' + cotNum,
+    guests:      invitados.join(','),
+    sendInvites: !!d.enviar && invitados.length > 0,
+  });
+  ev.addPopupReminder(30);
+  return {
+    titulo: d.titulo || 'Reunión', inicio: d.inicio, fin: d.fin, lugar: d.lugar || '',
+    invitados: invitados, descripcion: d.descripcion || '', enviada: !!d.enviar && invitados.length > 0,
+    eventId: ev.getId(),
+    url: 'https://calendar.google.com/calendar/r/day/' + Utilities.formatDate(inicio, 'America/Caracas', 'yyyy/M/d'),
+  };
+}
+
 // ── Archivo de documentos en Drive ──────────────────────────
 // Mi unidad › PERSONAL JR › MARIMAR › CRM › <tipo>
 const ARCHIVO_RUTA = ['PERSONAL JR', 'MARIMAR', 'CRM'];
@@ -604,6 +695,8 @@ function archiveDocument(token, type, name, html) {
 // Ejecutar una vez desde el editor para autorizar Drive y crear las carpetas.
 function autorizarDrive() {
   Object.keys(ARCHIVO_CARPETAS).forEach(t => getArchivoFolder_(t));
+  CalendarApp.getDefaultCalendar();
+  getSpreadsheet();
   Logger.log('Carpetas listas en Mi unidad › ' + ARCHIVO_RUTA.join(' › '));
 }
 

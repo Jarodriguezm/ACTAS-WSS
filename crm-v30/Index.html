@@ -306,6 +306,26 @@ body.locked #layout,body.locked #topnav{filter:blur(1px);pointer-events:none}
 .desc-ed:focus{border-color:#4a90e2;box-shadow:0 0 0 2px rgba(74,144,226,.15)}
 .desc-ed:empty:before{content:attr(data-ph);color:#aaa}
 .desc-ed ul,.desc-ed ol{padding-left:18px;margin:2px 0}
+.anx-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.anx-tab{border:1px solid var(--border);background:#fff;border-radius:4px;padding:7px 14px;font-size:12.5px;font-weight:600;color:var(--text);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px}
+.anx-tab:hover{background:#f0f4ff}
+.anx-tab.on{background:var(--blue2);color:#fff;border-color:var(--blue2)}
+.anx-n{background:rgba(0,0,0,.08);border-radius:10px;padding:0 7px;font-size:11px}
+.anx-tab.on .anx-n{background:rgba(255,255,255,.25)}
+.anx-panel{background:#fff;border:1px solid var(--border);border-radius:3px;padding:12px 14px;margin-bottom:10px}
+.anx-form{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-items:end;margin-bottom:10px}
+.anx-form label{font-size:11px;font-weight:600;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.anx-form input,.anx-form select,.anx-form textarea{padding:6px 8px;border:1px solid var(--border);border-radius:3px;font:inherit;font-size:12.5px;width:100%;color:var(--text)}
+.anx-form textarea{resize:vertical;min-height:60px}
+.anx-full{grid-column:1/-1}
+.anx-chk{flex-direction:row!important;align-items:center;gap:6px!important;font-weight:400!important;color:var(--text)!important;font-size:12px!important}
+.anx-chk input{width:auto}
+.anx-item{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid #f0f0f0;font-size:12.5px}
+.anx-main{flex:1;min-width:0;overflow-wrap:anywhere}
+.anx-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.anx-empty{color:#aaa;font-size:12px;padding:6px 0}
+.anx-pend{font-size:11.5px;color:#e65100;background:#fff3e0;border-radius:3px;padding:6px 10px;margin-bottom:10px}
+@media(max-width:900px){.anx-form{grid-template-columns:1fr}}
 .items-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap;gap:10px}
 .total-box{background:#f8f8f8;border:1px solid var(--border);border-radius:3px;padding:10px 16px;min-width:220px}
 .t-row{display:flex;justify-content:space-between;font-size:12px;padding:2px 0}
@@ -524,6 +544,7 @@ body.locked #layout,body.locked #topnav{filter:blur(1px);pointer-events:none}
         </div>
       </div>
       <div class="form-wrap">
+        <div id="cot-anexos-nueva"></div>
         <form id="form-cot" onsubmit="saveCot(event)">
           <div class="f-card">
             <div class="f-card-hdr">📋 Datos del Documento</div>
@@ -608,6 +629,15 @@ body.locked #layout,body.locked #topnav{filter:blur(1px);pointer-events:none}
           </table>
         </div>
       </div>
+    </div>
+
+    <!-- ══ COT ANEXOS ══ -->
+    <div id="view-cot-anexos" class="view">
+      <div class="toolbar">
+        <button class="btn btn-ghost btn-sm" onclick="showView('cot-lista')">← Volver</button>
+        <strong style="font-size:13px">📂 <span id="cot-anexos-title"></span></strong>
+      </div>
+      <div class="form-wrap"><div id="cot-anexos-existente"></div></div>
     </div>
 
     <!-- ══ COT STATS ══ -->
@@ -1532,6 +1562,7 @@ function showView(key, navEl) {
     setAutoNum(type);
     loadSelects();
     if (type === 'facturas') loadNextFolio();
+    if (key === 'cot-nueva' && !ANX['cot-anexos-nueva']) anxInit('cot-anexos-nueva', { mode: 'pending' });
   }
 }
 
@@ -1834,6 +1865,7 @@ function renderList(type, textF='', statusF='') {
 
   body.innerHTML = data.map(r => {
     const acts = `<div style="display:flex;gap:4px">
+      ${type === 'cot' ? `<button class="btn btn-ghost btn-sm" title="Contactos, notas, archivos y agenda" onclick="openAnexos(${r.id})">📂</button>` : ''}
       <button class="btn btn-ghost btn-sm" onclick="cycleStatus('${type}',${r.id})">⚡</button>
       <button class="btn btn-ghost btn-sm" onclick="printRecord('${type}',${r.id})">🖨️</button>
       <button class="btn btn-red btn-sm" onclick="confirmDel('${type}',${r.id})">🗑️</button>
@@ -2283,12 +2315,219 @@ function serverSave(type, data) {
       loader(false);
       toast('✅ Guardado correctamente');
       archiveDoc(type, data);
+      if (type === 'cot') anxFlush('cot-anexos-nueva', res.id, data.num);
       resetForm(type);
       const listView = type.includes('otes') || type.includes('ores') ? type+'-lista' : type+'-lista';
       showView(listView);
     })
     .withFailureHandler(err => { loader(false); console.error(err); toast('Error al guardar: ' + (err && err.message ? err.message : err), false); })
     .saveRecord(AUTH_TOKEN, type, data);
+}
+
+// ── Anexos de cotización: contactos, notas, archivos, agenda ──
+const ANX_TABS = [
+  { k:'contacto', ico:'👥', lbl:'Contactos' },
+  { k:'nota',     ico:'📝', lbl:'Notas' },
+  { k:'archivo',  ico:'📎', lbl:'Archivos' },
+  { k:'reunion',  ico:'📅', lbl:'Agenda' },
+];
+const ANX = {};
+const ANX_MAX_MB = 20;
+
+function anxEsc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function anxSize(b) { return b > 1048576 ? (b/1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b/1024)) + ' KB'; }
+function anxFecha(iso) { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleString('es-VE', { dateStyle:'medium', timeStyle:'short' }); }
+function anxRun(fn, ...args) {
+  return new Promise((res, rej) => google.script.run.withSuccessHandler(res).withFailureHandler(rej)[fn](...args));
+}
+function anxReadFile(f) {
+  return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1] || ''); r.onerror = rej; r.readAsDataURL(f); });
+}
+
+function anxInit(cid, ctx) {
+  ANX[cid] = Object.assign({ tab: null, list: [] }, ctx);
+  anxRender(cid);
+}
+
+function anxTab(cid, k) {
+  const c = ANX[cid];
+  c.tab = c.tab === k ? null : k;
+  anxRender(cid);
+}
+
+function anxRender(cid) {
+  const c = ANX[cid], el = document.getElementById(cid);
+  if (!c || !el) return;
+  const n = k => c.list.filter(a => a.tipo === k).length;
+  let html = '<div class="anx-tabs">' + ANX_TABS.map(t =>
+    `<button type="button" class="anx-tab${c.tab === t.k ? ' on' : ''}" onclick="anxTab('${cid}','${t.k}')">${t.ico} ${t.lbl} <span class="anx-n">${n(t.k)}</span></button>`
+  ).join('') + '</div>';
+  if (c.tab) {
+    html += '<div class="anx-panel">';
+    if (c.mode === 'pending') html += '<div class="anx-pend">Se guardará junto con la cotización al presionar 💾 Guardar.</div>';
+    html += anxFormHtml(cid, c.tab) + anxListHtml(cid, c.tab) + '</div>';
+  }
+  el.innerHTML = html;
+}
+
+function anxFormHtml(cid, tab) {
+  const f = (name, label, type='text', extra='') =>
+    `<label>${label}<input type="${type}" id="${cid}-f-${name}" ${extra}></label>`;
+  const btn = (txt) => `<button type="button" class="btn btn-primary btn-sm" onclick="anxAdd('${cid}','${tab}')">${txt}</button>`;
+  if (tab === 'contacto') return `<div class="anx-form">
+      ${f('nombre','Nombre *')}${f('cargo','Cargo')}${f('email','Email','email')}${f('telefono','Teléfono')}
+      <div>${btn('➕ Agregar contacto')}</div></div>`;
+  if (tab === 'nota') return `<div class="anx-form">
+      <label class="anx-full">Nota interna<textarea id="${cid}-f-texto" rows="3" placeholder="Seguimiento, acuerdos, observaciones…"></textarea></label>
+      <div>${btn('➕ Agregar nota')}</div></div>`;
+  if (tab === 'archivo') return `<div class="anx-form">
+      <label class="anx-full">Archivos (PDF, imágenes, correos guardados .eml/.msg — máx. ${ANX_MAX_MB} MB c/u)
+        <input type="file" id="${cid}-f-files" multiple></label>
+      <div>${btn('⬆️ Subir')}</div></div>`;
+  if (tab === 'reunion') {
+    const emails = ANX[cid].list.filter(a => a.tipo === 'contacto' && a.data.email);
+    const guests = emails.length
+      ? emails.map((a, i) => `<label class="anx-chk"><input type="checkbox" class="${cid}-guest" value="${anxEsc(a.data.email)}" checked> ${anxEsc(a.data.nombre)} &lt;${anxEsc(a.data.email)}&gt;</label>`).join('')
+      : '<span class="anx-meta">Agregue contactos con email para invitarlos desde aquí.</span>';
+    return `<div class="anx-form">
+      ${f('titulo','Título *')}${f('fecha','Fecha *','date')}${f('hora','Hora *','time')}
+      <label>Duración<select id="${cid}-f-dur"><option value="30">30 min</option><option value="60" selected>1 hora</option><option value="90">1 h 30</option><option value="120">2 horas</option><option value="240">4 horas</option></select></label>
+      <label class="anx-full">Lugar o enlace de videollamada<input type="text" id="${cid}-f-lugar"></label>
+      <div class="anx-full" style="display:flex;flex-direction:column;gap:4px"><span style="font-size:11px;font-weight:600;color:var(--muted)">INVITADOS</span>${guests}</div>
+      <label class="anx-full">Otros emails (separados por coma)<input type="text" id="${cid}-f-extra" placeholder="persona@empresa.com, otra@empresa.com"></label>
+      <label class="anx-full">Descripción<textarea id="${cid}-f-desc" rows="2"></textarea></label>
+      <label class="anx-chk anx-full"><input type="checkbox" id="${cid}-f-enviar" checked> Enviar invitación por correo a los invitados</label>
+      <div>${btn('📅 Agendar en Google Calendar')}</div></div>`;
+  }
+  return '';
+}
+
+function anxListHtml(cid, tab) {
+  const items = ANX[cid].list.filter(a => a.tipo === tab);
+  if (!items.length) return '<div class="anx-empty">Sin registros.</div>';
+  return items.map(a => {
+    const d = a.data || {}, key = a.id || a._tmp;
+    let main = '';
+    if (tab === 'contacto') main = `<b>${anxEsc(d.nombre)}</b>${d.cargo ? ' · ' + anxEsc(d.cargo) : ''}
+      <div class="anx-meta">${[d.email && `✉️ ${anxEsc(d.email)}`, d.telefono && `📞 ${anxEsc(d.telefono)}`].filter(Boolean).join(' &nbsp; ')}</div>`;
+    if (tab === 'nota') main = `<div style="white-space:pre-wrap">${anxEsc(d.texto)}</div>`;
+    if (tab === 'archivo') main = (d.url ? `<a href="${anxEsc(d.url)}" target="_blank">📄 ${anxEsc(d.nombre)}</a>` : `📄 ${anxEsc(d.nombre)}`)
+      + `<div class="anx-meta">${d.tamano ? anxSize(d.tamano) : ''}</div>`;
+    if (tab === 'reunion') main = `<b>${anxEsc(d.titulo)}</b> — ${anxFecha(d.inicio)}
+      <div class="anx-meta">${d.lugar ? '📍 ' + anxEsc(d.lugar) + ' &nbsp; ' : ''}${(d.invitados||[]).length ? '👥 ' + anxEsc(d.invitados.join(', ')) : ''}
+      ${d.url ? ` &nbsp; <a href="${anxEsc(d.url)}" target="_blank">Ver en Calendar</a>` : ''}</div>`;
+    const meta = a.createdAt ? `<div class="anx-meta">${anxEsc(a.usuario || '')} · ${anxFecha(a.createdAt)}</div>` : '';
+    return `<div class="anx-item"><div class="anx-main">${main}${meta}</div>
+      <button type="button" class="btn btn-ghost btn-sm" title="Eliminar" onclick="anxDel('${cid}','${key}')">🗑️</button></div>`;
+  }).join('');
+}
+
+function anxVal(cid, name) {
+  const e = document.getElementById(cid + '-f-' + name);
+  if (!e) return '';
+  return e.type === 'checkbox' ? e.checked : e.value.trim();
+}
+
+async function anxAdd(cid, tipo) {
+  const c = ANX[cid];
+  if (tipo === 'archivo') {
+    const files = Array.from((document.getElementById(cid + '-f-files') || {}).files || []);
+    if (!files.length) { toast('Seleccione uno o más archivos', false); return; }
+    for (const f of files) {
+      if (f.size > ANX_MAX_MB * 1048576) { toast(`${f.name} supera ${ANX_MAX_MB} MB`, false); continue; }
+      await anxSubmit(cid, 'archivo', { nombre: f.name, mime: f.type, tamano: f.size }, f);
+    }
+    return;
+  }
+  let data;
+  if (tipo === 'contacto') {
+    data = { nombre: anxVal(cid,'nombre'), cargo: anxVal(cid,'cargo'), email: anxVal(cid,'email'), telefono: anxVal(cid,'telefono') };
+    if (!data.nombre) { toast('Indique el nombre del contacto', false); return; }
+  }
+  if (tipo === 'nota') {
+    data = { texto: anxVal(cid,'texto') };
+    if (!data.texto) { toast('Escriba la nota', false); return; }
+  }
+  if (tipo === 'reunion') {
+    const titulo = anxVal(cid,'titulo'), fecha = anxVal(cid,'fecha'), hora = anxVal(cid,'hora');
+    if (!titulo || !fecha || !hora) { toast('Complete título, fecha y hora', false); return; }
+    const inicio = new Date(fecha + 'T' + hora);
+    const fin    = new Date(inicio.getTime() + Number(anxVal(cid,'dur') || 60) * 60000);
+    const invitados = Array.from(document.querySelectorAll('.' + cid + '-guest:checked')).map(x => x.value)
+      .concat(String(anxVal(cid,'extra')).split(',').map(s => s.trim()).filter(Boolean));
+    data = { titulo, inicio: inicio.toISOString(), fin: fin.toISOString(), lugar: anxVal(cid,'lugar'),
+             invitados, descripcion: anxVal(cid,'desc'), enviar: anxVal(cid,'enviar') };
+  }
+  await anxSubmit(cid, tipo, data);
+}
+
+async function anxSubmit(cid, tipo, data, file) {
+  const c = ANX[cid];
+  if (c.mode === 'pending' || !IS_APPS_SCRIPT) {
+    c.list.push({ _tmp: String(Date.now() + Math.random()), tipo, data, file });
+    anxRender(cid);
+    return;
+  }
+  loader(true);
+  try {
+    if (file) data = Object.assign({}, data, { base64: await anxReadFile(file) });
+    const rec = await anxRun('addAnexo', AUTH_TOKEN, c.cotId, c.cotNum, tipo, data);
+    c.list.push(rec);
+    anxRender(cid);
+    toast(tipo === 'reunion' ? '📅 Reunión agendada en Google Calendar' : '✅ Guardado');
+  } catch (ex) {
+    toast('Error: ' + ((ex && ex.message) || ex), false);
+  } finally {
+    loader(false);
+  }
+}
+
+async function anxDel(cid, key) {
+  const c = ANX[cid];
+  const a = c.list.find(x => String(x.id || x._tmp) === String(key));
+  if (!a) return;
+  const aviso = a.tipo === 'reunion' ? '¿Eliminar la reunión? También se borrará de Google Calendar.'
+              : a.tipo === 'archivo' ? '¿Eliminar el archivo? Se enviará a la papelera de Drive.' : '¿Eliminar este registro?';
+  if (!confirm(aviso)) return;
+  if (a.id && IS_APPS_SCRIPT && c.mode === 'live') {
+    loader(true);
+    try { await anxRun('deleteAnexo', AUTH_TOKEN, a.id); }
+    catch (ex) { loader(false); toast('Error: ' + ((ex && ex.message) || ex), false); return; }
+    loader(false);
+  }
+  c.list = c.list.filter(x => x !== a);
+  anxRender(cid);
+}
+
+async function anxFlush(cid, cotId, cotNum) {
+  const c = ANX[cid];
+  const pend = c ? c.list.slice() : [];
+  if (!pend.length || !IS_APPS_SCRIPT) return;
+  let ok = 0, fail = 0;
+  for (const a of pend) {
+    try {
+      const data = a.file ? Object.assign({}, a.data, { base64: await anxReadFile(a.file) }) : a.data;
+      await anxRun('addAnexo', AUTH_TOKEN, cotId, cotNum, a.tipo, data);
+      ok++;
+    } catch (ex) { fail++; console.error(ex); }
+  }
+  toast(fail ? `Anexos guardados: ${ok}. Con error: ${fail}` : `📂 ${ok} anexo(s) guardados en ${cotNum}`, !fail);
+}
+
+function openAnexos(id) {
+  const r = (DB.cot || []).find(x => String(x.id) === String(id));
+  if (!r) return;
+  document.getElementById('cot-anexos-title').textContent = `${r.num} · ${r.cliente || ''}`;
+  showView('cot-anexos');
+  anxInit('cot-anexos-existente', { mode: 'live', cotId: r.id, cotNum: r.num, tab: 'contacto' });
+  if (!IS_APPS_SCRIPT) return;
+  loader(true);
+  anxRun('getAnexos', AUTH_TOKEN, r.id)
+    .then(list => { ANX['cot-anexos-existente'].list = list || []; anxRender('cot-anexos-existente'); })
+    .catch(ex => toast('Error: ' + ((ex && ex.message) || ex), false))
+    .finally(() => loader(false));
 }
 
 function archiveDoc(type, data) {
@@ -2316,6 +2555,7 @@ function resetForm(type) {
     }
     addItem(type);
     if (type === 'facturas') loadNextFolio();
+    if (type === 'cot') anxInit('cot-anexos-nueva', { mode: 'pending' });
   }
   const today = new Date().toISOString().split('T')[0];
   const fechaId = type === 'facturas' ? 'fac-fecha' : type+'-fecha';
