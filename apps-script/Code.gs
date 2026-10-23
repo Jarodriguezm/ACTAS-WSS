@@ -55,21 +55,6 @@ const HEADERS = {
 
 // ── Entry point ─────────────────────────────────────────────
 function doGet() {
-  // Descarga el HTML más reciente desde GitHub en cada carga
-  try {
-    const resp = UrlFetchApp.fetch(
-      'https://raw.githubusercontent.com/Jarodriguezm/ACTAS-WSS/claude/marimar-crm-setup-OZQa3/apps-script/Index.html',
-      { muteHttpExceptions: true }
-    );
-    if (resp.getResponseCode() === 200) {
-      return HtmlService.createHtmlOutput(resp.getContentText())
-        .setTitle('CRM Marimar Group')
-        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-    }
-  } catch(e) {
-    Logger.log('GitHub no disponible, usando archivo local: ' + e);
-  }
-  // Fallback: usa el archivo local si GitHub no responde
   return HtmlService.createHtmlOutputFromFile('Index')
     .setTitle('CRM Marimar Group')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);

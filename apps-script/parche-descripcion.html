@@ -1,0 +1,30 @@
+<script>
+(function(){
+  var desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  function upgrade(inp){
+    if (inp.dataset.ta) return;
+    inp.dataset.ta = '1';
+    var ta = document.createElement('textarea');
+    ta.rows = 3;
+    ta.placeholder = inp.placeholder;
+    ta.value = inp.value;
+    ta.style.cssText = 'width:100%;min-height:60px;resize:vertical;border:1px solid #9bb7dc;border-radius:4px;padding:6px 8px;font:inherit;font-size:12px;line-height:1.45;box-sizing:border-box;background:#fff;display:block';
+    Object.defineProperty(inp, 'value', {
+      get: function(){ return desc.get.call(inp); },
+      set: function(v){ desc.set.call(inp, v); if (ta.value !== v) ta.value = v; }
+    });
+    ta.addEventListener('input', function(){ desc.set.call(inp, ta.value); });
+    inp.style.display = 'none';
+    inp.parentNode.insertBefore(ta, inp.nextSibling);
+    Array.prototype.forEach.call(inp.closest('tr').cells, function(td){ td.style.verticalAlign = 'top'; });
+  }
+  function scan(){
+    document.querySelectorAll('tbody[id$="-items-body"] tr').forEach(function(tr){
+      var inp = tr.cells[1] && tr.cells[1].querySelector('input[type="text"]');
+      if (inp) upgrade(inp);
+    });
+  }
+  new MutationObserver(scan).observe(document.body, { childList: true, subtree: true });
+  scan();
+})();
+</script>
