@@ -631,7 +631,7 @@ body.locked #layout,body.locked #topnav{filter:blur(1px);pointer-events:none}
                 <button type="button" class="btn btn-ghost btn-sm" onclick="addItem('cot')">➕ Agregar ítem</button>
                 <div class="total-box">
                   <div class="t-row"><span>Subtotal</span><span id="cot-subtotal">$0</span></div>
-                  <div class="t-row"><span>IVA (19%)</span><span id="cot-iva">$0</span></div>
+                  <div class="t-row"><span>IVA (16%)</span><span id="cot-iva">$0</span></div>
                   <div class="t-row grand"><span>TOTAL</span><span id="cot-total">$0</span></div>
                 </div>
               </div>
@@ -801,7 +801,7 @@ body.locked #layout,body.locked #topnav{filter:blur(1px);pointer-events:none}
                 <button type="button" class="btn btn-ghost btn-sm" onclick="addItem('ot')">➕ Agregar actividad</button>
                 <div class="total-box">
                   <div class="t-row"><span>Subtotal</span><span id="ot-subtotal">$0</span></div>
-                  <div class="t-row"><span>IVA (19%)</span><span id="ot-iva">$0</span></div>
+                  <div class="t-row"><span>IVA (16%)</span><span id="ot-iva">$0</span></div>
                   <div class="t-row grand"><span>TOTAL</span><span id="ot-total">$0</span></div>
                 </div>
               </div>
@@ -907,7 +907,7 @@ body.locked #layout,body.locked #topnav{filter:blur(1px);pointer-events:none}
                 <button type="button" class="btn btn-ghost btn-sm" onclick="addItem('oc')">➕ Agregar ítem</button>
                 <div class="total-box">
                   <div class="t-row"><span>Subtotal</span><span id="oc-subtotal">$0</span></div>
-                  <div class="t-row"><span>IVA (19%)</span><span id="oc-iva">$0</span></div>
+                  <div class="t-row"><span>IVA (16%)</span><span id="oc-iva">$0</span></div>
                   <div class="t-row grand"><span>TOTAL</span><span id="oc-total">$0</span></div>
                 </div>
               </div>
@@ -1417,6 +1417,8 @@ body.locked #layout,body.locked #topnav{filter:blur(1px);pointer-events:none}
 <!-- ═══════════ JS ═══════════ -->
 <script>
 // ── Cache & state ────────────────────────────────────────────
+const IVA_VE = 16;
+function ivaPctDe(r) { const s = Number(r.subtotal) || 0; return s ? Math.round((Number(r.iva) || 0) / s * 100) : IVA_VE; }
 const DB = { cot:[], ot:[], oc:[], sol:[], facturas:[], clientes:[], productos:[], proveedores:[], usuarios:[] };
 const SELECTS = { clientes:[], productos:[], proveedores:[], usuarios:[] };
 let delTarget    = null;
@@ -2198,7 +2200,7 @@ function recalc(type) {
   });
   const ivaP  = (type==='facturas' || type==='sol')
     ? (type==='facturas' ? (parseFloat((document.getElementById('fac-ivaPorc') || {}).value)||16) : 16)
-    : 19;
+    : IVA_VE;
   const iva   = sub * (ivaP/100);
   document.getElementById(type+'-subtotal').textContent = '$'+fmt(sub);
   document.getElementById(type+'-iva').textContent      = '$'+fmt(iva);
@@ -2254,7 +2256,7 @@ function saveCot(e) {
     entrega:document.getElementById('cot-entrega').value,
     obs:    document.getElementById('cot-obs').value,
     moneda: document.getElementById('cot-moneda').value,
-    items, subtotal:sub, iva:sub*0.19, total:sub*1.19,
+    items, subtotal:sub, iva:Math.round(sub*IVA_VE)/100, total:Math.round(sub*(100+IVA_VE))/100,
   };
   if (EDIT.cot) { updateCot(EDIT.cot, data); return; }
   serverSave('cot', data);
@@ -2279,7 +2281,7 @@ function saveOT(e) {
     materiales:document.getElementById('ot-materiales').value,
     cotRef:   document.getElementById('ot-cot-ref').value,
     obs:      document.getElementById('ot-obs').value,
-    items, subtotal:sub, iva:sub*0.19, total:sub*1.19,
+    items, subtotal:sub, iva:Math.round(sub*IVA_VE)/100, total:Math.round(sub*(100+IVA_VE))/100,
   };
   serverSave('ot', data);
 }
@@ -2303,7 +2305,7 @@ function saveOC(e) {
     fechaEntrega:document.getElementById('oc-fecha-entrega').value,
     solicitante:document.getElementById('oc-solicitante').value,
     obs:      document.getElementById('oc-obs').value,
-    items, subtotal:sub, iva:sub*0.19, total:sub*1.19,
+    items, subtotal:sub, iva:Math.round(sub*IVA_VE)/100, total:Math.round(sub*(100+IVA_VE))/100,
   };
   serverSave('oc', data);
 }
@@ -2701,11 +2703,11 @@ function fichaCotHtml(r) {
   </table>`;
   const right = `<table class="fx-tbl fx-tot">
     <tr><td>Monto neto</td><td>${money(r.subtotal)} ${anxEsc(mon)}</td></tr>
-    <tr><td>IVA (19%)</td><td>${money(r.iva)} ${anxEsc(mon)}</td></tr>
+    <tr><td>IVA (${ivaPctDe(r)}%)</td><td>${money(r.iva)} ${anxEsc(mon)}</td></tr>
     <tr><td><b>Monto total</b></td><td><b>${money(r.total)} ${anxEsc(mon)}</b></td></tr>
   </table>`;
   const lines = `<table class="fx-lines"><thead><tr><th>Descripción</th><th class="num">IVA</th><th class="num">P.U.</th><th class="num">Cantidad</th><th class="num">Unidad</th><th class="num">Total neto</th></tr></thead><tbody>
-    ${items.length ? items.map(it => `<tr><td class="desc">${it.desc || ''}</td><td class="num">19%</td><td class="num">${money(it.price)}</td>
+    ${items.length ? items.map(it => `<tr><td class="desc">${it.desc || ''}</td><td class="num">${ivaPctDe(r)}%</td><td class="num">${money(it.price)}</td>
       <td class="num">${anxEsc(it.qty || 0)}</td><td class="num">${anxEsc(it.unit || '')}</td><td class="num">${money(it.total)}</td></tr>`).join('')
       : '<tr><td colspan="6" class="anx-empty">Sin líneas</td></tr>'}
   </tbody></table>`;
@@ -2924,7 +2926,7 @@ function buildCotPdfHtml(r) {
     <tbody>${filas}</tbody></table>
   <table class="tot">
     <tr><td>Sub Total (${mon})</td><td>${money(r.subtotal)}</td></tr>
-    <tr><td>Impuestos 19% (${mon})</td><td>${money(r.iva)}</td></tr>
+    <tr><td>Impuestos ${ivaPctDe(r)}% (${mon})</td><td>${money(r.iva)}</td></tr>
     <tr class="g"><td>Total (${mon})</td><td>${money(r.total)}</td></tr>
   </table>
   ${[r.pago && 'Condición de pago: ' + anxEsc(r.pago), r.entrega && 'Tiempo de entrega: ' + anxEsc(r.entrega),
@@ -3067,8 +3069,8 @@ function printDoc(type) {
   const printData = collectFormVals(type);
   printData.items = items;
   printData.subtotal = sub;
-  printData.iva = sub * 0.19;
-  printData.total = sub * 1.19;
+  printData.iva = Math.round(sub*IVA_VE)/100;
+  printData.total = Math.round(sub*(100+IVA_VE))/100;
   openPrintWin(type, printData);
 }
 
@@ -3159,7 +3161,7 @@ function buildPrintHtml(type, r) {
   <tbody>${iHtml}</tbody></table></div>
   <div class="tot"><div class="tb">
     <div class="tr"><span>Subtotal</span><span>$${fmt(r.subtotal)}</span></div>
-    <div class="tr"><span>IVA (19%)</span><span>$${fmt(r.iva)}</span></div>
+    <div class="tr"><span>IVA (${ivaPctDe(r)}%)</span><span>$${fmt(r.iva)}</span></div>
     <div class="tr g"><span>TOTAL</span><span>$${fmt(r.total)}</span></div>
   </div></div>
   ${r.obs?`<div class="obs"><b>Observaciones:</b><br>${r.obs}</div>`:''}
