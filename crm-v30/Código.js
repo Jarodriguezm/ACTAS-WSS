@@ -466,6 +466,28 @@ function getNextFolio(token) {
   return fac.length + 1;
 }
 
+// ── Notas comerciales ───────────────────────────────────────
+const NOTAS_DEFAULT = [
+  'Precios expresados en USD.',
+  'Precios no incluyen IVA.',
+  'Validez de la oferta: 30 días.',
+  'Tiempo de entrega sujeto a disponibilidad.',
+  'Forma de pago: 50% anticipo y 50% contra entrega.',
+];
+
+function getNotasComerciales(token) {
+  getAuthUser_(token);
+  const raw = PropertiesService.getScriptProperties().getProperty('NOTAS_COMERCIALES');
+  return raw ? JSON.parse(raw) : NOTAS_DEFAULT;
+}
+
+function saveNotasComerciales(token, notas) {
+  getAuthUser_(token);
+  const clean = (notas || []).map(n => String(n).trim()).filter(Boolean).slice(0, 100);
+  PropertiesService.getScriptProperties().setProperty('NOTAS_COMERCIALES', JSON.stringify(clean));
+  return clean;
+}
+
 
 
 

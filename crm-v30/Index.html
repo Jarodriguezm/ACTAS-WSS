@@ -1290,6 +1290,19 @@ body.locked #layout,body.locked #topnav{filter:blur(1px);pointer-events:none}
   </div>
 </div>
 
+<!-- Modal notas comerciales -->
+<div class="overlay" id="notas-modal">
+  <div class="modal-box" style="max-width:560px">
+    <h3>📝 Notas comerciales</h3>
+    <p style="font-size:12px;color:#666;margin:6px 0 8px">Escriba una nota por línea. Aparecerán en el menú "Nota comercial" de cada ítem.</p>
+    <textarea id="notas-text" rows="10" style="width:100%;resize:vertical;border:1px solid #c9d6e8;border-radius:4px;padding:8px;font:inherit;font-size:12.5px;line-height:1.5;outline:none"></textarea>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeNotasModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveNotas()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════ JS ═══════════ -->
 <script>
 // ── Cache & state ────────────────────────────────────────────
@@ -1339,6 +1352,7 @@ function startPortal() {
   buildSidebar('comercial');
   showView(CURRENT_USER && CURRENT_USER.role === 'SECRETARIA' ? 'oc-nueva' : 'dashboard');
   loadLogo();
+  loadNotas();
 }
 
 function applyRoleUI() {
@@ -1953,10 +1967,7 @@ function addItem(type) {
         <button type="button" onmousedown="event.preventDefault()" onclick="descCmd(this,'insertUnorderedList')" title="Viñetas">•</button>
         <button type="button" onmousedown="event.preventDefault()" onclick="descCmd(this,'insertOrderedList')" title="Lista numerada">1.</button>
         <button type="button" onmousedown="event.preventDefault()" onclick="descCmd(this,'removeFormat')" title="Quitar formato">✕</button>
-        <select onchange="descNota(this)" title="Insertar nota comercial">
-          <option value="">📝 Nota comercial…</option>
-          ${DESC_NOTAS.map(n => `<option>${n}</option>`).join('')}
-        </select>
+        <select onchange="descNota(this)" title="Insertar nota comercial"></select>
       </div>
       <div class="desc-ed" contenteditable="true" data-ph="Descripción del ítem" onpaste="descPaste(event)"></div>
     </td>
@@ -1966,19 +1977,57 @@ function addItem(type) {
     <td style="text-align:right;font-weight:600;color:var(--blue2)">$0</td>
     <td><button type="button" style="background:none;border:none;cursor:pointer;color:#c62828;font-size:14px" onclick="removeItem(this,'${type}')">✕</button></td>`;
   tb.appendChild(tr);
+  fillNotaSelect(tr.querySelector('.desc-tb select'));
   recalc(type);
 }
 
-const DESC_NOTAS = [
+let DESC_NOTAS = [
   'Precios expresados en USD.',
   'Precios no incluyen IVA.',
   'Validez de la oferta: 30 días.',
   'Tiempo de entrega sujeto a disponibilidad.',
   'Forma de pago: 50% anticipo y 50% contra entrega.',
-  'Incluye transporte hasta el sitio.',
-  'No incluye transporte.',
-  'Garantía de 6 meses por defectos de fabricación.',
 ];
+
+function fillNotaSelect(sel) {
+  sel.innerHTML = '';
+  const add = (value, text) => { const o = document.createElement('option'); o.value = value; o.textContent = text; sel.appendChild(o); };
+  add('', '📝 Nota comercial…');
+  DESC_NOTAS.forEach(n => add(n, n));
+  add('__edit', '⚙️ Editar notas…');
+}
+
+function refreshNotaSelects() {
+  document.querySelectorAll('.desc-tb select').forEach(fillNotaSelect);
+}
+
+function loadNotas() {
+  if (!IS_APPS_SCRIPT) return;
+  google.script.run
+    .withSuccessHandler(notas => { if (Array.isArray(notas)) { DESC_NOTAS = notas; refreshNotaSelects(); } })
+    .getNotasComerciales(AUTH_TOKEN);
+}
+
+function openNotasModal() {
+  document.getElementById('notas-text').value = DESC_NOTAS.join('\n');
+  document.getElementById('notas-modal').classList.add('open');
+  document.getElementById('notas-text').focus();
+}
+
+function closeNotasModal() {
+  document.getElementById('notas-modal').classList.remove('open');
+}
+
+function saveNotas() {
+  const notas = document.getElementById('notas-text').value.split('\n').map(s => s.trim()).filter(Boolean);
+  const done = list => { DESC_NOTAS = list; refreshNotaSelects(); closeNotasModal(); toast('Notas comerciales guardadas'); };
+  if (!IS_APPS_SCRIPT) { done(notas); return; }
+  loader(true);
+  google.script.run
+    .withSuccessHandler(list => { loader(false); done(list); })
+    .withFailureHandler(ex => { loader(false); toast((ex && ex.message) || 'No se pudieron guardar las notas', false); })
+    .saveNotasComerciales(AUTH_TOKEN, notas);
+}
 
 function descCmd(btn, cmd) {
   const ed = btn.closest('td').querySelector('.desc-ed');
@@ -1990,6 +2039,7 @@ function descNota(sel) {
   const nota = sel.value;
   sel.value = '';
   if (!nota) return;
+  if (nota === '__edit') { openNotasModal(); return; }
   const ed = sel.closest('td').querySelector('.desc-ed');
   const line = document.createElement('div');
   const em = document.createElement('i');
