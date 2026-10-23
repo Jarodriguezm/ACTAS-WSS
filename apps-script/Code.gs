@@ -53,38 +53,26 @@ const HEADERS = {
                'direccion','ciudad','condicionPago','estado','obs','createdAt']
 };
 
-// ── URL del código en GitHub (no cambiar) ───────────────────
-const GITHUB_RAW = 'https://raw.githubusercontent.com/Jarodriguezm/ACTAS-WSS/claude/marimar-crm-setup-OZQa3/apps-script/Index.html';
-
 // ── Entry point ─────────────────────────────────────────────
 function doGet() {
-  const props  = PropertiesService.getScriptProperties();
-  const cached = props.getProperty('crm_html');
-  const html   = cached
-    ? HtmlService.createHtmlOutput(cached)
-    : HtmlService.createHtmlOutputFromFile('Index');
-  return html
+  // Descarga el HTML más reciente desde GitHub en cada carga
+  try {
+    const resp = UrlFetchApp.fetch(
+      'https://raw.githubusercontent.com/Jarodriguezm/ACTAS-WSS/claude/marimar-crm-setup-OZQa3/apps-script/Index.html',
+      { muteHttpExceptions: true }
+    );
+    if (resp.getResponseCode() === 200) {
+      return HtmlService.createHtmlOutput(resp.getContentText())
+        .setTitle('CRM Marimar Group')
+        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    }
+  } catch(e) {
+    Logger.log('GitHub no disponible, usando archivo local: ' + e);
+  }
+  // Fallback: usa el archivo local si GitHub no responde
+  return HtmlService.createHtmlOutputFromFile('Index')
     .setTitle('CRM Marimar Group')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-}
-
-// ── Actualizar HTML desde GitHub ─────────────────────────────
-// Ejecutar esta función manualmente desde el editor para aplicar cambios
-function actualizarCRM() {
-  try {
-    const resp = UrlFetchApp.fetch(GITHUB_RAW, { muteHttpExceptions: true });
-    if (resp.getResponseCode() !== 200) {
-      Logger.log('Error descargando: HTTP ' + resp.getResponseCode());
-      return 'Error HTTP ' + resp.getResponseCode();
-    }
-    const html = resp.getContentText();
-    PropertiesService.getScriptProperties().setProperty('crm_html', html);
-    Logger.log('CRM actualizado: ' + html.length + ' bytes');
-    return '✅ CRM actualizado (' + html.length + ' bytes)';
-  } catch(e) {
-    Logger.log('Error: ' + e.toString());
-    return 'Error: ' + e.toString();
-  }
 }
 
 // ── Logo ────────────────────────────────────────────────────
