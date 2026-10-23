@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM - Marimar Group</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --blue-dark: #1a3d6b;
+      --blue-mid: #2c5f9e;
+      --blue-light: #4a90e2;
+      --sidebar-w: 260px;
+      --accent: #e8941a;
+      --danger: #e74c3c;
+      --success: #27ae60;
+      --text: #2d3748;
+      --muted: #718096;
+      --border: #e2e8f0;
+      --bg: #f7fafc;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      width: var(--sidebar-w);
+      background: linear-gradient(180deg, var(--blue-dark) 0%, #0d2440 100%);
+      color: #fff;
+      display: flex;
