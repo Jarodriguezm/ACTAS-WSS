@@ -264,9 +264,17 @@ function saveRecord(token, type, data) {
     data.items = JSON.stringify(data.items);
   }
 
-  const row = HEADERS[type].map(h => (data[h] !== undefined ? data[h] : ''));
-  sheet.appendRow(row);
-  return { success: true, id: data.id };
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    if (NUM_PREFIJOS[type]) data[numCampo_(type)] = asignarNumero_(type);
+    const row = HEADERS[type].map(h => (data[h] !== undefined ? data[h] : ''));
+    sheet.appendRow(row);
+  } finally {
+    lock.releaseLock();
+  }
+  supabaseSync_(type, data);
+  return { success: true, id: data.id, num: data[numCampo_(type)] || '' };
 }
 
 function updateRecordInternal_(type, id, updates) {
@@ -294,12 +302,16 @@ function updateRecordInternal_(type, id, updates) {
 
 function updateRecord(token, type, id, updates) {
   requirePermission_(token, 'write', type);
-  return updateRecordInternal_(type, id, updates);
+  const ok = updateRecordInternal_(type, id, updates);
+  if (ok) supabaseResync_(type, id);
+  return ok;
 }
 
 function updateStatus(token, type, id, newStatus) {
   requirePermission_(token, 'write', type);
-  return updateRecordInternal_(type, id, { estado: newStatus });
+  const ok = updateRecordInternal_(type, id, { estado: newStatus });
+  if (ok) supabaseResync_(type, id);
+  return ok;
 }
 
 function deleteRecord(token, type, id) {
@@ -314,6 +326,7 @@ function deleteRecord(token, type, id) {
   for (let i = 1; i < values.length; i++) {
     if (String(values[i][idCol]) === String(id)) {
       sheet.deleteRow(i + 1);
+      supabaseRequest_('delete', 'crm_registros?id=eq.' + encodeURIComponent(id));
       return true;
     }
   }
@@ -464,6 +477,100 @@ function getNextFolio(token) {
   requirePermission_(token, 'write', 'facturas');
   const fac = getRecordsInternal_('facturas');
   return fac.length + 1;
+}
+
+// ── Numeración correlativa ──────────────────────────────────
+// Formato: PREFIJO + MM + AA + correlativo de 5 dígitos que nunca se reinicia.
+const NUM_PREFIJOS = { cot:'COT', ot:'OT', oc:'OC', sol:'SDF', facturas:'FAC' };
+
+function numCampo_(type) {
+  return type === 'facturas' ? 'folio' : 'num';
+}
+
+function formatNumero_(type, seq) {
+  const mmaa = Utilities.formatDate(new Date(), 'America/Caracas', 'MMyy');
+  return NUM_PREFIJOS[type] + mmaa + String(seq).padStart(5, '0');
+}
+
+function seqActual_(type) {
+  const raw = PropertiesService.getScriptProperties().getProperty('SEQ_' + type);
+  return raw !== null ? Number(raw) : getRecordsInternal_(type).length;
+}
+
+function asignarNumero_(type) {
+  const seq = seqActual_(type) + 1;
+  PropertiesService.getScriptProperties().setProperty('SEQ_' + type, String(seq));
+  return formatNumero_(type, seq);
+}
+
+function getNextNumber(token, type) {
+  requirePermission_(token, 'read', type);
+  return NUM_PREFIJOS[type] ? formatNumero_(type, seqActual_(type) + 1) : '';
+}
+
+// ── Copia en Supabase ───────────────────────────────────────
+// Configurar en Configuración del proyecto → Propiedades de la secuencia de comandos:
+//   SUPABASE_URL = https://xxxx.supabase.co
+//   SUPABASE_KEY = clave service_role
+function supabaseConfig_() {
+  const p = PropertiesService.getScriptProperties();
+  const url = p.getProperty('SUPABASE_URL');
+  const key = p.getProperty('SUPABASE_KEY');
+  return url && key ? { url: url.trim().replace(/\/+$/, ''), key: key.trim() } : null;
+}
+
+function supabaseRequest_(method, path, body) {
+  const cfg = supabaseConfig_();
+  if (!cfg) return null;
+  const opts = {
+    method: method,
+    muteHttpExceptions: true,
+    headers: { apikey: cfg.key, Authorization: 'Bearer ' + cfg.key, Prefer: 'resolution=merge-duplicates,return=minimal' },
+  };
+  if (body) { opts.contentType = 'application/json'; opts.payload = JSON.stringify(body); }
+  try {
+    const resp = UrlFetchApp.fetch(cfg.url + '/rest/v1/' + path, opts);
+    if (resp.getResponseCode() >= 300) Logger.log('Supabase ' + resp.getResponseCode() + ': ' + resp.getContentText());
+    return resp.getResponseCode();
+  } catch (e) {
+    Logger.log('Supabase error: ' + e);
+    return null;
+  }
+}
+
+function supabaseSync_(type, rec) {
+  if (type === 'usuarios' || !rec || !rec.id) return null;
+  const data = Object.assign({}, rec);
+  if (typeof data.items === 'string' && data.items) { try { data.items = JSON.parse(data.items); } catch (e) {} }
+  return supabaseRequest_('post', 'crm_registros?on_conflict=id', {
+    id: Number(data.id),
+    tipo: type,
+    numero: String(data.num || data.folio || data.codigo || ''),
+    data: data,
+    updated_at: new Date().toISOString(),
+  });
+}
+
+function supabaseResync_(type, id) {
+  if (!supabaseConfig_()) return;
+  const rec = getRecordsInternal_(type).find(r => String(r.id) === String(id));
+  if (rec) supabaseSync_(type, rec);
+}
+
+// Ejecutar desde el editor: autoriza permisos y prueba la conexión.
+function probarSupabase() {
+  if (!supabaseConfig_()) { Logger.log('Falta configurar SUPABASE_URL y SUPABASE_KEY en las propiedades del script.'); return; }
+  const code = supabaseRequest_('get', 'crm_registros?select=id&limit=1');
+  Logger.log(code === 200 ? '✅ Conexión con Supabase correcta' : '❌ Supabase respondió: ' + code + ' (revise el registro)');
+}
+
+// Ejecutar una vez desde el editor para copiar a Supabase los registros que ya existen.
+function sincronizarTodoSupabase() {
+  let n = 0;
+  Object.keys(SHEET_NAMES).filter(t => t !== 'usuarios').forEach(t => {
+    getRecordsInternal_(t).forEach(r => { supabaseSync_(t, r); n++; });
+  });
+  Logger.log('Registros enviados a Supabase: ' + n);
 }
 
 // ── Archivo de documentos en Drive ──────────────────────────

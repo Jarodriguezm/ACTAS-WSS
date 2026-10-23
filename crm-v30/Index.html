@@ -529,7 +529,7 @@ body.locked #layout,body.locked #topnav{filter:blur(1px);pointer-events:none}
             <div class="f-card-hdr">📋 Datos del Documento</div>
             <div class="f-body">
               <div class="f-grid fg-4">
-                <div class="f-field"><label>N° Cotización</label><input type="text" id="cot-num" required placeholder="COT-0001"></div>
+                <div class="f-field"><label>N° Cotización</label><input type="text" id="cot-num" readonly placeholder="Se asigna al guardar" style="background:#f5f5f5"></div>
                 <div class="f-field"><label>Fecha</label><input type="date" id="cot-fecha" required></div>
                 <div class="f-field"><label>Validez (días)</label><input type="number" id="cot-validez" value="30"></div>
                 <div class="f-field"><label>Estado</label>
@@ -643,7 +643,7 @@ body.locked #layout,body.locked #topnav{filter:blur(1px);pointer-events:none}
             <div class="f-card-hdr">🔧 Datos OT</div>
             <div class="f-body">
               <div class="f-grid fg-4">
-                <div class="f-field"><label>N° OT</label><input type="text" id="ot-num" required placeholder="OT-0001"></div>
+                <div class="f-field"><label>N° OT</label><input type="text" id="ot-num" readonly placeholder="Se asigna al guardar" style="background:#f5f5f5"></div>
                 <div class="f-field"><label>Fecha</label><input type="date" id="ot-fecha" required></div>
                 <div class="f-field"><label>Estado</label>
                   <select id="ot-estado"><option>Borrador</option><option>Pendiente</option><option>En proceso</option><option>Terminada</option><option>Cancelado</option></select>
@@ -757,7 +757,7 @@ body.locked #layout,body.locked #topnav{filter:blur(1px);pointer-events:none}
             <div class="f-card-hdr">🛒 Datos OC</div>
             <div class="f-body">
               <div class="f-grid fg-4">
-                <div class="f-field"><label>N° OC</label><input type="text" id="oc-num" required placeholder="OC-0001"></div>
+                <div class="f-field"><label>N° OC</label><input type="text" id="oc-num" readonly placeholder="Se asigna al guardar" style="background:#f5f5f5"></div>
                 <div class="f-field"><label>Fecha</label><input type="date" id="oc-fecha" required></div>
                 <div class="f-field"><label>Estado</label>
                   <select id="oc-estado"><option>Pendiente</option><option>Aprobada</option><option>Recibida</option><option>Anulada</option></select>
@@ -1036,7 +1036,7 @@ body.locked #layout,body.locked #topnav{filter:blur(1px);pointer-events:none}
             <div class="f-card-hdr">🧾 Datos del Documento</div>
             <div class="f-body">
               <div class="f-grid fg-4">
-                <div class="f-field"><label>N° Factura</label><input type="text" id="fac-folio" required placeholder="05121" readonly style="background:#f5f5f5"></div>
+                <div class="f-field"><label>N° Factura</label><input type="text" id="fac-folio" placeholder="Se asigna al guardar" readonly style="background:#f5f5f5"></div>
                 <div class="f-field"><label>N° de Control</label><input type="text" id="fac-ncontrol" placeholder="09921"></div>
                 <div class="f-field"><label>Fecha</label><input type="date" id="fac-fecha" required></div>
                 <div class="f-field"><label>IVA %</label><input type="number" id="fac-ivaPorc" value="16" min="0" max="100" oninput="recalc('facturas')"></div>
@@ -1149,7 +1149,7 @@ body.locked #layout,body.locked #topnav{filter:blur(1px);pointer-events:none}
             <div class="f-card-hdr">📄 Datos del Documento</div>
             <div class="f-body">
               <div class="f-grid fg-4">
-                <div class="f-field"><label>N° Solicitud</label><input type="text" id="sol-num" required placeholder="SOL-0001"></div>
+                <div class="f-field"><label>N° Solicitud</label><input type="text" id="sol-num" readonly placeholder="Se asigna al guardar" style="background:#f5f5f5"></div>
                 <div class="f-field"><label>Fecha</label><input type="date" id="sol-fecha" required></div>
                 <div class="f-field"><label>Estado</label>
                   <select id="sol-estado"><option>Borrador</option><option>Pendiente</option><option>Aprobada</option><option>Facturada</option><option>Rechazada</option></select>
@@ -2105,13 +2105,17 @@ function getItems(type) {
 }
 
 // ── Auto num ─────────────────────────────────────────────────
+function previewNumero(type, el) {
+  if (!el) return;
+  if (!IS_APPS_SCRIPT) { el.value = ''; return; }
+  google.script.run
+    .withSuccessHandler(n => { el.value = n || ''; })
+    .getNextNumber(AUTH_TOKEN, type);
+}
+
 function setAutoNum(type) {
-  const pfx = {cot:'COT',ot:'OT',oc:'OC',sol:'SOL'}[type];
-  if (!pfx) return;
-  const el = document.getElementById(type + '-num');
-  if (el && !el.dataset.edited) {
-    el.value = pfx + '-' + String(DB[type].length + 1).padStart(4,'0');
-  }
+  if (!['cot','ot','oc','sol'].includes(type)) return;
+  previewNumero(type, document.getElementById(type + '-num'));
 }
 
 // ── Save ─────────────────────────────────────────────────────
@@ -2273,6 +2277,7 @@ function serverSave(type, data) {
   google.script.run
     .withSuccessHandler(res => {
       data.id = res.id;
+      if (res.num) data[type === 'facturas' ? 'folio' : 'num'] = res.num;
       DB[type].push(data);
       if (['clientes','productos','proveedores'].includes(type)) refreshLocalSelects();
       loader(false);
@@ -2563,17 +2568,7 @@ function saveFact(e) {
 
 // ── loadNextFolio ─────────────────────────────────────────────
 function loadNextFolio() {
-  if (!IS_APPS_SCRIPT) {
-    const el = document.getElementById('fac-folio');
-    if (el && !el.value) el.value = 'FAC-0001';
-    return;
-  }
-  google.script.run
-    .withSuccessHandler(n => {
-      const el = document.getElementById('fac-folio');
-      if (el) el.value = 'FAC-' + String(n).padStart(4,'0');
-    })
-    .getNextFolio(AUTH_TOKEN);
+  previewNumero('facturas', document.getElementById('fac-folio'));
 }
 
 // ── loadLogo ──────────────────────────────────────────────────
